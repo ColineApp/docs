@@ -49,7 +49,7 @@ const client = new ColineApiClient({
 Most operations need a workspace. Get a scoped client:
 
 ```typescript
-const ws = client.workspace('ws_abc123')
+const ws = client.workspace('ws_abc123') // workspace ID or slug
 
 // All operations are now scoped to this workspace
 const drives = await ws.listDrives()
