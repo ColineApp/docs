@@ -1,0 +1,198 @@
+---
+title: App Authentication
+description: How apps authenticate with Coline.
+---
+
+## App Authentication
+
+Apps authenticate with Coline using signed requests. Every request from Coline to your app includes a signature you verify. Every request from your app to Coline uses an API key.
+
+## Two-Way Authentication
+
+```
+┌──────────────┐                    ┌──────────────┐
+│    Coline    │ ─────────────────▶ │   Your App   │
+│              │   Signed Request   │              │
+│              │                    │  (Verify sig) │
+│              │ ◀───────────────── │              │
+│              │   API Key Auth     │              │
+└──────────────┘                    └──────────────┘
+```
+
+## Incoming Requests (Coline → Your App)
+
+### Signature Headers
+
+Every request includes these headers:
+
+| Header | Description |
+|--------|-------------|
+| `X-Coline-Signature` | HMAC-SHA256 signature |
+| `X-Coline-Timestamp` | Unix timestamp (seconds) |
+| `X-Coline-Delivery` | Unique delivery ID |
+
+### Verifying Signatures
+
+```typescript
+import { verifyAppRequestSignature, COLINE_SIGNATURE_HEADER, COLINE_TIMESTAMP_HEADER, COLINE_DELIVERY_HEADER } from '@colineapp/sdk'
+
+export async function POST(request: Request) {
+  const signature = request.headers.get(COLINE_SIGNATURE_HEADER)
+  const timestamp = request.headers.get(COLINE_TIMESTAMP_HEADER)
+  const deliveryId = request.headers.get(COLINE_DELIVERY_HEADER)
+  const body = await request.text()
+  
+  const isValid = await verifyAppRequestSignature({
+    secret: process.env.COLINE_APP_SECRET,
+    signature,
+    timestamp,
+    body
+  })
+  
+  if (!isValid) {
+    return new Response('Invalid signature', { status: 401 })
+  }
+  
+  // Check timestamp (optional but recommended)
+  const timestampMs = parseInt(timestamp) * 1000
+  const now = Date.now()
+  if (now - timestampMs > 5 * 60 * 1000) {
+    return new Response('Request too old', { status: 401 })
+  }
+  
+  // Process request...
+}
+```
+
+### Manual Verification
+
+If not using the SDK:
+
+```typescript
+import { createHmac, timingSafeEqual } from 'crypto'
+
+function verifySignature(params: {
+  secret: string
+  signature: string
+  timestamp: string
+  body: string
+}): boolean {
+  const payload = `${params.timestamp}.${params.body}`
+  const expected = createHmac('sha256', params.secret)
+    .update(payload)
+    .digest('hex')
+  
+  return timingSafeEqual(
+    Buffer.from(params.signature),
+    Buffer.from(expected)
+  )
+}
+```
+
+## Outgoing Requests (Your App → Coline)
+
+### API Key Authentication
+
+Use your workspace API key:
+
+```typescript
+import { ColineApiClient } from '@colineapp/sdk'
+
+const client = new ColineApiClient({
+  baseUrl: 'https://api.coline.app',
+  apiKey: process.env.COLINE_API_KEY  // col_ws_xxx
+})
+
+const ws = client.workspace('ws_abc123')
+
+// All requests include: Authorization: Bearer {apiKey}
+const files = await ws.listDriveFiles('drive_xyz')
+```
+
+### App Context
+
+When acting as an installed app:
+
+```typescript
+const ws = client.workspace('ws_abc123')
+const app = ws.app('my-crm')
+
+// Create file as the app
+const file = await app.createFile({
+  typeKey: 'contact',
+  name: 'New Contact'
+})
+
+// The file is created with the app as the author
+```
+
+## Secrets
+
+### App Secret
+
+Used to verify incoming requests from Coline:
+
+- Generated when you register an app
+- Available in Developer Console → App → Settings
+- Store securely (environment variable, not code)
+- Rotate if compromised
+
+### API Key
+
+Used to make requests to Coline:
+
+- Generated from Developer Console → API Keys
+- Workspace-scoped
+- Has permissions (read/write/etc.)
+- Can be rotated independently
+
+## Security Checklist
+
+### Do
+
+- ✅ Store secrets in environment variables
+- ✅ Verify every incoming request signature
+- ✅ Check timestamps to prevent replays
+- ✅ Use HTTPS for all communication
+- ✅ Rotate secrets regularly
+- ✅ Log authentication failures
+
+### Don't
+
+- ❌ Hardcode secrets in source code
+- ❌ Skip signature verification
+- ❌ Accept requests older than 5 minutes
+- ❌ Send secrets in URLs or logs
+- ❌ Share secrets between environments
+
+## Troubleshooting
+
+### Signature Verification Failed
+
+```typescript
+// Add debug logging
+console.log('Secret:', process.env.COLINE_APP_SECRET?.slice(0, 4) + '...')
+console.log('Signature:', signature?.slice(0, 20) + '...')
+console.log('Timestamp:', timestamp)
+console.log('Body length:', body.length)
+
+const isValid = await verifyAppRequestSignature({...})
+console.log('Valid:', isValid)
+```
+
+Common causes:
+- Wrong secret (check environment)
+- Body modified after reading
+- Timestamp in wrong format (should be seconds, not milliseconds)
+
+### 401 Unauthorized on Outgoing Requests
+
+- API key invalid or revoked
+- Key doesn't have required permissions
+- Key is for wrong workspace
+
+## Next Steps
+
+- [Building Apps](/docs/integrations/building) — Build your first app
+- [App Platform](/docs/integrations/framework) — App architecture
+- [Webhooks](/docs/integrations/webhooks) — Event handling

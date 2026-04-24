@@ -1,0 +1,336 @@
+---
+title: Files
+description: The typed file system that unifies all content in Coline.
+---
+
+## Files
+
+Everything in Coline is a file. Not metaphorically — literally. A doc, a spreadsheet, a kanban board, a chat channel, a calendar event: all files with types. This isn't a document management system layered on top of work. This is the work itself, stored as typed files you can move, share, transform, and version.
+
+## File System Basics
+
+### Virtual Drives
+
+Files live in virtual drives, not folders on a disk. Drives are logical containers:
+
+- **My Drive** — Your personal files, visible only to you
+- **Team Drive** — Shared workspace files
+- **Project Drive** — Scoped to a specific project
+- **Archive Drive** — Old files, read-only for most users
+
+Drives have their own permissions. You might have edit access to your personal drive, view access to the team drive, and no access to the finance drive.
+
+### File IDs and Paths
+
+Every file has:
+- **ID** — Permanent, unique identifier (e.g., `file_abc123`)
+- **Path** — Human-readable location (e.g., `/Projects/API/Roadmap`)
+- **URL** — Web address for sharing (e.g., `coline.app/acme/Projects/API/Roadmap`)
+
+Move a file and its ID stays the same. Links don't break. Permalinks work forever.
+
+### File Metadata
+
+Every file has standard metadata:
+- Name, type, size
+- Created by, created at
+- Modified by, modified at
+- Version history
+- Tags, color, starred status
+- Permissions and sharing settings
+
+## File Types
+
+### `.doc` — Rich Text Documents
+
+Traditional documents like Word or Google Docs. Free-form editing with formatting, styles, and continuous flow.
+
+**Best for:**
+- Formal documents and reports
+- Content that needs polished formatting
+- Documents you will export or share externally
+- Contracts, proposals, specs
+
+**Capabilities:**
+- Rich formatting (bold, italic, headings, lists, tables)
+- Styles and paragraph formatting
+- Comments and suggestions
+- Track changes
+- Export to PDF, Word
+
+### `.note` — Networked Notes
+
+Block-based notes designed for thinking, not just writing. Every paragraph is a block you can link, reference, and transform.
+
+**Best for:**
+- Daily standup notes
+- Research and reference material
+- Meeting notes with action items
+- Personal knowledge base
+- Drafting before formalizing in docs
+
+**Capabilities:**
+- Block-based editing (every paragraph is manipulable)
+- Bidirectional linking with `[[page]]` syntax
+- Backlinks (see all pages that reference this one)
+- Daily notes (automatic pages for each day)
+- Knowledge graph view
+- Tags and nested structure
+
+### `.sheet` — Structured Data
+
+Spreadsheets with typed columns, formulas, and views. Think database meets spreadsheet.
+
+**Best for:**
+- Project tracking with custom fields
+- Inventory and resource management
+- Financial calculations and budgets
+- Data analysis and reporting
+- Structured information that needs formulas
+
+**Capabilities:**
+- Typed columns (text, number, date, boolean, select, multi-select, url, user)
+- Formulas with auto-complete and cell references
+- Multiple views (grid, calendar, gallery, kanban)
+- Relations between sheets
+- Import/export CSV
+- Row-level permissions
+
+### `.board` — Visual Workspaces
+
+Flexible canvas for organizing anything visually. Not just kanban — any layout you need.
+
+**Best for:**
+- Sprint planning and retrospectives
+- Content calendars
+- Brainstorming and ideation
+- Roadmapping and strategic planning
+- Bug tracking and issue management
+
+**Capabilities:**
+- Infinite canvas with zoom and pan
+- Cards with rich content and properties
+- Multiple layouts (kanban columns, freeform, grid)
+- Custom fields on cards
+- Filters and views
+- Automation triggers on card changes
+
+### `.slide` — Presentations
+
+Presentation decks built from blocks. Seamless conversion from docs and notes.
+
+**Best for:**
+- Team updates and status reports
+- Client presentations
+- Training materials
+- Quick decks from existing docs
+
+**Capabilities:**
+- Block-based slides (same blocks as docs)
+- Themes and layouts
+- Present mode with speaker notes
+- Export to PDF
+- Auto-convert from docs
+
+### `.code` — Code Files
+
+Syntax-highlighted code editing. Basic editor now, full IDE coming.
+
+**Best for:**
+- Snippets and scripts
+- Configuration files
+- Code review and discussion
+- Technical documentation with code
+
+**Capabilities:**
+- Syntax highlighting for 50+ languages
+- Basic editing and navigation
+- File tree for multi-file projects
+
+### `.taskboard` — Project Management
+
+Structured task management with statuses, sprints, and assignees.
+
+**Best for:**
+- Engineering sprints
+- Product backlogs
+- Team task assignment
+- Workflow tracking with defined stages
+
+**Capabilities:**
+- Columns representing workflow stages
+- Tasks with assignees, due dates, priorities
+- Custom fields per project
+- Sprint planning and velocity tracking
+- Integration with calendar and channels
+
+## File Operations
+
+### Create
+
+Create files from:
+- The New button in any drive
+- The command bar (`Cmd/Ctrl+K`)
+- Converting existing files (doc to slides, sheet to board)
+- Templates
+- API and SDK
+
+### Move
+
+Move files between drives and folders:
+- Drag and drop
+- Cut and paste
+- API move operation
+
+Permissions are checked at destination. If you can't write to the target drive, the move fails.
+
+### Copy
+
+Copy creates a new file with duplicated content:
+- Same type as original
+- New ID, new URL
+- "Copy of [Name]" as default name
+- Optionally copy comments and history
+
+### Transform
+
+Transform changes the file type while preserving content:
+- Doc → Slides (headings become slides)
+- Sheet → Board (rows become cards)
+- Note → Doc (blocks become rich text)
+- Messages → Note (thread becomes document)
+
+Transformation is lossy by design — it extracts the essence for the new format.
+
+### Version History
+
+Every file keeps version history:
+- Automatic save points
+- Named versions ("Before Q2 edits")
+- Restore to any version
+- Compare versions side-by-side
+- See who changed what when
+
+### Star
+
+Star files for quick access:
+- Starred section in sidebar
+- Quick open with `Cmd/Ctrl+K`
+- Personal to you (your stars, not workspace stars)
+
+### Archive
+
+Archive files to remove from active view but keep accessible:
+- Archived files don't show in default views
+- Still searchable
+- Can be unarchived
+- Auto-archive rules available
+
+## File Sharing
+
+### Link Sharing
+
+Create shareable links:
+- **View** — Read-only access
+- **Comment** — Can add comments
+- **Edit** — Full edit access
+- **Expiration** — Link expires after date
+- **Password** — Extra protection
+
+### Direct Permissions
+
+Grant access to specific users:
+- Workspace members
+- External guests (with email)
+- Groups and teams
+
+### Public Files
+
+Make files publicly accessible:
+- Public read-only link
+- Embeddable in external sites
+- SEO-friendly URLs
+- Analytics on views
+
+## File Storage
+
+### Storage Limits
+
+Workspaces have storage quotas:
+- Personal workspaces: 5 GB
+- Team workspaces: 100 GB base + per-user additions
+- Files count against workspace quota, not individual user quotas
+
+### What Counts
+
+Against storage:
+- File content (docs, sheets, uploads)
+- Version history
+- Attachments and embeds
+
+Not against storage:
+- Messages (separate system)
+- Metadata and indexes
+- Cache and previews
+
+### Large Files
+
+Maximum file sizes:
+- Upload via UI: 100 MB
+- Upload via API: 500 MB
+- Embedded images: 10 MB recommended
+- Video files: Stream via external host recommended
+
+## Search and Discovery
+
+### Full-Text Search
+
+Search across all files you have access to:
+- Content, names, tags
+- Filter by type, date, author
+- Recent, relevant, exact match ranking
+
+### File Relationships
+
+See how files connect:
+- Linked from (what references this file)
+- Links to (what this file references)
+- Part of (which drives/folders contain this)
+- Created from (transformation history)
+
+### Activity
+
+Track file activity:
+- Recent edits
+- Comments added
+- Views and opens
+- Sharing events
+
+## Best Practices
+
+### Naming
+
+- Use clear, descriptive names
+- Include dates for time-sensitive files ("Q2 Roadmap - March")
+- Avoid "Draft," "Final," "v2" — use versions instead
+- Consistent naming conventions within teams
+
+### Organization
+
+- Don't nest deeper than 3 levels
+- Use drives for major boundaries (Personal, Projects, Archive)
+- Star frequently accessed files
+- Archive, don't delete
+
+### Collaboration
+
+- Share drives, not individual files
+- Use comments for async feedback
+- Mention people in file content for visibility
+- Set clear permissions (default to view, grant edit carefully)
+
+## Next Steps
+
+- [Containers](/docs/platform/containers) — Where files live and get shared
+- [Permissions](/docs/platform/permissions) — Access control and sharing
+- [Files User Guide](/docs/files) — How to use each file type

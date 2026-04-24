@@ -1,0 +1,145 @@
+---
+title: Code Execution
+description: Run sandboxed JavaScript for custom logic and data processing.
+---
+
+## Code Execution
+
+Kairo can execute JavaScript code in secure sandboxes. This enables calculations, data processing, and complex automation logic that goes beyond simple tool calls.
+
+## What It Is
+
+Code execution runs JavaScript in an isolated environment:
+
+- **Sandboxed** — Code cannot access your data without explicit tools
+- **Ephemeral** — No state persists between runs
+- **Fast** — Near-instant startup and execution
+- **Safe** — Network and system access restricted by default
+
+## Use Cases
+
+### Data Processing
+
+Transform and analyze data from your workspace:
+
+```javascript
+// Calculate metrics from a sheet
+const sheet = await tools.open_resource({
+  sourceKind: "file",
+  sourceId: "sales-q1"
+});
+const total = sheet.rows.reduce((sum, row) => sum + row.revenue, 0);
+await tools.update_doc({
+  docId: "sales-summary",
+  content: `Q1 Total: $${total}`
+});
+```
+
+### Custom Logic
+
+Multi-step workflows in a single execution:
+
+```javascript
+// Close stale tasks
+const tasks = await tools.search_tasks({
+  status: "in_progress",
+  updatedBefore: "30 days ago"
+});
+for (const task of tasks) {
+  await tools.update_task({
+    taskId: task.id,
+    statusId: "archived"
+  });
+}
+```
+
+## How to Use
+
+### From Kairo Chat
+
+Ask Kairo to run code:
+
+> "Calculate the average task completion time from the Engineering board"
+
+Kairo will write and execute the code, then return the result.
+
+### In Automations
+
+Use code execution in automations for custom logic that processes data or makes decisions.
+
+### API
+
+Execute code programmatically via the SDK:
+
+```typescript
+const result = await coline.kairo.execute({
+  code: `
+    const tasks = await tools.search_tasks({ status: "done" });
+    return { count: tasks.length };
+  `,
+  networkAccess: "block"
+});
+```
+
+## Security & Permissions
+
+### Sandboxing
+
+- Code runs in an isolated environment
+- No file system or system access
+- 30-second execution timeout
+- Memory limits enforced
+
+### Permissions
+
+Code execution respects workspace permissions:
+
+- Code can only access what you can access
+- Tools require the same approvals as Kairo chat
+- Audit logs track all executions
+
+### Network Access
+
+By default, network is blocked. Options:
+
+- **Block all** (default) — Code cannot make HTTP requests
+- **Allowlist** — Only specific domains allowed
+- **Full access** — Any HTTPS endpoint (requires admin approval)
+
+## Runtime Features
+
+### Available APIs
+
+- **Standard JavaScript** — Modern ES features
+- **Fetch** — HTTP requests (when network enabled)
+- **Tools API** — Access to Kairo tools
+
+### Not Available
+
+- File system access
+- Environment variables
+- Timers (use async/await instead)
+- External packages
+
+## Limits
+
+| Resource | Limit |
+|----------|-------|
+| Execution time | 30 seconds |
+| Memory | 128 MB |
+| Code size | 100 KB |
+| Network requests | 50 per execution (if enabled) |
+| Concurrent runs | 10 per workspace |
+
+## Best Practices
+
+### Do
+- Keep code focused and single-purpose
+- Use the tools API for workspace operations
+- Handle errors with try/catch
+- Return structured data
+
+### Don't
+- Store secrets in code
+- Create infinite loops
+- Make unnecessary network requests

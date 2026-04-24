@@ -1,0 +1,4 @@
+{
+  "title": "API Reference",
+  "pages": ["index", "endpoints", "errors", "rate-limits", "tab", "mcp"]
+}

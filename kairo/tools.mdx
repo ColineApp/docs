@@ -1,0 +1,143 @@
+---
+title: Tools
+description: The tools Kairo uses to interact with your workspace.
+---
+
+## Kairo Tools
+
+Kairo has a set of tools that let it interact with your workspace. When you ask Kairo to do something, it decides which tools to use and in what order.
+
+## Search & Discovery
+
+### search_workspace
+
+Search across everything in your workspace: notes, docs, tasks, messages, Kairo chats, and app documents. Kairo uses this first when it needs to discover context.
+
+Example prompts that use search:
+- "Find docs about the API"
+- "What did we decide about the pricing?"
+- "Show me tasks assigned to me"
+
+### open_resource
+
+Open a specific file, task, message thread, or document after finding it via search. This lets Kairo read full content.
+
+### search_tasks
+
+Deep search within tasks and taskboards. Filter by status, assignee, due date, and more.
+
+Example prompts:
+- "Find urgent bugs in the backend board"
+- "What tasks are due this week?"
+
+## Task Management
+
+### read_taskboard
+
+Read a complete taskboard with its columns, custom fields, and all tasks. Kairo uses this to understand project structure.
+
+### create_task
+
+Create new tasks in any taskboard. Kairo will ask for confirmation before creating tasks that affect your workflow.
+
+Example prompts:
+- "Create a task for the API documentation"
+- "Add a bug to the sprint board"
+
+### update_task
+
+Modify existing tasks: change status, assignees, due dates, custom fields.
+
+Example prompts:
+- "Mark the API task as in progress"
+- "Assign the frontend bug to Sarah"
+
+## File Operations
+
+### create_note / update_note
+
+Create and edit notes. Kairo uses notes for working drafts, summaries, and knowledge capture.
+
+Example prompts:
+- "Create a note summarizing this thread"
+- "Update the meeting notes with action items"
+
+### create_doc / update_doc
+
+Create and edit docs. Kairo can draft documents, rewrite content, or update existing docs.
+
+Example prompts:
+- "Draft a project proposal"
+- "Rewrite this more formally"
+
+## Calendar
+
+### list_calendar_events
+
+Read your calendar to find availability, check upcoming events, or suggest meeting times.
+
+### create_calendar_event / update_calendar_event
+
+Schedule meetings and update event details.
+
+Example prompts:
+- "Schedule a 30-min sync with the team tomorrow"
+- "Find a time when everyone is free"
+
+## Messaging
+
+### read_thread
+
+Read complete message threads in channels or DMs. Kairo uses this to understand conversations before replying or summarizing.
+
+### send_container_message
+
+Send messages to channels or DMs on your behalf after confirming with you.
+
+Example prompts:
+- "Send a summary to #general"
+- "Reply to this thread with the action items"
+
+## Memory
+
+### save_memory / search_memories
+
+Kairo can save information to its memory and recall it later. This persists across conversations.
+
+Example prompts:
+- "Remember that I prefer async standups"
+- "What did I ask you to remember about the API?"
+
+## Code Execution
+
+### execute_code
+
+Run JavaScript in a sandboxed Cloudflare Worker. Used for calculations, data processing, and custom logic.
+
+See [Code Execution](/docs/kairo/code-execution) for details.
+
+## Web Search
+
+When enabled, Kairo can search the web for current information:
+
+- "What are the latest React best practices?"
+- "Search for documentation on this error"
+
+## Tool Approval
+
+Some tools require your approval before running:
+
+- **Create/Update** — Making new files, tasks, or calendar events
+- **Send messages** — Posting on your behalf
+- **Execute code** — Running JavaScript
+
+Kairo will show you exactly what it plans to do and ask for confirmation.
+
+## Privacy & Permissions
+
+Kairo only accesses what you can access:
+
+- Respects workspace permissions
+- Cannot read private channels you are not in
+- Cannot access files without permission
+- Does not train on your data

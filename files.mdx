@@ -1,0 +1,329 @@
+---
+title: Files
+description: The unified virtual drive where all your work lives.
+---
+
+## Files
+
+In Coline, everything is a **file**. Not files in the traditional sense of Word documents or PDFs, but typed, structured files that live in a unified virtual drive. This is the foundation that makes everything else possible.
+
+## The Virtual Drive
+
+Your workspace has a **virtual file system (VFS)** — think of it like the file explorer on your computer, but designed for the web, for teams, and for structured content.
+
+### Drives
+
+Files live in **drives** — containers that control access:
+
+- **Shared drives** — Team content that everyone can access
+- **Personal drives** — Your private workspace within the team
+- **Channel drives** — Files attached to specific channels
+
+Each drive has its own folder structure, permissions, and sharing rules.
+
+### Folders
+
+Organize files hierarchically with folders:
+
+- Create nested folder structures
+- Move files between folders with drag-and-drop
+- Share entire folders or specific files
+- Color-code folders for visual organization
+
+### File Types
+
+Every file has a **type** that determines how it behaves:
+
+| Extension | Type | Purpose |
+|-----------|------|---------|
+| `.note` | Note | Quick capture, journaling, knowledge base |
+| `.doc` | Doc | Long-form writing, reports, documentation |
+| `.sheet` | Sheet | Structured data, calculations, databases |
+| `.board` | Board | Visual organization, kanban, mind mapping |
+| `.slide` | Slide | Presentations, decks, visual storytelling |
+| `.code` | Code | Code files with syntax highlighting |
+| `.taskboard` | Taskboard | Project management, sprints, workflows |
+
+The type determines the editor you get when you open the file, but all files share common capabilities.
+
+## Universal File Features
+
+### Every File Can...
+
+**Be Shared**
+- Share with specific workspace members
+- Share via email with external collaborators
+- Publish publicly with a URL
+- Set view or edit permissions
+
+**Be Starred**
+- Mark important files for quick access
+- Personal to each user (your stars, not workspace stars)
+
+**Be Colored**
+- 8 colors for visual organization
+- Appear in sidebar and file lists
+
+**Be Tagged**
+- Add #tags for cross-cutting organization
+- Filter by tags across drives
+- Multiple tags per file
+
+**Be Linked**
+- Link to files from channels, calendar events, or other files
+- Use `[[filename]]` syntax for bidirectional links
+- Automatic backlinks tracking
+
+**Be Searched**
+- Full-text search across all files
+- Search filters by type, date, tags
+- Search within file contents
+
+**Be Moved**
+- Drag between folders
+- Move between drives
+- Preserve links and references
+
+### Version History
+
+Every file keeps a complete version history:
+
+- **Automatic saves** — Captured as you work
+- **Named versions** — "Before Q3 edits", "Final draft"
+- **Compare versions** — Side-by-side diff view
+- **Restore** — Roll back to any point
+- **See who changed what** — Attribution for every edit
+
+### Comments
+
+Collaborate on files with comments:
+
+- **Inline comments** — Highlight text and comment
+- **Threaded discussions** — Replies and resolutions
+- **@mentions** — Notify specific people
+- **Comment history** — See all past discussions
+
+## Creating Files
+
+### From the Drive
+
+1. Navigate to the folder where you want the file
+2. Click **New** → Select file type
+3. Enter a name
+4. Start editing
+
+### From the Command Bar
+
+Press `Cmd/Ctrl+K` and type:
+- "Create a doc called Project Brief"
+- "New sheet for Q4 budget"
+- "Note about the API design"
+
+### From a Channel
+
+In any channel with a Files tab:
+1. Click the Files tab
+2. Click **New File**
+3. The file is automatically linked to the channel
+
+### From Templates
+
+Many file types support templates:
+- Start with pre-filled content
+- Choose from built-in or custom templates
+- Apply templates on file creation
+
+## File Organization Strategies
+
+### Project-Based
+
+```
+Projects/
+  ├── Acme Corp/
+  │   ├── Brief.doc
+  │   ├── Budget.sheet
+  │   ├── Tasks.board
+  │   └── Meeting Notes/
+  └── Widget Inc/
+      └── ...
+```
+
+### Type-Based
+
+```
+📁 Notes/
+📁 Docs/
+📁 Sheets/
+📁 Boards/
+📁 Meetings/
+```
+
+### Hybrid (PARA Method)
+
+```
+📁 Projects/
+📁 Areas/
+📁 Resources/
+📁 Archive/
+```
+
+## File Permissions
+
+### Access Levels
+
+- **Owner** — Full control, can delete, manage sharing
+- **Edit** — Can modify content, cannot delete or change share settings
+- **Comment** — Can add comments, cannot edit content
+- **View** — Read-only access
+
+### Permission Inheritance
+
+- Files inherit from their parent folder
+- Files in shared drives inherit drive permissions
+- Explicit permissions override inherited ones
+
+### Breaking Inheritance
+
+Set a file to "restricted" access mode to ignore parent folder permissions:
+- Useful for sensitive files in shared folders
+- Only explicit grants matter
+
+## File Operations
+
+### Upload and Import
+
+**From Your Computer:**
+- Drag files onto the drive
+- Use the upload button
+- Supported: Images, PDFs, Word docs, and more
+
+**Import from Other Tools:**
+- Import from Notion, Confluence, Google Docs
+- Convert formats automatically
+- Preserve structure where possible
+
+### Export
+
+**Download Files:**
+- Export notes as Markdown
+- Export sheets as CSV
+- Export docs as PDF or Word
+- Export boards as images
+
+### Transform
+
+Change a file from one type to another:
+- **Doc → Slides** — Headings become slides
+- **Sheet → Board** — Rows become cards
+- **Note → Doc** — Blocks become rich text
+- **Messages → Note** — Channel thread becomes document
+
+Transformation is lossy by design — it extracts the essence for the new format.
+
+## Working with Files
+
+### Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `N` | Create new file |
+| `Cmd/Ctrl+O` | Open file finder |
+| `Cmd/Ctrl+Shift+O` | Open recent files |
+| `Cmd/Ctrl+Shift+S` | Star/unstar file |
+| `Cmd/Ctrl+Shift+C` | Copy file link |
+| `R` | Rename file |
+| `M` | Move file |
+| `Del` | Move to trash |
+| `Shift+Del` | Permanently delete |
+
+### Drag and Drop
+
+- **Move files** — Drag between folders
+- **Upload** — Drag files from desktop
+- **Link in channels** — Drag file to message input
+- **Attach to events** — Drag file to calendar event
+
+### Bulk Operations
+
+Select multiple files with `Cmd/Ctrl+Click` or `Shift+Click`:
+- Move together
+- Star/unstar
+- Change color
+- Add tags
+- Delete
+
+## Trash and Recovery
+
+### Trash
+
+Deleted files go to trash:
+- Recoverable for 30 days
+- View trashed files from sidebar
+- Restore with one click
+
+### Permanent Delete
+
+- Shift+Delete to skip trash
+- Or empty trash manually
+- Cannot be recovered after permanent delete
+
+## Storage and Limits
+
+### Storage Quotas
+
+- **Free tier** — 1GB per workspace
+- **Pro** — 100GB per workspace
+- **Enterprise** — Unlimited
+
+Storage counts:
+- File content
+- Version history
+- Uploaded attachments
+
+### File Size Limits
+
+- **Text files** — Unlimited (within storage quota)
+- **Attachments** — 100MB per file
+- **Images** — 50MB per image
+
+## Best Practices
+
+### Naming Conventions
+
+**Good names:**
+- `2024 Q3 Product Roadmap`
+- `API Design Principles`
+- `Acme Corp - Contract v2`
+
+**Avoid:**
+- `Document 1`
+- `New File`
+- `Untitled`
+
+### Folder Structure
+
+- Keep it flat (3 levels max typically)
+- Use search over deep nesting
+- Archive old projects
+
+### Sharing
+
+- Share folders when possible (easier to manage)
+- Use "view" permission for external sharing
+- Regular access reviews for sensitive content
+
+### Organization
+
+- Star files you access daily
+- Color-code by project or priority
+- Tag for cross-cutting attributes
+- Trust search over perfect folders
+
+## Next Steps
+
+- [Notes](/docs/notes) — Quick capture with bidirectional linking
+- [Docs](/docs/docs) — Long-form writing and publishing
+- [Sheets](/docs/sheets) — Data and calculations
+- [Boards](/docs/boards) — Visual organization
+- [Slides](/docs/slides) — Presentations
+- [Code](/docs/code) — Code editing and IDE features

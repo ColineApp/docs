@@ -1,0 +1,223 @@
+---
+title: Calendar
+description: Calendar and scheduling for events, meetings, and team coordination.
+---
+
+## Calendar
+
+Coline's calendar isn't just a place to put meetings—it's a coordination hub where events connect to your files, channels, and tasks. Events can have meeting notes, action items, file attachments, and even trigger AI automations.
+
+## How It Works
+
+### Events as Containers
+
+Unlike a traditional calendar where events are just time blocks, Coline events are **containers** that hold:
+
+- **Attendees** with RSVP tracking and role-based permissions
+- **Meeting notes** — auto-generated docs linked to the event
+- **Action items** — AI-extracted tasks with sync to your task boards
+- **Links** — Attach files, channels, or external URLs
+- **Voice calls** — Built-in meeting rooms (coming soon)
+
+When you create a meeting, you're not just blocking time—you're creating a workspace for everything related to that meeting.
+
+### Calendar Views
+
+Switch between perspectives depending on what you need:
+
+- **Month** — See the big picture, spot patterns, plan ahead
+- **Week** — The default work view with time slots
+- **Day** — Deep focus on one day's schedule
+- **Agenda** — List view of upcoming events
+
+Your preferred view is saved per workspace.
+
+### Time Zone Handling
+
+Every event stores its own time zone. When someone views the event, they see it in **their** local time. No more "what time is that for me?" math. This matters when you have a distributed team—an event created in Tokyo displays correctly for someone in New York.
+
+## Key Concepts
+
+### Visibility
+
+Events have three visibility levels:
+
+- **Private** — Only you and invitees can see it exists
+- **Invitees** — Visible to invitees, others see "busy" without details
+- **Workspace** — Anyone in the workspace can see event details
+
+### RSVP Tracking
+
+Each attendee has a response status:
+
+- **Needs action** — Haven't responded yet (notifications sent)
+- **Accepted** — Coming to the meeting
+- **Tentative** — Might attend
+- **Declined** — Can't make it
+
+Organizers get notified of responses. You can see at a glance who's coming to your meeting.
+
+### Recurring Events
+
+Create repeating events with flexible rules:
+
+- Daily, weekly, monthly, or yearly
+- Every N weeks (e.g., every 2 weeks)
+- Specific days of the week (e.g., Mon/Wed/Fri)
+- End after N occurrences or on a specific date
+
+Recurring events use the standard iCalendar RRULE format under the hood, so they work with external calendar sync.
+
+## Creating Events
+
+### Natural Language Input
+
+Type "lunch with the design team tomorrow at 1pm" and Coline parses it into:
+- Title: "Lunch with the design team"
+- Date: Tomorrow
+- Time: 1:00 PM - 2:00 PM (default 1 hour)
+- Attendees: Design team members (if group exists)
+
+The smart input understands relative dates, times, common phrases, and even suggests attendees from your workspace.
+
+### From Anywhere
+
+Create events from:
+- The calendar view (click any time slot)
+- The command bar (`Cmd/Ctrl+K`)
+- A message in a channel ("let's meet tomorrow at 3")
+- Kairo AI ("schedule a 30-minute sync with Sarah next week")
+
+## Meeting Notes
+
+Every event can have an associated **note file** that captures:
+
+- Pre-meeting agenda
+- Live notes during the call
+- Post-meeting decisions
+
+### Auto-Generated Structure
+
+When you create meeting notes, Coline pre-populates them with:
+- Event title and time
+- Attendee list
+- Links to attached files
+- Empty sections for agenda, notes, and action items
+
+### Action Items
+
+The real magic happens with **action items**. Coline can:
+
+1. **Extract from notes** — AI reads your meeting notes and identifies tasks
+2. **Sync two-way** — Check a box in the note, it marks done in the database
+3. **Push to task boards** — Convert action items into actual tasks
+
+Say you write "John will update the API docs by Friday" in your notes. Coline extracts that as an action item assigned to John with a due date.
+
+## Event Links
+
+Connect events to the rest of your workspace:
+
+- **Files** — Attach a doc you're reviewing in the meeting
+- **Channels** — Link to the #engineering channel for team standups
+- **URLs** — External links like Zoom, Figma, or Notion
+
+These links show up in the event sidebar, notifications, and meeting prep emails.
+
+## Availability and Scheduling
+
+### Your Availability Rules
+
+Set when you're typically available:
+
+- Weekly recurring hours (e.g., 9am-5pm, Mon-Fri)
+- Time zone for your working hours
+- Override specific dates (PTO, travel, focus time)
+
+This powers the **scheduling assistant**—when someone tries to book time with you, Coline knows when you're free.
+
+### Scheduling Links
+
+Create public booking links (like Calendly) that let anyone schedule time with you:
+
+- Set duration (15, 30, 60 minutes)
+- Add buffer time before/after meetings
+- Require minimum notice (e.g., 24 hours)
+- Limit to specific availability windows
+- Custom slug: `coline.app/book/acme/john` or `coline.app/book/sarah/15min`
+
+When someone books through your link, the event appears on both calendars automatically.
+
+### Availability Preview
+
+Before scheduling a meeting, see when everyone's available:
+
+- "Find a time when Sarah and Mike are both free next week"
+- Visual indicators: green (available), yellow (tentative), red (busy)
+- Respects each person's availability rules and existing events
+
+## AI and Automation
+
+### Kairo Calendar Assistance
+
+Ask Kairo anything about your schedule:
+
+- "What meetings do I have today?"
+- "Find a time for the design review this week"
+- "Reschedule my 1:1 with Sarah to Thursday"
+- "Summarize what happened in the planning meeting"
+
+### Meeting Prep
+
+Coline can automatically prepare you for meetings:
+
+15 minutes before a meeting, Kairo can:
+- Pull up the meeting notes from last time
+- Show recent messages in related channels
+- Surface files attached to the event
+- Remind you of action items from previous meetings
+
+Set this up in your calendar settings.
+
+### Smart Suggestions
+
+When viewing an event, Kairo suggests:
+- "Create action items from the notes"
+- "Send a follow-up message to attendees"
+- "Schedule a follow-up meeting"
+
+## Integration with the Rest of Coline
+
+### Tasks and Due Dates
+
+Tasks with due dates show up on your calendar as all-day events. Click them to jump to the task board. This gives you a complete view of your commitments—meetings and deadlines in one place.
+
+### Channels
+
+Every channel can have a calendar tab showing:
+- Upcoming events for that team
+- Shared team availability
+- Scheduled launches, releases, or milestones
+
+### Files
+
+Docs, sheets, and boards can reference events with `[[Meeting Name]]` syntax. This creates backlinks—open the event and see every file that mentions it.
+
+## Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `N` | Create new event |
+| `M` | Switch to month view |
+| `W` | Switch to week view |
+| `D` | Switch to day view |
+| `A` | Switch to agenda view |
+| `T` | Jump to today |
+| `←/→` | Navigate days/weeks |
+| `?` | Show keyboard shortcuts |
+
+## Next Steps
+
+- [Events](/docs/calendar/events) — Creating, editing, and managing events
+- [Scheduling](/docs/calendar/scheduling) — Public booking links and availability
+- [Availability](/docs/calendar/availability) — Setting your working hours and rules

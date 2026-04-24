@@ -1,0 +1,289 @@
+---
+title: Security
+description: Security best practices for Coline integrations.
+---
+
+## Security Best Practices
+
+Security is critical when building integrations. Follow these guidelines to protect your users and their data.
+
+## Credential Management
+
+### API Keys
+
+- **Never expose in client-side code** — Browser-based apps should use OAuth
+- **Store in environment variables** — Not in config files
+- **Use secret management** — AWS Secrets Manager, HashiCorp Vault, 1Password Secrets
+- **Rotate regularly** — Set calendar reminders to rotate keys quarterly
+
+```typescript
+// Good
+const client = new ColineApiClient({
+  baseUrl: 'https://api.coline.app',
+  apiKey: process.env.COLINE_API_KEY
+})
+
+// Bad
+const client = new ColineApiClient({
+  baseUrl: 'https://api.coline.app',
+  apiKey: 'col_ws_abc123...'
+})
+```
+
+### OAuth Credentials
+
+- **Client Secret** — Never expose in SPAs or mobile apps (use PKCE instead)
+- **Access Tokens** — Short-lived, store securely
+- **Refresh Tokens** — Encrypt at rest, rotate on use
+
+## Transport Security
+
+### HTTPS Only
+
+- All API requests must use HTTPS
+- Never send credentials over HTTP
+- Verify SSL certificates (don't disable verification)
+
+### Webhook Security
+
+Verify webhook signatures to ensure payloads came from Coline:
+
+```typescript
+import { verifyAppRequestSignature, COLINE_SIGNATURE_HEADER, COLINE_TIMESTAMP_HEADER } from '@colineapp/sdk'
+
+app.post('/webhooks/coline', async (req, res) => {
+  const signature = req.headers[COLINE_SIGNATURE_HEADER] as string
+  const timestamp = req.headers[COLINE_TIMESTAMP_HEADER] as string
+  
+  const isValid = await verifyAppRequestSignature({
+    secret: process.env.COLINE_WEBHOOK_SECRET,
+    signature,
+    timestamp,
+    body: JSON.stringify(req.body)
+  })
+  
+  if (!isValid) {
+    return res.status(401).send('Invalid signature')
+  }
+  
+  // Process webhook
+  console.log('Received event:', req.body.type)
+  res.status(200).send('OK')
+})
+```
+
+## Request Security
+
+### Input Validation
+
+Validate all user input before sending to the API:
+
+```typescript
+import { z } from 'zod'
+
+const CreateFileSchema = z.object({
+  name: z.string().min(1).max(255),
+  type: z.enum(['doc', 'sheet', 'board']),
+  parentId: z.string().optional()
+})
+
+app.post('/files', async (req, res) => {
+  const result = CreateFileSchema.safeParse(req.body)
+  if (!result.success) {
+    return res.status(400).json({ error: 'Invalid input' })
+  }
+  
+  // Now safe to use
+  const file = await ws.createDoc(result.data)
+  res.json(file)
+})
+```
+
+### Rate Limit Handling
+
+The SDK automatically retries on 429 errors. To handle manually:
+
+```typescript
+import { ColineApiError, isColineApiError } from '@colineapp/sdk'
+
+try {
+  const files = await ws.listDriveFiles('drive_abc')
+} catch (error) {
+  if (isColineApiError(error) && error.status === 429) {
+    // Rate limited - implement exponential backoff
+    const retryAfter = error.code === 'retry_after' 
+      ? parseInt(error.message) 
+      : 60
+    await sleep(retryAfter * 1000)
+  }
+}
+```
+
+## Data Handling
+
+### Data Minimization
+
+Only request and store the data you need:
+
+- Use pagination to limit response sizes
+- Don't cache sensitive data longer than necessary
+- Anonymize analytics data
+
+### Secure Logging
+
+Never log credentials or sensitive user data:
+
+```typescript
+// Bad
+console.log('API call with key:', apiKey)
+logger.info('User data:', userData)
+
+// Good
+console.log('API call to /files')
+logger.info('User action', { action: 'file.create', userId: user.id })
+```
+
+### Error Messages
+
+Don't expose internal details in error messages:
+
+```typescript
+// Bad
+res.status(500).json({ error: error.message })
+
+// Good
+logger.error(error) // Log full error internally
+res.status(500).json({ error: 'Something went wrong' })
+```
+
+## Authentication Security
+
+### OAuth State Parameter
+
+Always use the `state` parameter to prevent CSRF:
+
+```typescript
+import { createOauthState } from '@colineapp/sdk'
+
+const state = createOauthState()
+session.oauthState = state
+
+// In callback
+if (req.query.state !== session.oauthState) {
+  throw new Error('CSRF detected')
+}
+```
+
+### PKCE for Mobile/SPA
+
+Use PKCE for public clients:
+
+```typescript
+import { createPkceCodeChallenge } from '@colineapp/sdk'
+
+const { codeVerifier, codeChallenge } = createPkceCodeChallenge()
+session.codeVerifier = codeVerifier
+
+const authUrl = buildLoginWithColineAuthorizeUrl({
+  clientId: CLIENT_ID,
+  redirectUri: CALLBACK_URL,
+  scope: 'files:read',
+  codeChallenge,
+  codeChallengeMethod: 'S256'
+})
+```
+
+### Token Storage
+
+- Store tokens encrypted at rest
+- Use httpOnly, secure cookies for web apps
+- Implement token rotation
+- Revoke tokens on logout
+
+## Infrastructure Security
+
+### Network Isolation
+
+- Run integrations in isolated network segments
+- Use VPCs and private subnets
+- Restrict outbound traffic to known endpoints
+
+### Dependency Management
+
+- Keep dependencies updated
+- Audit for vulnerabilities (`npm audit`)
+- Pin dependency versions in production
+- Use lockfiles
+
+### Monitoring
+
+Set up alerts for suspicious activity:
+
+- Unusual API call patterns
+- Failed authentication attempts
+- Error rate spikes
+- Rate limit approaches
+
+```typescript
+import { isColineApiError } from '@colineapp/sdk'
+
+// Wrap API calls with logging
+try {
+  const result = await ws.listDriveFiles('drive_abc')
+} catch (error) {
+  if (isColineApiError(error)) {
+    logger.error({
+      status: error.status,
+      code: error.code,
+      type: error.type,
+      retryable: error.isRetryable
+    })
+    
+    // Alert on auth failures
+    if (error.status === 401 || error.status === 403) {
+      alerting.send('Security alert: Auth failure')
+    }
+  }
+}
+```
+
+## Incident Response
+
+### Key Compromise
+
+If an API key or OAuth credential is compromised:
+
+1. **Revoke immediately** — Go to Coline settings and revoke the key
+2. **Rotate secrets** — Generate new credentials
+3. **Review logs** — Check what was accessed
+4. **Notify users** — If user data was affected
+5. **Update integrations** — Deploy new credentials
+
+### Security Contacts
+
+Report security vulnerabilities:
+
+- Email: security@coline.app
+- Include detailed description and reproduction steps
+- Allow time for fix before public disclosure
+
+## Security Checklist
+
+Before deploying your integration:
+
+- [ ] Credentials stored securely (env vars, not code)
+- [ ] HTTPS enforced for all requests
+- [ ] Webhook signatures verified
+- [ ] Input validation implemented
+- [ ] Rate limiting handled
+- [ ] Error messages don't leak sensitive info
+- [ ] Dependencies audited
+- [ ] Logging doesn't capture credentials
+- [ ] OAuth state parameter used
+- [ ] Tokens refreshed properly
+
+## Next Steps
+
+- [API Keys](/docs/authentication/api-keys) — Secure API key usage
+- [OAuth 2.0](/docs/authentication/oauth) — Secure OAuth implementation
+- [Integrations](/docs/integrations) — Build secure integrations

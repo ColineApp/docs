@@ -1,0 +1,140 @@
+---
+title: Python SDK
+description: Python SDK for the Coline API.
+---
+
+## Python SDK
+
+The Python SDK is currently in development. Expected release: Q2 2026.
+
+## Current Options
+
+Until the Python SDK is available, use the REST API directly with your preferred HTTP client:
+
+```python
+import requests
+import os
+
+API_KEY = os.environ['COLINE_API_KEY']
+BASE_URL = 'https://api.coline.app/v1'
+
+def coline_request(method, path, **kwargs):
+    """Make an authenticated request to the Coline API."""
+    headers = {
+        'Authorization': f'Bearer {API_KEY}',
+        'Content-Type': 'application/json'
+    }
+    
+    response = requests.request(
+        method,
+        f'{BASE_URL}{path}',
+        headers=headers,
+        **kwargs
+    )
+    response.raise_for_status()
+    return response.json()
+
+# List drives in a workspace
+result = coline_request('GET', '/workspaces/acme/drives')
+for drive in result['data']['drives']:
+    print(drive['name'])
+
+# List files in a drive
+result = coline_request(
+    'GET',
+    '/workspaces/acme/drives/drive_123/files',
+    params={'limit': 50}
+)
+
+# Create a note
+result = coline_request(
+    'POST',
+    '/workspaces/acme/notes',
+    json={
+        'title': 'My Note',
+        'body': 'Note content...',
+        'driveId': 'drive_123'
+    }
+)
+
+# Send a message
+result = coline_request(
+    'POST',
+    '/workspaces/acme/channels/channel_123/messages',
+    json={
+        'content': [
+            {'type': 'text', 'text': 'Hello from Python!'}
+        ]
+    }
+)
+```
+
+## Webhook Verification
+
+```python
+import hmac
+import hashlib
+
+def verify_webhook(payload: str, signature: str, secret: str) -> bool:
+    """Verify a Coline webhook signature."""
+    expected = hmac.new(
+        secret.encode(),
+        payload.encode(),
+        hashlib.sha256
+    ).hexdigest()
+    
+    return hmac.compare_digest(signature, expected)
+
+# In your webhook handler
+@app.route('/webhooks/coline', methods=['POST'])
+def handle_webhook():
+    signature = request.headers.get('X-Coline-Signature', '')
+    
+    if not verify_webhook(request.data, signature, WEBHOOK_SECRET):
+        return 'Invalid signature', 401
+    
+    event = request.json
+    print(f"Received: {event['type']}")
+    
+    return 'OK', 200
+```
+
+## Pagination
+
+```python
+def paginate_files(workspace_slug, drive_id):
+    """Auto-paginate through all files in a drive."""
+    cursor = None
+    
+    while True:
+        params = {'limit': 50}
+        if cursor:
+            params['cursor'] = cursor
+        
+        result = coline_request(
+            'GET',
+            f'/workspaces/{workspace_slug}/drives/{drive_id}/files',
+            params=params
+        )
+        
+        for file in result['data']['files']:
+            yield file
+        
+        if not result['data']['page']['hasMore']:
+            break
+        
+        cursor = result['data']['page']['nextCursor']
+
+# Use the generator
+for file in paginate_files('acme', 'drive_123'):
+    print(file['name'])
+```
+
+## Stay Updated
+
+Subscribe to the [developer newsletter](https://coline.app/developers) to get notified when the Python SDK launches.
+
+## Next Steps
+
+- [API Reference](/docs/api) — Use the REST API directly
+- [SDK Overview](/docs/sdk) — Learn about SDK features

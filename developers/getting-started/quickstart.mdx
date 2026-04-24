@@ -1,0 +1,87 @@
+---
+title: Quickstart
+description: Get up and running with the Coline API in minutes.
+---
+
+## Quickstart
+
+Get your first API call working in under 5 minutes. This guide walks you through creating an API key, installing the SDK, and making your first requests.
+
+## Prerequisites
+
+Before you start, you will need:
+
+- A Coline account with a workspace
+- Node.js 18+ (for TypeScript/JavaScript SDK)
+
+## Step 1: Create an API Key
+
+1. Open your workspace in Coline
+2. Go to **Settings** → **API**
+3. Click **Generate API Key**
+4. Give it a name (e.g., "Quickstart")
+5. Copy the key and store it securely
+
+The key starts with `col_ws_` and should never be exposed in client-side code or public repositories.
+
+## Step 2: Install the SDK
+
+```bash
+npm install @colineapp/sdk
+```
+
+## Step 3: Make Your First Request
+
+Create a file called `test.js`:
+
+```typescript
+import { Coline } from '@colineapp/sdk'
+
+const coline = new Coline({
+  apiKey: process.env.COLINE_API_KEY
+})
+
+async function main() {
+  // List all drives in your workspace
+  const drives = await coline.drives.list()
+  console.log('Your drives:', drives)
+
+  // Create a new doc
+  const doc = await coline.files.create({
+    type: 'doc',
+    name: 'Hello Coline',
+    content: {
+      blocks: [
+        {
+          type: 'paragraph',
+          content: 'My first document created via API'
+        }
+      ]
+    }
+  })
+  console.log('Created doc:', doc.id)
+}
+
+main()
+```
+
+Run it:
+
+```bash
+COLINE_API_KEY=<your-api-key> node test.js
+```
+
+## What Just Happened
+
+- **Authentication**: The SDK automatically included your API key in the `Authorization` header
+- **Drive listing**: Retrieved all virtual drives in your workspace
+- **File creation**: Created a `.doc` file with rich text content
+
+## Next Steps
+
+Now that you have made your first API calls:
+
+- **[Authentication](/docs/authentication/api-keys)**: Learn about API key security and OAuth flows
+- **[Files](/docs/core-concepts/files)**: Understand the file system and available types
+- **[SDK Reference](/docs/sdk)**: Explore the full TypeScript SDK API
+- **[API Reference](/docs/api)**: Browse all available endpoints

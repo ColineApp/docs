@@ -1,0 +1,133 @@
+---
+title: Automations
+description: Event-driven workflows powered by Kairo.
+---
+
+## Automations
+
+Automations let Kairo respond to events in your workspace without you asking. Set up triggers, and Kairo takes action when they fire.
+
+## How Automations Work
+
+1. **Trigger** — An event happens in your workspace
+2. **Condition** (optional) — Check if criteria are met
+3. **Action** — Kairo executes a tool or runs custom logic
+
+## Triggers
+
+### File Events
+
+- **File created** — When a new file is added to a drive
+- **File updated** — When content changes
+- **File moved** — When files change location
+- **File starred** — When someone marks a file as important
+
+Example: "When a bug report doc is created in the Bugs drive, create a task in the sprint board"
+
+### Task Events
+
+- **Task created** — New task added to a board
+- **Status changed** — Task moves to a new column
+- **Assigned** — Task gets an owner
+- **Due date approaching** — Reminders for upcoming deadlines
+
+Example: "When a task moves to Done, notify the team in #releases"
+
+### Channel Events
+
+- **New message** — Keyword detection in channels
+- **Thread started** — New conversation thread
+- **Member joined/left** — Channel membership changes
+
+Example: "When someone says 'urgent' in #support, create a high-priority task"
+
+### Calendar Events
+
+- **Event created** — New meeting scheduled
+- **Event starting** — Reminders before meetings
+- **Event ending** — Post-meeting actions
+
+Example: "When a standup ends, create notes with the transcript summary"
+
+## Actions
+
+### Built-in Actions
+
+- **Create task** — Add to any taskboard
+- **Send message** — Post to channel or DM
+- **Create file** — Generate notes, docs, or sheets
+- **Update file** — Modify existing content
+- **Schedule event** — Create calendar events
+
+### Custom Logic
+
+For complex workflows, use the code execution action to run JavaScript:
+
+```javascript
+// Example: Calculate sprint velocity
+const tasks = await tools.search_tasks({ 
+  taskboardId: "sprint-12",
+  status: "done"
+});
+const velocity = tasks.length * 5;
+await tools.create_note({
+  title: `Sprint 12 Velocity: ${velocity}`,
+  body: `Completed ${tasks.length} tasks`
+});
+```
+
+## Creating Automations
+
+### From Kairo Chat
+
+Ask Kairo to create an automation:
+
+> "When a task moves to Done in the Engineering board, send a message to #engineering with the task name"
+
+Kairo will set up the trigger and action for you.
+
+### From Settings
+
+1. Go to **Settings** → **Automations**
+2. Click **New Automation**
+3. Select a trigger type
+4. Configure conditions (optional)
+5. Choose an action
+6. Test with the "Run Now" button
+
+## Automation Limits
+
+- **Rate limits** — Automations throttle to prevent spam
+- **Permissions** — Automations run with your permissions
+- **Audit log** — All automation runs are logged
+
+## Best Practices
+
+### Do
+- Start simple: one trigger, one action
+- Use descriptive names for your automations
+- Test with "Run Now" before enabling
+- Set up error notifications
+
+### Don't
+- Create infinite loops
+- Over-automate: not everything needs a robot
+- Forget to disable old automations
+
+## Examples
+
+### Sprint Management
+**Trigger:** Task moves to "Done"  
+**Action:** Update sprint velocity note
+
+### Content Pipeline
+**Trigger:** Doc created in "Drafts" drive  
+**Action:** Create task in "Editorial Calendar" board
+
+### Support Triage
+**Trigger:** Message contains "bug" or "broken" in #support  
+**Action:** Create high-priority task and notify @oncall
+
+### Meeting Notes
+**Trigger:** Calendar event ends  
+**Action:** Create notes file with transcript link

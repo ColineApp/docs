@@ -1,0 +1,380 @@
+---
+title: App Platform
+description: Build native integrations that live inside Coline.
+---
+
+## App Platform
+
+Build apps that integrate directly into Coline. Apps can define custom file types, render UI inside Coline, handle actions, and participate in search.
+
+## What You Can Build
+
+- **Custom file types** — Apps define their own file types (e.g., CRM records, tickets)
+- **Native UI** — Render UI inside Coline's interface (home views, file editors)
+- **Actions** — Handle button clicks, form submissions, menu items
+- **Search integration** — Index app content for workspace search
+- **Notifications** — Send notifications through Coline's channels
+- **Kairo integration** — Let Kairo AI interact with your app
+
+## Architecture
+
+Apps are external services that Coline calls via HTTPS:
+
+```
+┌─────────────────────────────────────┐
+│             Coline                  │
+│  ┌──────────────┐  ┌─────────────┐  │
+│  │  App Home    │  │  App File   │  │
+│  │   View       │  │   Editor    │  │
+│  └──────┬───────┘  └──────┬──────┘  │
+│         │                 │         │
+│  ┌──────┴───────┐  ┌──────┴──────┐  │
+│  │   Render     │  │   Render    │  │
+│  │   Request    │  │   Request   │  │
+│  └──────┬───────┘  └──────┬──────┘  │
+└─────────┼────────────────┼────────┘
+          │ HTTPS            │
+          ▼                  ▼
+┌─────────────────────────────────────┐
+│          Your App Server            │
+│  ┌──────────────┐  ┌─────────────┐  │
+│  │  Home Route  │  │  File Route │  │
+│  │   Handler    │  │   Handler   │  │
+│  └──────────────┘  └─────────────┘  │
+└─────────────────────────────────────┘
+```
+
+## Quick Start
+
+### 1. Create App Manifest
+
+```typescript
+const manifest = {
+  key: 'my-crm',
+  name: 'My CRM',
+  description: 'Customer relationship management inside Coline',
+  hosting: {
+    mode: 'external',
+    baseUrl: 'https://my-crm.example.com'
+  },
+  permissions: ['files.read', 'files.write', 'notifications.write'],
+  fileTypes: [{
+    typeKey: 'contact',
+    name: 'Contact',
+    storage: 'coline_document',
+    indexable: true
+  }]
+}
+```
+
+### 2. Implement Render Routes
+
+```typescript
+// app/api/coline/home/route.ts
+import { NextRequest } from 'next/server'
+import { parseSignedColineRequest } from '@colineapp/sdk'
+
+export async function POST(request: NextRequest) {
+  const { data } = await parseSignedColineRequest({
+    request,
+    secret: process.env.COLINE_APP_SECRET,
+    schema: colineHostedRenderHomeRequestSchema
+  })
+  
+  return Response.json({
+    type: 'stack',
+    direction: 'vertical',
+    gap: 4,
+    children: [
+      { type: 'text', content: 'Welcome to My CRM' },
+      { type: 'button', action: 'create_contact', label: 'New Contact' }
+    ]
+  })
+}
+```
+
+### 3. Register and Install
+
+```typescript
+import { ColineApiClient } from '@colineapp/sdk'
+
+const client = new ColineApiClient({
+  baseUrl: 'https://api.coline.app',
+  apiKey: process.env.COLINE_API_KEY
+})
+
+// Register app
+const result = await client.registerApp({
+  version: '1.0.0',
+  manifest
+})
+
+// Install to workspace
+const ws = client.workspace('ws_abc123')
+await ws.installApp({ appId: result.appId })
+```
+
+## Manifest Reference
+
+### Required Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `key` | string | Unique identifier (3-120 chars) |
+| `name` | string | Display name (1-120 chars) |
+| `hosting` | object | Hosting configuration |
+
+### Hosting Configuration
+
+```typescript
+{
+  mode: 'external',
+  baseUrl: 'https://your-app.com'  // Must be HTTPS
+}
+```
+
+### Permissions
+
+Apps must declare permissions they need:
+
+| Permission | Description |
+|------------|-------------|
+| `files.read` | Read app-backed files |
+| `files.write` | Create and modify files |
+| `tasks.read` | Read tasks |
+| `tasks.write` | Create and update tasks |
+| `index.write` | Index documents for search |
+| `notifications.write` | Send notifications |
+| `ambient.events.write` | Emit ambient events |
+| `profile.read` | Read user profile |
+| `app.home.read` | Render app home |
+
+### File Types
+
+Define custom file types your app creates:
+
+```typescript
+{
+  typeKey: 'ticket',           // Unique within your app
+  name: 'Support Ticket',
+  description: 'Customer support ticket',
+  storage: 'coline_document',  // Only supported option
+  indexable: true,             // Include in search
+  homeRenderMode: 'cached'     // cached, live, or hybrid
+}
+```
+
+## UI Components
+
+Apps render UI using Coline's component system:
+
+### Text
+
+```json
+{ "type": "text", "content": "Hello World" }
+```
+
+### Button
+
+```json
+{
+  "type": "button",
+  "label": "Click Me",
+  "action": "do_something",
+  "variant": "primary"
+}
+```
+
+### Stack (Layout)
+
+```json
+{
+  "type": "stack",
+  "direction": "vertical",
+  "gap": 4,
+  "children": [
+    { "type": "text", "content": "Title" },
+    { "type": "text", "content": "Description" }
+  ]
+}
+```
+
+### Input
+
+```json
+{
+  "type": "text_field",
+  "name": "email",
+  "label": "Email",
+  "placeholder": "user@example.com"
+}
+```
+
+### Table
+
+```json
+{
+  "type": "table",
+  "columns": [
+    { "key": "name", "title": "Name" },
+    { "key": "status", "title": "Status" }
+  ],
+  "rows": [
+    { "name": "Alice", "status": "Active" }
+  ]
+}
+```
+
+## Handling Actions
+
+When users click buttons or submit forms:
+
+```typescript
+// app/api/coline/action/route.ts
+export async function POST(request: NextRequest) {
+  const { data } = await parseSignedColineRequest({
+    request,
+    secret: process.env.COLINE_APP_SECRET,
+    schema: colineHostedActionRequestSchema
+  })
+  
+  const { action, workspace, app, file } = data
+  
+  switch (action.type) {
+    case 'create_contact':
+      // Create file
+      const file = await ws.app(app.appKey).createFile({
+        typeKey: 'contact',
+        name: action.payload.name
+      })
+      
+      return Response.json({
+        type: 'open_file',
+        fileId: file.id
+      })
+      
+    case 'update_contact':
+      // Update document
+      await ws.app(app.appKey).file(file!.id).updateDocument({
+        email: action.payload.email
+      })
+      
+      return Response.json({ type: 'refresh' })
+      
+    default:
+      return Response.json({ type: 'ok' })
+  }
+}
+```
+
+### Action Response Types
+
+| Type | Description |
+|------|-------------|
+| `ok` | Success, no UI change |
+| `refresh` | Refresh current view |
+| `navigate` | Navigate to URL |
+| `open_file` | Open a specific file |
+
+## Search Integration
+
+Index your app's content for workspace search:
+
+```typescript
+// Index a document
+await ws.app('my-crm').upsertIndexDocuments([
+  {
+    documentKey: 'contact_123',
+    documentType: 'contact',
+    fileId: 'file_456',
+    title: 'Alice Smith',
+    body: 'alice@example.com, VP Engineering',
+    metadata: {
+      company: 'Acme Inc',
+      priority: 'high'
+    }
+  }
+])
+
+// Remove from index
+await ws.app('my-crm').deleteIndexDocuments(['contact_123'])
+```
+
+## Notifications
+
+Send notifications to users:
+
+```typescript
+await ws.app('my-crm').createNotification({
+  channelKey: 'new_lead',
+  typeKey: 'hot_lead',
+  recipients: [{ userId: 'user_123' }],
+  title: 'Hot Lead Alert',
+  body: 'Enterprise prospect from Fortune 500',
+  targetUrl: '/workspaces/acme/apps/my-crm/files/file_123',
+  priority: 'high'
+})
+```
+
+## Security
+
+All requests are signed. Verify signatures:
+
+```typescript
+import { verifyAppRequestSignature, COLINE_SIGNATURE_HEADER } from '@colineapp/sdk'
+
+const signature = request.headers.get(COLINE_SIGNATURE_HEADER)
+const isValid = await verifyAppRequestSignature({
+  secret: process.env.COLINE_APP_SECRET,
+  signature,
+  timestamp: request.headers.get('X-Coline-Timestamp'),
+  body: await request.text()
+})
+
+if (!isValid) {
+  return new Response('Invalid signature', { status: 401 })
+}
+```
+
+## Development
+
+### Local Development
+
+```typescript
+import { createDevServer } from '@colineapp/sdk'
+
+// Run local dev server with hot reload
+createDevServer({
+  manifest,
+  port: 3001,
+  routes: {
+    home: async (req) => ({ type: 'text', content: 'Dev mode' }),
+    file: async (req) => ({ type: 'text', content: 'File view' }),
+    action: async (req) => ({ type: 'ok' })
+  }
+})
+```
+
+### Testing
+
+```typescript
+import { parseSignedColineRequest } from '@colineapp/sdk'
+
+// Mock request for testing
+const mockRequest = new Request('http://localhost/api/home', {
+  method: 'POST',
+  headers: {
+    'X-Coline-Signature': '...',
+    'X-Coline-Timestamp': Date.now().toString(),
+    'X-Coline-Delivery': 'test-123'
+  },
+  body: JSON.stringify({ workspace: { id: 'ws_123', slug: 'test', name: 'Test' } })
+})
+```
+
+## Next Steps
+
+- [Building Apps](/docs/integrations/building) — Step-by-step guide
+- [Webhooks](/docs/integrations/webhooks) — Event handling
+- [OAuth Flow](/docs/integrations/oauth-flow) — User authentication
+- [SDK Reference](/docs/sdk) — Complete SDK docs

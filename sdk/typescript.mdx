@@ -1,0 +1,592 @@
+---
+title: TypeScript SDK
+description: Complete guide to the TypeScript SDK.
+---
+
+## TypeScript SDK
+
+The Coline TypeScript SDK provides type-safe access to the entire Coline API. Built with TypeScript-first design, full async/await support, and ergonomic patterns for common workflows.
+
+## Installation
+
+```bash
+npm install @colineapp/sdk
+# or
+yarn add @colineapp/sdk
+# or
+pnpm add @colineapp/sdk
+```
+
+## Initialization
+
+### Basic Setup
+
+```typescript
+import { ColineApiClient } from '@colineapp/sdk'
+
+const client = new ColineApiClient({
+  baseUrl: 'https://api.coline.app',
+  apiKey: process.env.COLINE_API_KEY
+})
+```
+
+### With Options
+
+```typescript
+const client = new ColineApiClient({
+  baseUrl: 'https://api.coline.app',
+  apiKey: process.env.COLINE_API_KEY,
+  maxRetries: 3,      // Auto-retry on 429/5xx
+  debug: true,        // Log requests/responses
+  headers: {          // Custom headers
+    'X-Custom-Header': 'value'
+  }
+})
+```
+
+### Workspace Context
+
+Most operations need a workspace. Get a scoped client:
+
+```typescript
+const ws = client.workspace('ws_abc123')
+
+// All operations are now scoped to this workspace
+const drives = await ws.listDrives()
+const files = await ws.listDriveFiles('drive_xyz')
+```
+
+## Core Concepts
+
+### Resource Handles
+
+Access individual resources with chainable handles:
+
+```typescript
+// Get a handle to a specific note
+const note = ws.note('note_123')
+const body = await note.get()
+await note.update({ title: 'New title' })
+await note.delete()
+
+// File handle
+const file = ws.file('file_456')
+const details = await file.get()
+await file.update({ name: 'renamed.pdf' })
+
+// Message handle
+const msg = ws.message('msg_789')
+await msg.edit({ content: Message.text('updated').build() })
+await msg.react('👍')
+await msg.pin()
+```
+
+Available handles:
+- `ws.note(id)` — Note operations
+- `ws.doc(id)` — Doc operations
+- `ws.file(id)` — File operations
+- `ws.message(id)` — Message operations
+- `ws.channel(id)` — Channel operations
+- `ws.dm(id)` — DM operations
+- `ws.event(id)` — Calendar event operations
+- `ws.taskboard(id)` — Taskboard operations
+- `ws.app(key)` — App operations
+
+### Pagination
+
+List endpoints return paginated results:
+
+```typescript
+const result = await ws.listDriveFiles('drive_abc', { limit: 50 })
+
+// Check if there's more
+if (result.page.hasMore) {
+  const next = await ws.listDriveFiles('drive_abc', {
+    limit: 50,
+    cursor: result.page.nextCursor
+  })
+}
+```
+
+### Auto-Pagination
+
+Use async generators to iterate through all items:
+
+```typescript
+// Automatically handles pagination
+for await (const note of ws.paginateNotes({ q: 'search' })) {
+  console.log(note.title)
+}
+
+// Paginate docs
+for await (const doc of ws.paginateDocs()) {
+  await processDoc(doc)
+}
+```
+
+## Working with Files
+
+### List Files
+
+```typescript
+// List root files
+const root = await ws.listDriveFiles('drive_abc')
+
+// List folder contents
+const folder = await ws.listDriveFiles('drive_abc', {
+  parentId: 'folder_123'
+})
+
+// Filter by type
+const docs = await ws.listDriveFiles('drive_abc', {
+  fileType: 'doc'
+})
+```
+
+### Get File Details
+
+```typescript
+const file = await ws.getFile('file_123')
+console.log(file.name, file.fileType, file.sizeBytes)
+```
+
+### Update File
+
+```typescript
+await ws.updateFile('file_123', {
+  name: 'New Name',
+  color: 'blue',  // red, orange, yellow, green, blue, purple, pink, gray
+  parentId: 'folder_456'  // Move to different folder
+})
+```
+
+### Delete File
+
+```typescript
+await ws.deleteFile('file_123')
+```
+
+### Upload Files
+
+```typescript
+// Upload with automatic chunking
+const result = await ws.uploadFile({
+  data: fileBlob,
+  fileName: 'document.pdf',
+  mimeType: 'application/pdf',
+  driveId: 'drive_abc',
+  parentId: 'folder_123' // optional
+})
+
+console.log(result.file.id)
+```
+
+## Working with Notes
+
+### Create Note
+
+```typescript
+const note = await ws.createNote({
+  title: 'Meeting Notes',
+  body: 'Quick notes from the standup...',
+  driveId: 'drive_abc'
+})
+```
+
+### Get Note
+
+```typescript
+const note = await ws.getNote('note_123')
+console.log(note.title, note.body)
+```
+
+### Update Note
+
+```typescript
+await ws.updateNote('note_123', {
+  title: 'Updated Title',
+  body: 'Updated content...'
+})
+```
+
+### List Notes
+
+```typescript
+const notes = await ws.listNotes({
+  q: 'search query',     // Full-text search
+  limit: 50,
+  cursor: '...'          // For pagination
+})
+```
+
+### Auto-Paginate Notes
+
+```typescript
+for await (const note of ws.paginateNotes({ q: 'project' })) {
+  console.log(note.title)
+}
+```
+
+## Working with Docs
+
+### Create Doc
+
+```typescript
+const doc = await ws.createDoc({
+  title: 'Project Spec',
+  content: {
+    blocks: [
+      { type: 'paragraph', content: 'Introduction...' }
+    ]
+  },
+  driveId: 'drive_abc',
+  layout: {
+    orientation: 'portrait',
+    margins: 'normal'
+  }
+})
+```
+
+### Get Doc
+
+```typescript
+const doc = await ws.getDoc('doc_123')
+console.log(doc.title, doc.content)
+```
+
+### Update Doc
+
+```typescript
+await ws.updateDoc('doc_123', {
+  title: 'New Title',
+  content: { blocks: [...] }
+})
+```
+
+## Messaging
+
+### Send Channel Message
+
+```typescript
+import { Message } from '@colineapp/sdk'
+
+// Simple text
+await ws.sendChannelMessage('channel_123', {
+  content: Message.text('Hello everyone!').toInput()
+})
+
+// With mention
+await ws.sendChannelMessage('channel_123', {
+  content: Message
+    .text('Hey ')
+    .mention('user_123', 'Alice')
+    .text(' check this out!')
+    .toInput()
+})
+
+// Multi-line
+await ws.sendChannelMessage('channel_123', {
+  content: Message
+    .text('Line 1')
+    .newline()
+    .text('Line 2')
+    .toInput()
+})
+```
+
+### Send DM
+
+```typescript
+await ws.sendDmMessage('dm_456', {
+  content: Message.text('Private message').toInput()
+})
+```
+
+### List Messages
+
+```typescript
+const messages = await ws.listChannelMessages('channel_123', {
+  limit: 50,
+  cursor: '...'  // For pagination
+})
+```
+
+### Edit Message
+
+```typescript
+await ws.editMessage('msg_123', {
+  content: Message.text('Edited text').build()
+})
+```
+
+### Reactions
+
+```typescript
+await ws.addReaction('msg_123', '👍')
+await ws.removeReaction('msg_123', '👍')
+```
+
+### Threads
+
+```typescript
+// Get thread messages
+const thread = await ws.getThread('msg_123')
+
+// Reply to thread
+await ws.replyToThread('msg_123', {
+  content: Message.text('Thread reply').toInput()
+})
+```
+
+## Calendar
+
+### Create Event
+
+```typescript
+const event = await ws.createCalendarEvent({
+  title: 'Team Sync',
+  startTime: '2026-04-10T10:00:00Z',
+  endTime: '2026-04-10T11:00:00Z',
+  attendees: ['user_123', 'user_456']
+})
+```
+
+### List Events
+
+```typescript
+const events = await ws.listCalendarEvents({
+  start: '2026-04-01T00:00:00Z',
+  end: '2026-04-30T23:59:59Z'
+})
+```
+
+### Update Event
+
+```typescript
+await ws.updateCalendarEvent('evt_123', {
+  title: 'Rescheduled Sync',
+  startTime: '2026-04-10T14:00:00Z'
+})
+```
+
+## Tasks
+
+### Create Task
+
+```typescript
+const task = await ws.createTask('taskboard_123', {
+  title: 'Implement feature',
+  description: 'Detailed description...',
+  statusId: 'status_in_progress',
+  priority: 'high',
+  assigneeUserIds: ['user_123'],
+  dueDate: '2026-04-15',
+  labels: ['backend', 'urgent']
+})
+```
+
+### Batch Operations
+
+```typescript
+// Batch create
+await ws.batchCreateTasks('taskboard_123', [
+  { title: 'Task 1', priority: 'high' },
+  { title: 'Task 2', priority: 'medium' },
+  { title: 'Task 3', priority: 'low' }
+])
+
+// Batch update
+await ws.batchUpdateTasks('taskboard_123', [
+  { taskId: 'task_1', statusId: 'status_done' },
+  { taskId: 'task_2', priority: 'urgent' }
+])
+
+// Batch delete
+await ws.batchDeleteTasks('taskboard_123', ['task_1', 'task_2'])
+```
+
+## Tab (Autocomplete)
+
+### Stream Completions
+
+```typescript
+for await (const text of ws.streamTabText({
+  tab_context: {
+    surface: 'notes',
+    workspace_slug: 'acme',
+    entity_id: 'note_123',
+    documentType: 'markdown',
+    activeTextBeforeCursor: 'The key points are '
+  },
+  max_completion_tokens: 100
+})) {
+  // Show ghost text in your UI
+  editor.showGhostText(text)
+}
+```
+
+## Error Handling
+
+### Typed Errors
+
+```typescript
+import { ColineApiError, isColineApiError } from '@colineapp/sdk'
+
+try {
+  const file = await ws.getFile('file_123')
+} catch (error) {
+  if (isColineApiError(error)) {
+    console.log('Status:', error.status)
+    console.log('Code:', error.code)
+    console.log('Retryable:', error.isRetryable)
+    
+    switch (error.status) {
+      case 401:
+        // Refresh credentials
+        break
+      case 403:
+        // Insufficient permissions
+        break
+      case 404:
+        // File not found
+        break
+      case 429:
+        // Rate limited
+        await sleep(60000)
+        break
+    }
+  }
+}
+```
+
+### With Retry
+
+```typescript
+async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3): Promise<T> {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await fn()
+    } catch (error) {
+      if (isColineApiError(error) && error.isRetryable && i < maxRetries - 1) {
+        await sleep(Math.pow(2, i) * 1000)
+        continue
+      }
+      throw error
+    }
+  }
+  throw new Error('Max retries exceeded')
+}
+```
+
+## App Platform
+
+### Register App
+
+```typescript
+const result = await client.registerApp({
+  manifest: {
+    name: 'My Integration',
+    description: 'Does cool things',
+    appKey: 'my-integration',
+    scopes: ['files:read', 'messages:read']
+  }
+})
+
+console.log(result.appKey, result.versionId)
+```
+
+### Install App to Workspace
+
+```typescript
+await ws.installApp({
+  appId: 'app_123',
+  grantedPermissions: ['files:read', 'messages:read']
+})
+```
+
+### App Operations
+
+```typescript
+const app = ws.app('my-integration')
+
+// List app files
+const files = await app.listFiles()
+
+// Create app file
+const file = await app.createFile({
+  name: 'Record',
+  typeKey: 'my-record'
+})
+
+// Update file document
+await app.file('file_123').updateDocument({
+  status: 'active'
+})
+```
+
+## Webhook Verification
+
+```typescript
+import { verifyAppRequestSignature, COLINE_SIGNATURE_HEADER, COLINE_TIMESTAMP_HEADER } from '@colineapp/sdk'
+
+app.post('/webhooks/coline', async (req, res) => {
+  const signature = req.headers[COLINE_SIGNATURE_HEADER] as string
+  const timestamp = req.headers[COLINE_TIMESTAMP_HEADER] as string
+  
+  const isValid = await verifyAppRequestSignature({
+    secret: process.env.COLINE_WEBHOOK_SECRET,
+    signature,
+    timestamp,
+    body: JSON.stringify(req.body)
+  })
+  
+  if (!isValid) {
+    return res.status(401).send('Invalid signature')
+  }
+  
+  // Process webhook
+  console.log('Event:', req.body.type)
+  res.send('OK')
+})
+```
+
+## OAuth Helpers
+
+```typescript
+import { createOauthState, createPkceCodeChallenge } from '@colineapp/sdk'
+
+// Generate state for CSRF protection
+const state = createOauthState()
+
+// Generate PKCE for secure exchange
+const { codeVerifier, codeChallenge } = createPkceCodeChallenge()
+
+// Build authorization URL
+const authUrl = client.buildLoginWithColineAuthorizeUrl({
+  clientId: CLIENT_ID,
+  redirectUri: 'https://your-app.com/callback',
+  scope: 'files:read messages:read',
+  state,
+  codeChallenge,
+  codeChallengeMethod: 'S256'
+})
+```
+
+## Debug Mode
+
+Enable debug logging to see all requests:
+
+```typescript
+const client = new ColineApiClient({
+  baseUrl: 'https://api.coline.app',
+  apiKey: process.env.COLINE_API_KEY,
+  debug: true
+})
+
+// Logs: [Coline SDK] POST /v1/workspaces/.../files { ... }
+```
+
+## Next Steps
+
+- [Examples](/docs/sdk/examples) — More code examples and recipes
+- [API Reference](/docs/api) — Complete API documentation

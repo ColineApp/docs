@@ -1,0 +1,306 @@
+---
+title: Containers
+description: Where files live and people collaborate.
+---
+
+## Containers
+
+Containers are collaboration spaces that hold files, messages, and people. While files are the content, containers are the context — the "where" and "with whom" of your work.
+
+## Container Types
+
+### Workspaces
+
+The top-level boundary. Everything lives inside a workspace.
+
+**Types:**
+- **Personal** — Just you. Your private files, your personal calendar, your DMs with others.
+- **Team** — Shared workspace for a group. Files, channels, and collaboration.
+
+**What a workspace contains:**
+- Virtual drives with files
+- Channels and DMs (team workspaces only)
+- Calendar
+- Members with roles (owner, admin, member)
+- Settings, integrations, billing
+- API keys and automations
+
+**Switching Workspaces:**
+- Sidebar workspace switcher
+- Each workspace has its own URL (e.g., `coline.app/acme`)
+- Cross-workspace DMs supported (personal network)
+
+### Virtual Drives
+
+File storage containers within a workspace.
+
+**Common Drives:**
+- **My Drive** — Personal files (visible only to you)
+- **Team Drive** — Shared files for the workspace
+- **Project Drives** — Scoped to specific initiatives
+- **Archive Drive** — Old files, retained but out of the way
+
+**Drive Properties:**
+- Name and description
+- Icon and color
+- Permission defaults
+- Storage quota usage
+
+**Drive Permissions:**
+- **Full access** — Read, write, share, delete
+- **Edit** — Read, write, create
+- **Comment** — Read, add comments
+- **View** — Read only
+- **No access** — Can't see or access
+
+**Sharing Models:**
+- **Private drive** — Explicit invites required
+- **Workspace drive** — All workspace members get default access
+- **Public drive** — Anyone with link (rare, admin-controlled)
+
+### Channels
+
+Persistent collaboration spaces for teams.
+
+**Types:**
+- **Public** — Open to all workspace members. Anyone can join, read history, and participate.
+- **Private** — Invite-only. Members must be explicitly added. Non-members can't see the channel exists.
+
+**Channel Components:**
+
+**Messages**
+- Threaded conversations
+- Rich text, mentions, attachments
+- Reactions and pins
+- Voice and video calls
+
+**Tabs**
+Every channel has customizable tabs:
+- **Messages** — Default conversation view
+- **Files** — Display any file directly in the channel
+- **Folders** — Browse drive folders without leaving
+- **Custom** — Any file type as a tab
+
+Example channel setup for an engineering team:
+- Messages (team chat)
+- Sprint Board (taskboard file)
+- Bugs (folder of bug reports)
+- Runbooks (doc with operational procedures)
+
+**Channel Features:**
+- **Slug** — Clean URL (e.g., `/channels/engineering`)
+- **Topic** — Short description shown in header
+- **Description** — Long-form purpose statement
+- **Archive** — Retire inactive channels (recoverable)
+- **Leave** — Exit channel (except last member)
+
+**Availability:**
+Channels are **team workspaces only**. Personal workspaces don't have channels — they use DMs for all messaging.
+
+### DMs (Direct Messages)
+
+Private conversations between two or more people.
+
+**Types:**
+- **1:1** — Two people
+- **Group DM** — 3-8 people
+
+**DM Properties:**
+- Private by design — no visibility to workspace admins
+- Persistent history
+- File sharing
+- Voice and video calls
+- Cross-workspace supported (personal network)
+
+**DM vs. Private Channel:**
+
+| | DM | Private Channel |
+|---|---|---|
+| Participants | Fixed at creation | Can add/remove |
+| Visibility | Only participants | Workspace members see it exists |
+| Purpose | Personal conversation | Team project/topic |
+| Discovery | Can't be found | Can be found, can't access |
+
+**When to use DMs:**
+- Personal check-ins
+- Sensitive 1:1 feedback
+- Quick coordination with a few people
+- Cross-workspace communication
+
+**When to use private channels:**
+- Team projects with changing membership
+- Sensitive topics that need audit trail
+- Long-running confidential work
+- HR, legal, executive discussions
+
+### Calendar Events
+
+Scheduled containers with date, time, and participants.
+
+**Event Components:**
+- **Date/time** — Start, end, timezone, recurrence
+- **Invitees** — Required and optional attendees
+- **Location** — Physical place or video call link
+- **Description** — Agenda, context, preparation
+- **Files** — Attachments and pre-reads
+- **Message thread** — Pre/post event discussion
+- **Voice call** — Built-in or external conference
+
+**Event Types:**
+- **Meeting** — Scheduled discussion
+- **Focus time** — Blocked personal work time
+- **Reminder** — Deadline or notification
+- **Out of office** — Availability indicator
+
+**Event Features:**
+- **Availability** — See when people are free/busy
+- **Scheduling** — Find mutual availability
+- **Recurrence** — Weekly standups, monthly reviews
+- **Notifications** — Reminders before events
+- **Join** — One-click entry to voice/video
+
+**Calendar Views:**
+- Day, week, month, agenda
+- Overlay multiple calendars
+- Filter by event type
+- Show/hide declined events
+
+**Integration:**
+- Export to external calendars (Google, Outlook)
+- Import external events
+- Sync availability
+
+## Container Relationships
+
+### Files Live in Multiple Places
+
+A single file can appear in:
+- **Drive** — Primary storage location
+- **Channel tabs** — Referenced in collaboration spaces
+- **Calendar attachments** — Linked to events
+- **DM shared files** — Referenced in conversations
+
+The file has one canonical location (its drive) but many access points.
+
+### Nesting and Hierarchy
+
+**Workspace > Drive > Folder > File**
+
+Workspaces contain drives. Drives contain folders. Folders contain files.
+
+**Workspace > Channel > Messages/Files**
+
+Workspaces contain channels. Channels contain messages and references to files.
+
+**Workspace > Calendar > Events**
+
+Workspaces have calendars. Calendars contain events. Events reference files and people.
+
+**Cross-Cutting: DMs**
+
+DMs span workspaces in your personal network. A DM with someone from another workspace appears in both your personal workspaces.
+
+### Permission Inheritance
+
+Permissions flow downward:
+
+1. **Workspace access** — Can you access the workspace at all?
+2. **Container access** — Can you see this drive/channel/calendar?
+3. **File access** — Can you read/edit this specific file?
+
+Granular permissions override general ones. If you have workspace access but a file is explicitly restricted, you can't access the file.
+
+## Container Discovery
+
+### Finding Channels
+
+**Public channels:**
+- Browse channel list
+- Search by name or topic
+- See member count and recent activity
+
+**Private channels:**
+- Must be invited
+- Can see existence (member, not content)
+- Request access via channel settings
+
+### Finding DMs
+
+- Recent DMs in sidebar
+- Search by participant name
+- Start new DM from user profile
+
+### Finding Files
+
+- Drive browser
+- Search (across all accessible files)
+- Channel file tabs
+- Recent files
+- Starred files
+
+### Finding Events
+
+- Calendar views
+- Upcoming events list
+- Search by title or participant
+- Availability finder
+
+## Container Limits
+
+| Resource | Limit |
+|----------|-------|
+| Channels per workspace | 500 |
+| Members per channel | 500 |
+| DMs per user | 500 active |
+| Group DM size | 8 people |
+| Files per drive | 100,000 |
+| Folder depth | 10 levels |
+| Events per calendar | Unlimited |
+| Event duration | 24 hours max |
+| Recurrence | 2 years max |
+
+## Container Best Practices
+
+### Channels
+
+**Do:**
+- Create channels for topics, not teams ("api-redesign" not "backend-team")
+- Set a topic that explains the channel's purpose
+- Use threads for side conversations
+- Archive channels when the topic concludes
+
+**Don't:**
+- Create too many channels (fragmentation)
+- Use private channels for general work
+- Leave channels unused (clutter)
+
+### DMs
+
+**Do:**
+- Move ongoing team coordination to a channel
+- Use group DMs for quick coordination (< 8 people)
+- Cross-workspace DMs for external collaborators
+
+**Don't:**
+- Add/remove people from DMs (creates new conversation)
+- Use DMs for work that needs audit trail
+- Keep sensitive decisions in DMs (no visibility)
+
+### Calendar
+
+**Do:**
+- Set agendas in descriptions
+- Attach pre-read files
+- Mark focus time as "busy"
+- Decline events you won't attend
+
+**Don't:**
+- Double-book without notifying
+- Create vague titles ("Meeting")
+- Forget timezones for remote attendees
+
+## Next Steps
+
+- [Files](/docs/platform/files) — The content inside containers
+- [Permissions](/docs/platform/permissions) — Access control across containers
+- [Channels User Guide](/docs/channels) — How to use channels effectively

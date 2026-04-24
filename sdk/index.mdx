@@ -1,0 +1,81 @@
+---
+title: SDK
+description: The official Coline SDK for JavaScript and TypeScript.
+---
+
+## Coline SDK
+
+The official SDK for building on the Coline platform. TypeScript-first with full type safety, async generators for streaming, and ergonomic resource handles.
+
+## Installation
+
+```bash
+npm install @colineapp/sdk
+```
+
+## Quick Start
+
+```typescript
+import { ColineApiClient } from '@colineapp/sdk'
+
+// Initialize the client
+const client = new ColineApiClient({
+  baseUrl: 'https://api.coline.app',
+  apiKey: process.env.COLINE_API_KEY
+})
+
+// Get a workspace-scoped client
+const ws = client.workspace('ws_abc123')
+
+// List files in a drive
+const files = await ws.listDriveFiles('drive_xyz')
+
+// Send a message
+await ws.sendChannelMessage('channel_123', {
+  content: [{ type: 'text', text: 'Hello from the SDK!' }]
+})
+```
+
+## SDK Features
+
+- **Type-safe** — Full TypeScript support with generated types
+- **Resource handles** — Chainable accessors for individual resources
+- **Auto-pagination** — Async generators for paginated lists
+- **Streaming** — First-class support for streaming responses
+- **Error handling** — Typed errors with retry indicators
+- **Message builder** — Fluent API for constructing rich messages
+
+## Main Exports
+
+```typescript
+// Core clients
+export { ColineApiClient, ColineWorkspace } from '@colineapp/sdk'
+
+// App platform
+export { ColineApp } from '@colineapp/sdk'
+
+// Message builder
+export { Message } from '@colineapp/sdk'
+
+// Error handling
+export { ColineApiError, isColineApiError } from '@colineapp/sdk'
+
+// OAuth helpers
+export { createOauthState, createPkceCodeChallenge } from '@colineapp/sdk'
+
+// Webhook verification
+export { verifyAppRequestSignature } from '@colineapp/sdk'
+```
+
+## Language Support
+
+| Language | Status | Package |
+|----------|--------|---------|
+| TypeScript | ✅ Ready | `@colineapp/sdk` |
+| Python | ⏳ Coming Q2 2026 | `coline` (planned) |
+| Go | ⏳ Coming Q3 2026 | `github.com/colineapp/sdk` |
+
+## Next Steps
+
+- [TypeScript SDK](/docs/sdk/typescript) — Complete TypeScript guide
+- [Examples](/docs/sdk/examples) — Code examples and recipes

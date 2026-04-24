@@ -1,0 +1,484 @@
+---
+title: Notes
+description: Block-based instant capture with backlinks, templates, daily notes, and real-time collaboration.
+---
+
+## Notes
+
+Notes in Coline are block-based documents designed for frictionless capture and knowledge building. Unlike traditional documents where content is a continuous stream of text, Coline notes are composed of discrete **blocks** — each paragraph, heading, list item, or embed is a manipulable unit that can be moved, linked, and transformed.
+
+This block-based architecture enables powerful features like bidirectional linking, real-time collaboration with presence indicators, and seamless content reuse across your workspace.
+
+## Block-Based Editing
+
+### What Are Blocks?
+
+In Coline, everything in a note is a **block** — a discrete unit of content with its own identity. Think of it like LEGO bricks: each piece can be moved, connected, or reconfigured independently.
+
+**Why blocks matter:**
+- **Granular editing** — Select and manipulate individual elements, not just text ranges
+- **Easy restructuring** — Drag blocks to reorder, no copy-paste gymnastics
+- **Structured content** — Every block knows what type it is (paragraph, heading, code, etc.)
+- **Database storage** — Each block can be addressed individually for sync and search
+
+### Block Types
+
+Coline supports 18 block types for different content needs:
+
+**Text Blocks**
+- **Paragraph** — Standard text with inline formatting (bold, italic, links)
+- **Heading 1/2/3** — Section headers for document structure
+- **Quote** — Blockquotes for citations and references
+
+**Structured Blocks**
+- **Bulleted List** — Unordered lists with nesting support
+- **Numbered List** — Ordered lists that auto-renumber when reorganized
+- **Todo** — Checkbox items for task tracking
+- **Divider** — Horizontal rule for visual separation
+
+**Enhanced Blocks**
+- **Callout** — Highlighted boxes with emoji icons for important notes
+- **Code** — Syntax-highlighted code blocks with language selection
+- **Image** — Embedded images with captions
+- **File** — File attachments with download links
+- **Embed** — External content via iframe (videos, maps, etc.)
+
+### Working with Blocks
+
+**Creating Blocks**
+- Press `Enter` to create a new paragraph block
+- Type `/` for the slash menu to switch block types
+- Press `Space` on an empty line for the AI assistant menu
+
+**Converting Blocks**
+- Use the slash menu (`/`) to convert any block to another type
+- Text → Heading when you need hierarchy
+- Paragraph → Todo when you need a task
+- Text → Code when you need syntax highlighting
+
+**Moving Blocks**
+- Drag and drop to reorder
+- Use keyboard shortcuts: `Cmd/Ctrl+Shift+↑` and `Cmd/Ctrl+Shift+↓`
+- Select multiple blocks with `Shift+Click` to move chunks
+
+**Nesting (Lists)**
+- Press `Tab` to indent and nest list items
+- Press `Shift+Tab` to outdent
+- Create multi-level outlines and hierarchies
+
+## Bidirectional Linking
+
+### Wiki-Links
+
+Coline uses `[[` syntax for bidirectional linking — a powerful pattern from tools like Roam Research and Obsidian.
+
+**Creating Links:**
+1. Type `[[` in any block
+2. A search menu appears with your notes
+3. Select a note or type a new title
+4. The link is created: `[[My Note Title]]`
+
+**What makes it bidirectional:**
+- Links work both ways automatically
+- When you view Note A that links to Note B, Note B shows Note A in its backlinks
+- No manual maintenance required
+
+**Navigation:**
+- Click any `[[link]]` to jump to that note
+- Use `Cmd/Ctrl+Click` to open in a new tab
+- Navigate back with the browser back button
+
+### Backlinks Panel
+
+At the bottom of every note, you'll find the **backlinks panel** — a list of all notes that reference the current one.
+
+**Why backlinks matter:**
+- Discover connections you didn't know existed
+- See how ideas are being used across your workspace
+- Build a web of knowledge without explicit organization
+
+**Example:**
+You create a note about "API Design Principles". Three weeks later, you see in the backlinks that three different project notes reference it. You now know which projects are following (or should follow) those principles.
+
+## Templates
+
+### Why Templates?
+
+Templates provide structure for recurring note types. Instead of staring at a blank page, start with a scaffold designed for your use case.
+
+### Built-in Templates
+
+Coline includes 14 built-in templates across three categories:
+
+**Work (9 templates)**
+- **Meeting Notes** — Agenda, attendees, notes, action items
+- **Weekly Review** — Accomplishments, challenges, priorities for next week
+- **Project Brief** — Goals, scope, timeline, stakeholders
+- **1:1** — Talking points, notes, action items for manager meetings
+- **Decision Log** — Context, options, decision, rationale
+- **Bug Report** — Reproduction steps, expected vs actual behavior
+- **PRD Lite** — Requirements, user stories, acceptance criteria
+- **Standup** — Yesterday, today, blockers format
+- **Post-Mortem** — Timeline, impact, root cause, action items
+- **Interview Notes** — Candidate info, questions, impressions
+
+**Planning (1 template)**
+- **Weekly Review** — Planning and reflection framework
+
+**Personal (3 templates)**
+- **Brainstorm** — Free-form ideation with categories
+- **Daily Journal** — Gratitude, intention, energy, brain dump
+- **Article/Book Notes** — Summary, key takeaways, quotes, connections
+
+### Using Templates
+
+1. Click **New Note** or press `N` in the Notes view
+2. The template picker opens automatically
+3. Browse by category or search by name
+4. Select a template to start with pre-filled content
+5. Edit freely — templates are just starting points
+
+### Workspace Custom Templates
+
+Create your own templates for team-specific workflows:
+
+1. Write a note with the structure you want
+2. Click the **Save as Template** button
+3. Add name, description, category, and icon
+4. Choose who can use it (workspace-scoped)
+
+Custom templates appear alongside built-ins and can be edited or deleted by workspace admins.
+
+## Daily Notes
+
+### What Are Daily Notes?
+
+Daily Notes create a new note for each calendar day — a single place for journaling, standup notes, quick thoughts, and anything else that happens today.
+
+**Why daily notes work:**
+- **Reduce decision fatigue** — No need to decide "where does this go?"
+- **Chronological capture** — Everything time-stamped by default
+- **Easy review** — Look back at any day to see what you were thinking
+- **Serendipitous connections** — See adjacent days while browsing
+
+### Enabling Daily Notes
+
+1. Open Notes settings (gear icon in Notes sidebar)
+2. Toggle "Enable Daily Notes"
+3. A calendar icon appears in your sidebar
+
+### Using Daily Notes
+
+**Creating Today's Note:**
+- Click the calendar icon in the sidebar
+- Or press `Cmd/Ctrl+Shift+N` (creates daily note if enabled, otherwise quick note)
+
+**Note Format:**
+- **Title:** Automatically set to current date (e.g., "January 15, 2024")
+- **Template:** Uses the "Daily Journal" template with sections for gratitude, intention, energy level, and brain dump
+- **Tag:** Auto-tagged with `#daily` for easy filtering
+
+**Throughout the Day:**
+- Add standup notes in the morning
+- Capture meeting notes
+- Jot random thoughts
+- Track what you're working on
+
+**Reviewing:**
+- Browse by date in the sidebar
+- Filter by `#daily` tag
+- Search across all daily notes
+
+## Real-Time Collaboration
+
+### Collaborative Editing
+
+Multiple people can edit the same note simultaneously. Changes appear instantly without conflicts.
+
+**Presence Indicators:**
+- See who else is viewing/editing the note
+- Colored cursors show where others are typing
+- Selection highlights show what text they're working on
+- Avatars appear in the top-right of the editor
+
+**How It Works:**
+- Every change is synced via WebSocket
+- Operational Transform ensures edits don't conflict
+- Your changes appear immediately; others' changes appear in real-time
+- No "save" button — everything persists automatically
+
+### When to Collaborate
+
+- **Meeting notes** — Multiple attendees capture different perspectives
+- **Project planning** — PM and engineer draft together
+- **Documentation** — Domain expert and writer collaborate
+- **Brainstorming** — Team dumps ideas simultaneously
+
+## Organization Features
+
+### Color Coding
+
+Assign colors to notes for visual organization:
+
+- **Red** — Urgent/important
+- **Orange** — In progress
+- **Yellow** — Reference
+- **Green** — Completed
+- **Blue** — Ideas
+- **Purple** — Personal
+- **Pink** — Shared with others
+- **Gray** — Archived
+
+Colors appear in the sidebar note list, making it easy to scan and prioritize.
+
+### Tags
+
+Tag notes for cross-cutting organization:
+
+**Creating Tags:**
+- Type `#tag-name` anywhere in a note
+- Or use the tag picker in the note header
+
+**Tag Features:**
+- Hierarchical: `#project/api` and `#project/docs`
+- Filter by tag in the sidebar
+- Multiple tags per note
+- Click a tag to see all notes with that tag
+
+**Best Practices:**
+- Use project tags: `#acme-project`, `#q1-planning`
+- Use type tags: `#meeting`, `#decision`, `#reference`
+- Use status tags: `#draft`, `#review`, `#final`
+
+### Folders
+
+Organize notes hierarchically with folders:
+
+**Creating Folders:**
+- Right-click in the sidebar → "New Folder"
+- Or click the folder icon in the sidebar header
+
+**Folder Features:**
+- Nested folders (unlimited depth)
+- Drag notes between folders
+- Expand/collapse in sidebar
+- Breadcrumb navigation
+
+**When to Use Folders vs Tags:**
+- **Folders** — Hierarchical organization (Projects → Active → Acme Corp)
+- **Tags** — Cross-cutting attributes (#urgent, #meeting, #john)
+
+### Stars and Pins
+
+**Starred Notes:**
+- Click the star icon to mark important notes
+- Filter "Starred" in sidebar for quick access
+- Personal to each user
+
+**Pinned Notes:**
+- Pin notes to the sidebar for instant access
+- Appears at the top of your note list
+- Great for reference docs you access constantly
+
+## Note Sharing
+
+### Sharing Options
+
+**Workspace Share:**
+- Share with specific workspace members
+- Set permission level: View or Edit
+- Recipients get the note in their "Shared with me" filter
+
+**External Share (by Email):**
+- Share with anyone via email address
+- They receive an invite link
+- No Coline account required to view (but needed to edit)
+
+**Public Publishing:**
+- Publish note to the web with a public URL
+- Optional password protection
+- Clean, read-only view for external sharing
+- URL format: `coline.app/@workspace/note-slug`
+
+### Collaboration Permissions
+
+- **View** — Can read, cannot edit
+- **Edit** — Can modify content, cannot delete or change share settings
+- **Owner** — Full control including delete and sharing
+
+### Share Activity
+
+See who's accessing your shared notes:
+- View count
+- Recent activity
+- Who has accepted/declined invites
+
+## AI Integration
+
+### Inline AI Assistant
+
+Get help without leaving your note:
+
+**Trigger:**
+- Press `Cmd/Ctrl+E` anywhere in a note
+- Or press `Space` on an empty line
+
+**Use Cases:**
+- "Continue writing from here"
+- "Summarize the above"
+- "Make this more concise"
+- "Convert bullet points to paragraph"
+- "Expand on this idea"
+
+### Kairo in Notes
+
+Ask Kairo to work with your notes via chat:
+
+- "Find all my notes tagged #project-x"
+- "Summarize my daily notes from this week"
+- "Create a note from my meeting with Sarah yesterday"
+- "Suggest connections between my project notes"
+- "Extract action items from my standup notes"
+
+### AI Generation via API
+
+Developers can use the AI generation endpoint for custom integrations:
+
+```typescript
+POST /api/v1/notes/ai/generate
+{
+  "prompt": "Write a meeting recap",
+  "noteContext": "Project planning session...",
+  "selectedText": "Discussion points..."
+}
+```
+
+Returns a stream of generated text for seamless integration.
+
+## Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Cmd/Ctrl+Shift+N` | New quick note (or daily note if enabled) |
+| `Cmd/Ctrl+E` | Open inline AI prompt |
+| `Cmd/Ctrl+Shift+↑/↓` | Move block up/down |
+| `Tab` | Indent list item (or nest) |
+| `Shift+Tab` | Outdent list item |
+| `Cmd/Ctrl+A` (twice) | Select multiple blocks |
+| `/` | Open slash menu for block types |
+| `[[` | Start wiki-link |
+| `Cmd/Ctrl+K` | Insert link |
+
+## API and SDK
+
+### Creating Notes via API
+
+```typescript
+import { Coline } from '@colineapp/sdk'
+
+const coline = new Coline({ apiKey: 'col_ws_...' })
+
+// Create a note
+const note = await coline.notes.create({
+  workspaceId: 'ws_...',
+  title: 'Meeting Notes',
+  body: 'Discussion about...',
+  blocks: [
+    { type: 'heading2', content: 'Agenda' },
+    { type: 'bulleted-list', content: 'Q4 planning' },
+    { type: 'bulleted-list', content: 'Budget review' }
+  ]
+})
+
+// Update a note
+await coline.notes.update({
+  workspaceId: 'ws_...',
+  noteId: 'note_...',
+  title: 'Updated Title',
+  body: 'Updated content...'
+})
+```
+
+### Webhooks
+
+Subscribe to note events:
+
+```typescript
+// note.created
+// note.updated  
+// note.deleted
+```
+
+See [Webhooks](/docs/integrations/webhooks) for setup details.
+
+## Best Practices
+
+### For Individual Use
+
+1. **Start with daily notes** — Enable daily notes and capture everything there by default
+2. **Link liberally** — Use `[[` to connect ideas as you write
+3. **Tag consistently** — Pick a tagging system and stick to it
+4. **Use templates** — Save time on recurring note types
+5. **Review backlinks weekly** — See what connections have formed
+
+### For Teams
+
+1. **Share meeting notes** — Create in real-time during the meeting
+2. **Use project tags** — Tag all notes related to a project
+3. **Create team templates** — Standardize standups, retros, planning
+4. **Pin reference docs** — Keep important docs pinned in the sidebar
+5. **Collaborate live** — Edit together instead of passing documents around
+
+### Organization Strategies
+
+**PARA Method:**
+- **Projects** — Active projects with deadlines (folders)
+- **Areas** — Ongoing responsibilities (tags like `#area/engineering`)
+- **Resources** — Reference material (tags like `#reference`)
+- **Archives** — Completed/irrelevant (folder + tag)
+
+**Zettelkasten:**
+- One idea per note
+- Dense linking with `[[` syntax
+- No folders, heavy use of tags and backlinks
+- Index notes that link to related concepts
+
+**Simple Structure:**
+- Daily notes for capture
+- Project folders for organization
+- Tags for cross-cutting concerns
+- Backlinks for discovery
+
+## Troubleshooting
+
+### Note Won't Save
+
+- Check your internet connection
+- Look for the save indicator in the note header
+- Refresh the page — changes should persist
+- Contact support if data appears lost
+
+### Backlinks Not Showing
+
+- Links must use `[[` syntax, not just regular links
+- Backlinks update asynchronously (may take a few seconds)
+- Ensure the linked note actually exists
+
+### Real-Time Collaboration Not Working
+
+- Check that all users have edit permissions
+- Verify WebSocket connections (look for presence indicators)
+- Try refreshing the page
+- Check workspace settings for collaboration limits
+
+### Daily Note Already Exists
+
+- Daily notes are one per calendar day
+- If you need multiple notes for today, create additional regular notes
+- Or add to the existing daily note
+
+## Next Steps
+
+- [Files](/docs/files) — Learn about other file types in Coline
+- [Kairo AI](/docs/kairo) — Explore AI assistance throughout the platform
+- [SDK](/docs/sdk) — Build integrations with the Notes API

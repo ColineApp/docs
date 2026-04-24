@@ -1,0 +1,224 @@
+---
+title: Endpoints
+description: Complete API endpoint reference.
+---
+
+## API Endpoints
+
+The Coline API is organized into categories based on resource types. All endpoints are relative to `https://api.coline.app/v1`.
+
+## Authentication
+
+### OAuth
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/oauth/authorize` | Initiate OAuth flow |
+| `POST` | `/oauth/token` | Exchange code for tokens |
+| `GET` | `/oauth/userinfo` | Get current user info |
+
+## Apps & App Platform
+
+### App Store
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/apps` | List published apps |
+| `POST` | `/apps` | Register a new app |
+| `GET` | `/apps/{appKey}` | Get app details |
+| `GET` | `/apps/{appKey}/versions` | List app versions |
+| `POST` | `/apps/{appKey}/versions` | Create new version |
+| `POST` | `/apps/{appKey}/versions/{versionId}/submit` | Submit for review |
+
+### Workspace Apps
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/workspaces/{workspaceSlug}/apps` | List installed apps |
+| `POST` | `/workspaces/{workspaceSlug}/apps` | Install an app |
+| `GET` | `/workspaces/{workspaceSlug}/apps/{appKey}` | Get installed app |
+| `DELETE` | `/workspaces/{workspaceSlug}/apps/{appKey}` | Uninstall app |
+| `GET` | `/workspaces/{workspaceSlug}/apps/{appKey}/permissions` | Get permissions |
+| `PUT` | `/workspaces/{workspaceSlug}/apps/{appKey}/permissions` | Update permissions |
+| `GET` | `/workspaces/{workspaceSlug}/apps/{appKey}/secrets` | List secrets |
+| `POST` | `/workspaces/{workspaceSlug}/apps/{appKey}/secrets` | Create secret |
+| `DELETE` | `/workspaces/{workspaceSlug}/apps/{appKey}/secrets/{secretId}` | Delete secret |
+| `GET` | `/workspaces/{workspaceSlug}/apps/{appKey}/oauth-connections` | List OAuth connections |
+| `POST` | `/workspaces/{workspaceSlug}/apps/{appKey}/oauth-connections` | Create connection |
+| `DELETE` | `/workspaces/{workspaceSlug}/apps/{appKey}/oauth-connections/{connectionId}` | Delete connection |
+| `GET` | `/workspaces/{workspaceSlug}/apps/{appKey}/deliveries` | List deliveries |
+| `POST` | `/workspaces/{workspaceSlug}/apps/{appKey}/deliveries` | Send test delivery |
+| `POST` | `/workspaces/{workspaceSlug}/apps/{appKey}/deliveries/{deliveryId}/replay` | Replay delivery |
+| `GET` | `/workspaces/{workspaceSlug}/apps/{appKey}/files` | List app files |
+| `POST` | `/workspaces/{workspaceSlug}/apps/{appKey}/files` | Create app file |
+| `GET` | `/workspaces/{workspaceSlug}/apps/{appKey}/files/{fileId}` | Get app file |
+| `PATCH` | `/workspaces/{workspaceSlug}/apps/{appKey}/files/{fileId}` | Update app file |
+| `DELETE` | `/workspaces/{workspaceSlug}/apps/{appKey}/files/{fileId}` | Delete app file |
+| `POST` | `/workspaces/{workspaceSlug}/apps/{appKey}/actions` | Execute action |
+| `POST` | `/workspaces/{workspaceSlug}/apps/{appKey}/notifications` | Create notification |
+| `POST` | `/workspaces/{workspaceSlug}/apps/{appKey}/index-documents` | Upsert index docs |
+| `DELETE` | `/workspaces/{workspaceSlug}/apps/{appKey}/index-documents` | Delete index docs |
+| `POST` | `/workspaces/{workspaceSlug}/apps/{appKey}/ambient/events` | Emit ambient events |
+
+### Tab AI
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/tab/models` | List Tab models |
+| `POST` | `/tab/chat/completions` | Create chat completion |
+
+## Files & Drives
+
+### Drives
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/workspaces/{workspaceSlug}/drives` | List drives |
+
+### Files
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/workspaces/{workspaceSlug}/drives/{driveId}/files` | List drive files |
+| `GET` | `/workspaces/{workspaceSlug}/files/{fileId}` | Get file |
+| `PATCH` | `/workspaces/{workspaceSlug}/files/{fileId}` | Update file |
+| `DELETE` | `/workspaces/{workspaceSlug}/files/{fileId}` | Delete file |
+
+### Uploads
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/workspaces/{workspaceSlug}/uploads/initiate` | Initiate upload |
+| `POST` | `/workspaces/{workspaceSlug}/uploads/part` | Upload part |
+| `POST` | `/workspaces/{workspaceSlug}/uploads/complete` | Complete upload |
+
+## Notes
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/workspaces/{workspaceSlug}/notes` | List notes |
+| `POST` | `/workspaces/{workspaceSlug}/notes` | Create note |
+| `GET` | `/workspaces/{workspaceSlug}/notes/{noteId}` | Get note |
+| `PUT` | `/workspaces/{workspaceSlug}/notes/{noteId}` | Update note |
+| `DELETE` | `/workspaces/{workspaceSlug}/notes/{noteId}` | Delete note |
+
+## Docs
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/workspaces/{workspaceSlug}/docs` | List docs |
+| `POST` | `/workspaces/{workspaceSlug}/docs` | Create doc |
+| `GET` | `/workspaces/{workspaceSlug}/docs/{docId}` | Get doc |
+| `PATCH` | `/workspaces/{workspaceSlug}/docs/{docId}` | Update doc |
+| `DELETE` | `/workspaces/{workspaceSlug}/docs/{docId}` | Delete doc |
+
+## Channels
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/workspaces/{workspaceSlug}/channels` | List channels |
+| `GET` | `/workspaces/{workspaceSlug}/channels/{channelId}/messages` | List messages |
+| `POST` | `/workspaces/{workspaceSlug}/channels/{channelId}/messages` | Send message |
+
+## Direct Messages
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/workspaces/{workspaceSlug}/dms` | List DMs |
+| `GET` | `/workspaces/{workspaceSlug}/dms/{dmId}/messages` | List DM messages |
+| `POST` | `/workspaces/{workspaceSlug}/dms/{dmId}/messages` | Send DM message |
+
+## Messages (Cross-Container)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/workspaces/{workspaceSlug}/messages/{messageId}` | Get message |
+| `PATCH` | `/workspaces/{workspaceSlug}/messages/{messageId}` | Edit message |
+| `DELETE` | `/workspaces/{workspaceSlug}/messages/{messageId}` | Delete message |
+| `GET` | `/workspaces/{workspaceSlug}/messages/{messageId}/thread` | Get thread |
+| `POST` | `/workspaces/{workspaceSlug}/messages/{messageId}/thread` | Reply to thread |
+| `PUT` | `/workspaces/{workspaceSlug}/messages/{messageId}/reactions/{emoji}` | Add reaction |
+| `DELETE` | `/workspaces/{workspaceSlug}/messages/{messageId}/reactions/{emoji}` | Remove reaction |
+| `PUT` | `/workspaces/{workspaceSlug}/messages/{messageId}/pin` | Pin message |
+| `DELETE` | `/workspaces/{workspaceSlug}/messages/{messageId}/pin` | Unpin message |
+
+## Calendar
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/workspaces/{workspaceSlug}/calendar/events` | List events |
+| `POST` | `/workspaces/{workspaceSlug}/calendar/events` | Create event |
+| `GET` | `/workspaces/{workspaceSlug}/calendar/events/{eventId}` | Get event |
+| `PUT` | `/workspaces/{workspaceSlug}/calendar/events/{eventId}` | Update event |
+| `DELETE` | `/workspaces/{workspaceSlug}/calendar/events/{eventId}` | Delete event |
+
+## Taskboards
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/workspaces/{workspaceSlug}/taskboards` | List taskboards |
+| `GET` | `/workspaces/{workspaceSlug}/taskboards/{taskboardId}/tasks` | List tasks |
+| `POST` | `/workspaces/{workspaceSlug}/taskboards/{taskboardId}/tasks` | Create task |
+| `GET` | `/workspaces/{workspaceSlug}/taskboards/{taskboardId}/tasks/{taskId}` | Get task |
+| `PUT` | `/workspaces/{workspaceSlug}/taskboards/{taskboardId}/tasks/{taskId}` | Update task |
+| `DELETE` | `/workspaces/{workspaceSlug}/taskboards/{taskboardId}/tasks/{taskId}` | Delete task |
+| `POST` | `/workspaces/{workspaceSlug}/taskboards/{taskboardId}/tasks/batch-create` | Batch create |
+| `POST` | `/workspaces/{workspaceSlug}/taskboards/{taskboardId}/tasks/batch-update` | Batch update |
+| `POST` | `/workspaces/{workspaceSlug}/taskboards/{taskboardId}/tasks/batch-delete` | Batch delete |
+
+## Workspace Members
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/workspaces/{workspaceSlug}/members` | List members |
+
+## Search
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/workspaces/{workspaceSlug}/search` | Search workspace |
+
+## Common Query Parameters
+
+### Pagination
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `limit` | integer | Items per page (default: 50, max: 100) |
+| `cursor` | string | Cursor for next page |
+
+### Filtering
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `q` | string | Search query |
+| `fileType` | string | Filter by file type |
+
+## Response Format
+
+All responses use the same envelope:
+
+```json
+{
+  "data": {
+    // Resource or array of resources
+  }
+}
+```
+
+Error responses:
+
+```json
+{
+  "error": {
+    "code": "not_found",
+    "message": "Resource not found"
+  }
+}
+```
+
+## Next Steps
+
+- [SDK Reference](/docs/sdk) — Use the SDK for easier API access
+- [Errors](/docs/api/errors) — Error handling guide
+- [Rate Limits](/docs/api/rate-limits) — Rate limiting details

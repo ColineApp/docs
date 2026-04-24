@@ -1,0 +1,232 @@
+---
+title: Rate Limits
+description: API rate limiting and how to handle it.
+---
+
+## Rate Limiting
+
+The Coline API implements rate limiting to ensure fair usage and platform stability. Limits are applied per API key or OAuth token.
+
+## Default Limits
+
+Rate limits are applied per identity (API key or session) and differentiated by read vs write operations:
+
+| Auth Type | Operation | Requests per Minute |
+|-----------|-----------|-------------------|
+| API Key | Read (GET, HEAD) | 300 |
+| API Key | Write (POST, PUT, PATCH, DELETE) | 60 |
+| Session | Read (GET, HEAD) | 200 |
+| Session | Write (POST, PUT, PATCH, DELETE) | 40 |
+
+**Notes:**
+- Read operations: `GET`, `HEAD`
+- Write operations: `POST`, `PUT`, `PATCH`, `DELETE`
+- Limits reset every 60 seconds
+- Burst behavior is not supported — each request counts against the limit
+
+## Rate Limit Headers
+
+Every response includes rate limit headers:
+
+```
+X-RateLimit-Limit: 1000
+X-RateLimit-Remaining: 999
+X-RateLimit-Reset: 1640995200
+```
+
+### Header Descriptions
+
+- `X-RateLimit-Limit` — Maximum requests allowed per minute
+- `X-RateLimit-Remaining` — Requests remaining in current window
+- `X-RateLimit-Reset` — Unix timestamp when the limit resets
+
+## Handling Rate Limits
+
+### 429 Response
+
+When you exceed the rate limit, the API returns `429 Too Many Requests`:
+
+```json
+{
+  "error": {
+    "code": "rate_limited",
+    "message": "Rate limit exceeded. Try again in 60 seconds."
+  }
+}
+```
+
+Response headers:
+
+```
+Retry-After: 60
+X-RateLimit-Reset: 1640995200
+```
+
+### Exponential Backoff
+
+Implement exponential backoff when rate limited:
+
+```typescript
+async function withRetry(fn, maxRetries = 3) {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await fn()
+    } catch (error) {
+      if (isColineApiError(error) && error.status === 429) {
+        const delay = Math.pow(2, i) * 1000
+        await sleep(delay)
+        continue
+      }
+      throw error
+    }
+  }
+  throw new Error('Max retries exceeded')
+}
+```
+
+### Respecting Retry-After
+
+Always respect the `Retry-After` header:
+
+```typescript
+if (response.status === 429) {
+  const retryAfter = response.headers.get('Retry-After') || 60
+  await sleep(parseInt(retryAfter) * 1000)
+}
+```
+
+## Best Practices
+
+### 1. Monitor Your Usage
+
+Track rate limit headers to stay within limits:
+
+```typescript
+const remaining = response.headers.get('X-RateLimit-Remaining')
+if (parseInt(remaining) < 100) {
+  console.warn('Approaching rate limit')
+}
+```
+
+### 2. Implement Request Batching
+
+Instead of many small requests, use batch endpoints:
+
+```typescript
+// Good: Batch create
+await ws.batchCreateTasks('taskboard_123', [
+  { title: 'Task 1' },
+  { title: 'Task 2' },
+  { title: 'Task 3' }
+])
+
+// Bad: Individual requests
+await ws.createTask('taskboard_123', { title: 'Task 1' })
+await ws.createTask('taskboard_123', { title: 'Task 2' })
+await ws.createTask('taskboard_123', { title: 'Task 3' })
+```
+
+### 3. Use Pagination
+
+Request only what you need:
+
+```typescript
+// First page only
+const result = await ws.listDriveFiles('drive_abc', { limit: 50 })
+
+// Get next page only when needed
+if (result.page.hasMore) {
+  const next = await ws.listDriveFiles('drive_abc', {
+    limit: 50,
+    cursor: result.page.nextCursor
+  })
+}
+```
+
+### 4. Cache When Appropriate
+
+Cache responses that don't change frequently:
+
+```typescript
+const cache = new Map()
+
+async function getCachedFile(fileId) {
+  if (cache.has(fileId)) {
+    return cache.get(fileId)
+  }
+  
+  const file = await ws.getFile(fileId)
+  cache.set(fileId, file)
+  setTimeout(() => cache.delete(fileId), 60000) // 1 min cache
+  
+  return file
+}
+```
+
+### 5. Use Webhooks Instead of Polling
+
+Instead of polling for changes, use webhooks:
+
+```typescript
+// Bad: Polling
+setInterval(async () => {
+  const messages = await ws.listChannelMessages('channel_123')
+  // Process new messages
+}, 5000) // Wastes rate limit
+
+// Good: Webhook
+app.post('/webhooks/coline', (req, res) => {
+  const { type, data } = req.body
+  if (type === 'message.created') {
+    // Process immediately, no polling needed
+  }
+  res.send('OK')
+})
+```
+
+## Endpoint-Specific Limits
+
+Some endpoints have stricter limits:
+
+| Endpoint Type | Requests per Minute |
+|---------------|---------------------|
+| File uploads | 100 |
+| Batch operations | 120 |
+| Search | 300 |
+| Webhook deliveries | 1,000 |
+
+## Increasing Limits
+
+Enterprise customers can request higher rate limits:
+
+1. Contact support with your use case
+2. Describe your expected request volume
+3. Explain why you need higher limits
+
+## Troubleshooting
+
+### Sudden Rate Limit Spikes
+
+If you're hitting rate limits unexpectedly:
+
+1. Check for infinite loops in your code
+2. Look for redundant API calls
+3. Verify you're not creating multiple clients
+4. Check for retry storms after errors
+
+### Debugging Rate Limits
+
+Enable debug mode in the SDK to see rate limit headers:
+
+```typescript
+const client = new ColineApiClient({
+  baseUrl: 'https://api.coline.app',
+  apiKey: process.env.COLINE_API_KEY,
+  debug: true // Logs all requests with rate limit info
+})
+```
+
+## Next Steps
+
+- [Errors](/docs/api/errors) — Error handling guide
+- [Endpoints](/docs/api/endpoints) — API endpoint reference

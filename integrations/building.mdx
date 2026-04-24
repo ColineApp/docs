@@ -1,0 +1,404 @@
+---
+title: Building Apps
+description: Step-by-step guide to building a Coline app.
+---
+
+## Building a Coline App
+
+Create an app that lives inside Coline. This guide walks through building a simple CRM app.
+
+## What We're Building
+
+A CRM app that:
+- Shows a home view with recent contacts
+- Defines a custom "Contact" file type
+- Opens contact files with a custom editor
+- Indexes contacts for search
+
+## Prerequisites
+
+- Node.js 18+
+- A Coline workspace
+- An API key from the Developer Console
+
+## Step 1: Project Setup
+
+Create a Next.js project:
+
+```bash
+npx create-next-app@latest my-crm --typescript --tailwind --eslint --app
+
+cd my-crm
+npm install @colineapp/sdk zod
+```
+
+## Step 2: Create the Manifest
+
+Create `app/manifest.ts`:
+
+```typescript
+import { ColineAppManifest } from '@colineapp/sdk'
+
+export const manifest: ColineAppManifest = {
+  key: 'my-crm',
+  name: 'My CRM',
+  description: 'Simple CRM inside Coline',
+  hosting: {
+    mode: 'external',
+    baseUrl: process.env.COLINE_APP_BASE_URL!
+  },
+  permissions: [
+    'files.read',
+    'files.write',
+    'index.write',
+    'notifications.write',
+    'app.home.read'
+  ],
+  fileTypes: [{
+    typeKey: 'contact',
+    name: 'Contact',
+    storage: 'coline_document',
+    indexable: true,
+    homeRenderMode: 'live'
+  }],
+  notificationChannels: [{
+    key: 'new_contact',
+    name: 'New Contact',
+    defaultDeliveries: ['in_app'],
+    defaultPriority: 'default'
+  }]
+}
+```
+
+## Step 3: Implement Home View
+
+Create `app/api/coline/home/route.ts`:
+
+```typescript
+import { NextRequest } from 'next/server'
+import { parseSignedColineRequest, colineHostedRenderHomeRequestSchema } from '@colineapp/sdk'
+
+export async function POST(request: NextRequest) {
+  const { data, deliveryId } = await parseSignedColineRequest({
+    request,
+    secret: process.env.COLINE_APP_SECRET!,
+    schema: colineHostedRenderHomeRequestSchema
+  })
+  
+  const { workspace, app } = data
+  
+  // In production, fetch from your database
+  const recentContacts = [
+    { id: '1', name: 'Alice Smith', company: 'Acme Inc' },
+    { id: '2', name: 'Bob Johnson', company: 'Tech Co' }
+  ]
+  
+  return Response.json({
+    type: 'stack',
+    direction: 'vertical',
+    gap: 6,
+    padding: 4,
+    children: [
+      {
+        type: 'stack',
+        direction: 'horizontal',
+        gap: 2,
+        children: [
+          {
+            type: 'button',
+            label: '+ New Contact',
+            action: 'create_contact',
+            variant: 'primary'
+          }
+        ]
+      },
+      {
+        type: 'text',
+        content: `Recent Contacts (${recentContacts.length})`,
+        style: 'heading'
+      },
+      {
+        type: 'table',
+        columns: [
+          { key: 'name', title: 'Name', width: '40%' },
+          { key: 'company', title: 'Company', width: '40%' },
+          { key: 'actions', title: '', width: '20%' }
+        ],
+        rows: recentContacts.map(c => ({
+          name: c.name,
+          company: c.company,
+          actions: {
+            type: 'button',
+            label: 'Open',
+            action: 'open_contact',
+            payload: { contactId: c.id }
+          }
+        }))
+      }
+    ]
+  })
+}
+```
+
+## Step 4: Implement File View
+
+Create `app/api/coline/file/route.ts`:
+
+```typescript
+import { NextRequest } from 'next/server'
+import { parseSignedColineRequest, colineHostedRenderFileRequestSchema } from '@colineapp/sdk'
+
+export async function POST(request: NextRequest) {
+  const { data } = await parseSignedColineRequest({
+    request,
+    secret: process.env.COLINE_APP_SECRET!,
+    schema: colineHostedRenderFileRequestSchema
+  })
+  
+  const { file, document } = data
+  
+  return Response.json({
+    type: 'stack',
+    direction: 'vertical',
+    gap: 4,
+    padding: 4,
+    children: [
+      {
+        type: 'text_field',
+        name: 'name',
+        label: 'Name',
+        value: document.name || ''
+      },
+      {
+        type: 'text_field',
+        name: 'email',
+        label: 'Email',
+        value: document.email || ''
+      },
+      {
+        type: 'text_field',
+        name: 'company',
+        label: 'Company',
+        value: document.company || ''
+      },
+      {
+        type: 'select',
+        name: 'status',
+        label: 'Status',
+        value: document.status || 'lead',
+        options: [
+          { value: 'lead', label: 'Lead' },
+          { value: 'prospect', label: 'Prospect' },
+          { value: 'customer', label: 'Customer' }
+        ]
+      },
+      {
+        type: 'stack',
+        direction: 'horizontal',
+        gap: 2,
+        children: [
+          {
+            type: 'button',
+            label: 'Save',
+            action: 'save_contact',
+            variant: 'primary'
+          },
+          {
+            type: 'button',
+            label: 'Delete',
+            action: 'delete_contact',
+            variant: 'danger'
+          }
+        ]
+      }
+    ]
+  })
+}
+```
+
+## Step 5: Handle Actions
+
+Create `app/api/coline/action/route.ts`:
+
+```typescript
+import { NextRequest } from 'next/server'
+import { parseSignedColineRequest, colineHostedActionRequestSchema } from '@colineapp/sdk'
+import { ColineApiClient } from '@colineapp/sdk'
+
+const client = new ColineApiClient({
+  baseUrl: 'https://api.coline.app',
+  apiKey: process.env.COLINE_API_KEY!
+})
+
+export async function POST(request: NextRequest) {
+  const { data } = await parseSignedColineRequest({
+    request,
+    secret: process.env.COLINE_APP_SECRET!,
+    schema: colineHostedActionRequestSchema
+  })
+  
+  const { action, workspace, app, file } = data
+  const ws = client.workspace(workspace.id)
+  
+  switch (action.type) {
+    case 'create_contact':
+      const newFile = await ws.app(app.appKey).createFile({
+        typeKey: 'contact',
+        name: 'New Contact'
+      })
+      
+      return Response.json({
+        type: 'open_file',
+        fileId: newFile.file.id
+      })
+      
+    case 'save_contact':
+      await ws.app(app.appKey).file(file!.id).updateDocument({
+        name: action.payload.name,
+        email: action.payload.email,
+        company: action.payload.company,
+        status: action.payload.status
+      })
+      
+      // Index for search
+      await ws.app(app.appKey).upsertIndexDocuments([{
+        documentKey: file!.id,
+        documentType: 'contact',
+        fileId: file!.id,
+        title: action.payload.name,
+        body: `${action.payload.email} ${action.payload.company}`,
+        metadata: {
+          status: action.payload.status
+        }
+      }])
+      
+      return Response.json({ type: 'refresh' })
+      
+    case 'delete_contact':
+      await ws.app(app.appKey).file(file!.id).delete()
+      await ws.app(app.appKey).deleteIndexDocuments([file!.id])
+      return Response.json({ type: 'navigate', href: '..' })
+      
+    default:
+      return Response.json({ type: 'ok' })
+  }
+}
+```
+
+## Step 6: Environment Variables
+
+Create `.env.local`:
+
+```bash
+COLINE_APP_SECRET=<your-app-secret>
+COLINE_API_KEY=<your-api-key>
+COLINE_APP_BASE_URL=https://your-ngrok-url.ngrok.io
+```
+
+## Step 7: Register and Test
+
+### Local Development with Ngrok
+
+```bash
+# Install ngrok if needed
+npm install -g ngrok
+
+# Start your app
+npm run dev
+
+# In another terminal, expose to internet
+ngrok http 3000
+```
+
+Copy the ngrok HTTPS URL to `COLINE_APP_BASE_URL`.
+
+### Register the App
+
+Create `scripts/register.ts`:
+
+```typescript
+import { ColineApiClient } from '@colineapp/sdk'
+import { manifest } from '../app/manifest'
+
+const client = new ColineApiClient({
+  baseUrl: 'https://api.coline.app',
+  apiKey: process.env.COLINE_API_KEY!
+})
+
+async function register() {
+  const result = await client.registerApp({
+    version: '1.0.0',
+    manifest
+  })
+  
+  console.log('App registered:', result.appKey)
+  console.log('Install URL: https://coline.app/developers/apps/' + result.appKey)
+}
+
+register()
+```
+
+Run it:
+
+```bash
+npx tsx scripts/register.ts
+```
+
+### Install to Workspace
+
+1. Go to `https://coline.app/developers/apps/{your-app-key}`
+2. Click "Install to Workspace"
+3. Select your workspace
+4. Grant permissions
+
+## Step 8: Use Your App
+
+1. Open your workspace in Coline
+2. Go to the Apps tab
+3. Click "My CRM"
+4. Click "+ New Contact"
+5. Fill in details and save
+
+## Deployment
+
+### Production Setup
+
+1. Deploy your app to Vercel/Railway/Render
+2. Update `COLINE_APP_BASE_URL` to production URL
+3. Create new app version with updated URL
+4. Submit for review (for public apps)
+
+### Environment Variables
+
+```bash
+# Production
+COLINE_APP_SECRET=<production-app-secret>
+COLINE_API_KEY=<production-api-key>
+COLINE_APP_BASE_URL=https://my-crm.example.com
+```
+
+## Next Steps
+
+- Add more file types (Companies, Deals)
+- Implement webhooks for real-time sync
+- Add Kairo integration for AI features
+- Style your UI with Coline design tokens
+
+## Troubleshooting
+
+### Signature Verification Failed
+
+- Check `COLINE_APP_SECRET` matches the secret shown in Developer Console
+- Ensure request body isn't being modified
+
+### App Not Showing
+
+- Verify app is installed to the correct workspace
+- Check browser console for errors
+- Verify `baseUrl` is accessible from Coline
+
+### Actions Not Working
+
+- Check action handler logs
+- Ensure response format matches schema
+- Verify permissions are granted

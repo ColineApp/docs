@@ -1,0 +1,148 @@
+---
+title: Coline MCP
+description: Connect agents like Cursor to Coline over a hosted remote MCP server with Login with Coline.
+---
+
+Coline exposes a hosted remote MCP server so external agents can work against your Coline workspace context without running a local bridge.
+
+## Endpoint
+
+Production MCP server:
+
+```text
+https://mcp.coline.app/mcp
+```
+
+OAuth metadata:
+
+```text
+https://mcp.coline.app/.well-known/oauth-authorization-server
+```
+
+Protected resource metadata:
+
+```text
+https://mcp.coline.app/.well-known/oauth-protected-resource
+```
+
+## Authentication
+
+Coline MCP uses **OAuth with Login with Coline**.
+
+- No API keys are required for MCP clients
+- The MCP server redirects users to Coline's OAuth flow
+- After the user signs in, the MCP server issues MCP-native tokens for the client
+- The server refreshes its upstream Coline access token during MCP refresh-token exchange
+
+Current MCP scopes:
+
+- `workspace.read`
+- `taskboards.read`
+- `taskboards.write`
+- `calendar.read`
+- `calendar.write`
+
+## Current Tool Surface
+
+The current hosted MCP release is intentionally narrow.
+
+Taskboards:
+
+- `list_workspaces`
+- `list_taskboards`
+- `resolve_task_reference`
+- `list_tasks`
+- `get_task`
+- `create_task`
+- `update_task`
+- `delete_task`
+
+Calendar:
+
+- `list_calendar_events`
+- `get_calendar_event`
+- `create_calendar_event`
+- `update_calendar_event`
+
+Planned next surfaces include task comments, attachments, and broader workspace search.
+
+## Cursor Setup
+
+In Cursor, add a remote MCP server and use the hosted endpoint:
+
+```text
+https://mcp.coline.app/mcp
+```
+
+One-click install:
+
+<a
+  href="cursor://anysphere.cursor-deeplink/mcp/install?name=coline&config=eyJ1cmwiOiJodHRwczovL21jcC5jb2xpbmUuYXBwL21jcCJ9"
+  style={{
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "0.5rem",
+    padding: "0.75rem 1rem",
+    borderRadius: "0.75rem",
+    border: "1px solid color-mix(in oklab, currentColor 14%, transparent)",
+    textDecoration: "none",
+    fontWeight: 600,
+    marginBottom: "1rem",
+  }}
+>
+  Add to Cursor
+</a>
+
+Example config:
+
+```json
+{
+  "mcpServers": {
+    "coline": {
+      "url": "https://mcp.coline.app/mcp"
+    }
+  }
+}
+```
+
+Cursor should discover OAuth metadata automatically from the protected resource and authorization server metadata.
+
+Expected flow:
+
+1. Add the remote MCP server URL
+2. Start the connection
+3. Cursor opens the Coline login flow
+4. Sign in with your Coline account
+5. Approve access
+6. The MCP server becomes available to the agent
+
+## Typical Workflow
+
+Example: taskboard issue resolution
+
+1. The agent lists your workspaces with `list_workspaces`
+2. It finds the right board via `list_taskboards`
+3. It inspects current board work with `list_tasks`
+4. It resolves something like `COL-42` with `resolve_task_reference`
+5. It loads the full task with `get_task`
+6. It creates, updates, or deletes work with `create_task`, `update_task`, and `delete_task`
+
+Example: calendar assistance
+
+1. The agent lists events over a time range with `list_calendar_events`
+2. It loads a single event with `get_calendar_event`
+3. It creates or updates events as needed
+
+## Protocol Notes
+
+- Transport: Streamable HTTP
+- Authentication: OAuth 2.1 style public-client flow with PKCE
+- Dynamic client registration: supported
+- Unauthenticated MCP requests return OAuth-style token errors rather than anonymous access
+
+## Related Docs
+
+- [OAuth 2.0](/docs/authentication/oauth)
+- [Scopes](/docs/authentication/scopes)
+- [API Endpoints](/docs/api/endpoints)
+- [TypeScript SDK](/docs/sdk/typescript)

@@ -1,0 +1,357 @@
+---
+title: Docs
+description: Professional rich text documents with page layout, real-time collaboration, and AI assistance.
+---
+
+## Docs
+
+Docs are traditional rich text documents for professional writing—reports, formal letters, structured documentation. Unlike Notes, Docs provide continuous flow editing with page layout control and print-ready output.
+
+## The Ribbon Interface
+
+The toolbar organizes tools into tabs: Home, Insert, Format, Table, Page, View, and Review. The ribbon adapts to context—when you're in a table, the Table tab appears with relevant tools.
+
+### Home Tab
+
+**Clipboard**: Undo/redo with full history, cut/copy/paste with formatting.
+
+**Paragraph Styles**: Apply semantic structure in one click:
+- **Normal** — Body text
+- **Title** — Document title
+- **Heading 1, 2, 3** — Section hierarchy
+- **Quote** — Block quotations
+- **Pull Quote** — Emphasized extracts
+- **Callout** — Highlighted information boxes
+- **Caption** — Figure/table descriptions
+- **Footnote** — Reference notes
+- **Code Block** — Monospace code
+
+Styles apply semantic meaning, not just formatting. "Heading 1" tells the system "this is a major section," enabling outline navigation and consistent structure.
+
+**Typography**:
+- **Font Family**: 33 options (Inter, Arial, Georgia, Times New Roman, JetBrains Mono, etc.)
+- **Font Weight**: Light (300), Normal (400), Semibold (600), Bold (700), Extra Bold (800)
+- **Font Size**: 6pt to 96pt (up to 400pt custom)
+
+Font selection guide:
+- **Sans-serif** (Inter, Arial): Clean, modern, better for screens
+- **Serif** (Georgia, Times): Traditional, better for long printed texts
+- **Monospace** (JetBrains Mono): Code, tabular data
+
+**Text Formatting**: Bold, Italic, Underline, Strikethrough, Superscript, Subscript, Inline code.
+
+**Colors**: 15 text color presets, 10 highlight colors, 10 callout colors.
+
+### Insert Tab
+
+**Images**: Three insertion methods:
+- From Drive — Link to existing Coline files
+- From Computer — Upload directly
+- From URL — Link to external image
+
+Supported: PNG, JPG, WebP, GIF, SVG. Double-click to edit. Images resize to fit page width maintaining aspect ratio.
+
+**Videos**: Embed YouTube videos by pasting any YouTube URL (watch, youtu.be, embed, shorts formats). Renders at 16:9 with standard controls.
+
+**Tables**: Grid picker for dimensions up to 10×10. Default: 3×3 with header row.
+
+**Horizontal Rule**: Visual section separator.
+
+**Page Break**: Force content to new page (`Cmd/Ctrl+Enter`).
+
+**Links**: Insert hyperlinks with URL and display text.
+
+### Format Tab
+
+**Text Transform**: UPPERCASE, lowercase, Title Case, Sentence case.
+
+**Lists**: Bulleted, numbered (auto-renumbering), indent/outdent.
+
+**Alignment**: Left, Center, Right, Justified.
+
+**Line Spacing**: 1.15, 1.5, 1.75, 2.0.
+
+**Text Direction**: LTR, RTL.
+
+### Table Tab
+
+Appears when cursor is in a table.
+
+**Insert**: Row above/below, Column left/right.
+
+**Delete**: Row, Column, Table.
+
+**Merge & Split**: Merge selected cells, split merged cells.
+
+**Style**: Toggle header row/column, Cell background color (10 presets).
+
+**Layout**: Distribute rows/columns evenly.
+
+**Table Navigation**: Press `Arrow Down` at last row or `Enter` in last cell to exit table.
+
+### Page Tab
+
+**Orientation**: Portrait (default), Landscape.
+
+**Margins**:
+- Narrow: 72px horizontal, 64px vertical
+- Normal: 96px horizontal, 80px vertical  
+- Wide: 128px horizontal, 96px vertical
+
+**Decorations**: Show/hide page numbers, Page background color.
+
+**Note**: Currently only Letter size (8.5" × 11") is supported.
+
+### View Tab
+
+**Zoom**: 60% to 200%.
+
+**Layout Mode**:
+- **Paged** — See actual page breaks (default)
+- **Compact** — Continuous scrolling without breaks
+- **Focus** — Minimal UI, distraction-free
+
+**Show/Hide**: Ruler, Stats bar, Document outline.
+
+### Review Tab
+
+**Spell Check**: Toggle browser spell checking.
+
+**Document Statistics**: Word count, character count (with/without spaces), paragraph count, page count, sentence count, reading time (220 WPM), Flesch Reading Ease score.
+
+Reading level mapping:
+- 90-100: Very Easy (5th grade)
+- 80-89: Easy (6th grade)
+- 70-79: Fairly Easy (7th grade)
+- 60-69: Standard (8th-9th grade)
+- 50-59: Fairly Difficult (10th-12th grade)
+- 30-49: Difficult (College)
+- 0-29: Very Difficult (Graduate)
+
+Aim for 60-70 for general business writing.
+
+## Page Layout
+
+### Paged Documents
+
+Each page is 816×1056px (Letter size). Content flows automatically from page to page. Page breaks happen naturally; use `Cmd/Ctrl+Enter` for manual breaks when sections should start fresh.
+
+### Margins and Content Area
+
+| Margin | Horizontal | Vertical | Content Area |
+|--------|------------|----------|--------------|
+| Narrow | 72px | 64px | 672×928px |
+| Normal | 96px | 80px | 624×896px |
+| Wide | 128px | 96px | 560×864px |
+
+Use narrow for maximum content space, normal for balance, wide for readability and annotations.
+
+## Tables
+
+### Creating and Modifying
+
+Insert via grid picker. Modify structure via Table tab: add/remove rows and columns, merge/split cells, toggle headers.
+
+### Best Practices
+
+- Use header rows for data tables
+- Keep tables simple—complex tables are hard to read
+- Align numbers right, text left, headers centered
+- Use background colors for visual hierarchy (light gray headers, subtle row grouping)
+
+### Resizing
+
+Drag column borders. Use "Distribute evenly" for balanced columns. Tables stay within page margins.
+
+## Media
+
+### Images
+
+Three sources: Drive (linked reference), Computer (uploaded), URL (external link). Edit by double-click or hover overlay.
+
+### YouTube Videos
+
+Paste any YouTube URL format. Embeds at 16:9 with standard controls.
+
+## Real-Time Collaboration
+
+Multiple people edit simultaneously using Operational Transform to prevent conflicts. Changes appear instantly; no save button needed.
+
+### Presence
+
+- **Avatars**: Top-right shows active collaborators
+- **Cursors**: Each person has a colored cursor with name label
+- **Selections**: See what text others select (semi-transparent highlight)
+
+### Collaboration Tips
+
+- Work in different sections when possible
+- Check presence before making large structural changes
+- Avoid simultaneous editing of the same paragraph to prevent visual chaos
+
+## AI Assistance
+
+### Tab Autocomplete
+
+As you type, ghost text suggests completions. Press `Tab` to accept, `Esc` to dismiss, or keep typing to ignore.
+
+### Inline AI Prompt
+
+Select text (optional) and press `Cmd/Ctrl+E` for AI assistance.
+
+**Quick Actions**:
+- Improve writing — Polish and refine
+- Fix grammar — Correct errors
+- Make concise — Remove filler
+- Expand — Add detail
+- Continue writing — Pick up where you left off
+- Sharpen argument — Strengthen persuasion
+- Make warmer — Friendlier tone
+- Make direct — Clear and blunt
+- Turn to bullets — Convert prose to list
+- Turn to paragraph — Convert list to prose
+- Write intro — Create opening
+- Write conclusion — Summarize and close
+
+Select specific text for better context. AI generates starting points—edit to match your voice and verify facts.
+
+### Space AI Menu
+
+On an empty paragraph, press `Space` for AI suggestions to continue writing.
+
+## Navigation
+
+### Document Outline
+
+Toggle from View tab or sidebar. Shows H1, H2, H3 headings with page numbers. Click to jump to section.
+
+### View Modes
+
+- **Paged**: Actual page boundaries, print WYSIWYG
+- **Compact**: Continuous scrolling, more content visible
+- **Focus**: Minimal UI, distraction-free
+
+## Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Cmd/Ctrl+A` | Select all (twice for entire document) |
+| `Cmd/Ctrl+S` | Save |
+| `Cmd/Ctrl+Enter` | Insert page break |
+| `Cmd/Ctrl+E` | Open inline AI prompt |
+| `Cmd/Ctrl+K` | Insert/edit link |
+| `Space` (empty para) | Open AI space menu |
+| `Tab` | Accept ghost text suggestion |
+| `Cmd/Ctrl+Z` | Undo |
+| `Cmd/Ctrl+Shift+Z` | Redo |
+| `Cmd/Ctrl+B` | Bold |
+| `Cmd/Ctrl+I` | Italic |
+| `Cmd/Ctrl+U` | Underline |
+
+## Docs vs Notes
+
+**Use Docs for**:
+- Print fidelity and precise layout
+- Formal documents and reports
+- External distribution requiring polish
+- Long-form continuous prose
+- Structured content with tables
+
+**Use Notes for**:
+- Quick capture and brainstorming
+- Bidirectional linking and knowledge graphs
+- Daily journaling
+- Meeting notes and collaborative capture
+- Fluid, evolving structure
+
+## API
+
+### Creating Docs
+
+```typescript
+import { Coline } from '@colineapp/sdk'
+
+const coline = new Coline({ apiKey: 'col_ws_...' })
+
+const doc = await coline.docs.create({
+  workspaceId: 'ws_...',
+  title: 'Quarterly Report',
+  content: '<h1>Q4 Performance</h1><p>Revenue increased...</p>',
+  layout: {
+    mode: 'pages',
+    orientation: 'portrait',
+    margins: 'normal'
+  }
+})
+
+await coline.docs.update({
+  workspaceId: 'ws_...',
+  docId: 'doc_...',
+  content: '<h1>Updated Title</h1><p>New content...</p>'
+})
+```
+
+### AI Generation
+
+```typescript
+POST /api/v1/docs/ai/generate
+{
+  "prompt": "Write an executive summary",
+  "selectedText": "Q4 saw 23% revenue growth...",
+  "noteContext": "Full document content..."
+}
+```
+
+## Limitations
+
+Features not yet implemented:
+- Comments and annotations
+- Track changes
+- Export (PDF, Word, Markdown)
+- Find and replace
+- Headers and footers
+- Footnotes and endnotes (style exists, no formal system)
+- Table of contents
+- Version history
+
+## Best Practices
+
+### Structure
+
+1. Start with Title style, then H1 for sections
+2. Limit heading depth—H1→H2→H3 is usually enough
+3. One idea per paragraph
+4. Use page breaks thoughtfully
+5. Preview in both Paged and Compact modes
+
+### Formatting
+
+1. Use styles, not manual formatting ("Heading 1" not "16pt bold")
+2. Limit to 2-3 font families
+3. Establish a type scale and stick to it
+4. Use color sparingly—mostly for links and emphasis
+5. Generous white space improves readability
+
+### Collaboration
+
+1. Let others know before major structural changes
+2. Work in different sections when possible
+3. Regular `Cmd/Ctrl+S` for peace of mind
+4. Edit AI suggestions to match your voice
+
+## Troubleshooting
+
+**Document won't save**: Check internet, refresh page. Contact support if data appears lost.
+
+**Formatting looks wrong**: Check Paged vs Compact mode, verify margins, ensure images fit content area.
+
+**Collaboration issues**: Verify edit permissions, refresh if cursors frozen, avoid simultaneous editing of same paragraph.
+
+**AI not working**: Check AI quota, ensure text is selected for context, verify workspace permissions.
+
+## Next Steps
+
+- [Notes](/docs/notes) — Quick capture with bidirectional linking
+- [Sheets](/docs/sheets) — Structured data and calculations
+- [Boards](/docs/boards) — Visual organization and workflows
+- [Files](/docs/files) — The unified virtual drive system

@@ -1,0 +1,221 @@
+---
+title: Overview
+description: Base URL, authentication, and response format for the Coline API.
+---
+
+## API Overview
+
+The Coline API is a RESTful API that gives you access to the full Coline platform. Build integrations, automate workflows, or create entirely new experiences on top of Coline.
+
+## Base URL
+
+All API requests should be made to:
+
+```
+https://api.coline.app
+```
+
+## Versioning
+
+The current API version is **v1**. Include the version in the URL path:
+
+```
+https://api.coline.app/v1/workspaces/{workspaceSlug}/...
+```
+
+## Authentication
+
+All API requests require authentication. Coline supports two authentication methods:
+
+### API Keys
+
+For server-to-server integrations, use API keys:
+
+```bash
+curl https://api.coline.app/v1/workspaces/acme/drives \
+  -H "Authorization: Bearer col_ws_xxx"
+```
+
+See [API Keys](/docs/authentication/api-keys) for details.
+
+### OAuth 2.0
+
+For apps acting on behalf of users, use OAuth:
+
+```bash
+curl https://api.coline.app/v1/workspaces/acme/drives \
+  -H "Authorization: Bearer col_at_xxx"
+```
+
+See [OAuth 2.0](/docs/authentication/oauth) for details.
+
+## Response Format
+
+All responses are JSON with a consistent envelope:
+
+### Success Response
+
+```json
+{
+  "data": {
+    "id": "file_123",
+    "name": "Project Brief",
+    "fileType": "doc"
+  }
+}
+```
+
+### Error Response
+
+```json
+{
+  "error": {
+    "code": "not_found",
+    "message": "File not found"
+  }
+}
+```
+
+### List Response
+
+List endpoints return paginated results:
+
+```json
+{
+  "data": {
+    "files": [...],
+    "page": {
+      "limit": 50,
+      "hasMore": true,
+      "nextCursor": "eyJpZCI6..."
+    }
+  }
+}
+```
+
+## HTTP Methods
+
+The API uses standard HTTP methods:
+
+| Method | Description |
+|--------|-------------|
+| `GET` | Retrieve a resource or list |
+| `POST` | Create a new resource |
+| `PUT` | Full update of a resource |
+| `PATCH` | Partial update of a resource |
+| `DELETE` | Remove a resource |
+
+## Status Codes
+
+| Code | Meaning |
+|------|---------|
+| `200 OK` | Request succeeded |
+| `201 Created` | Resource created successfully |
+| `204 No Content` | Request succeeded, no body returned |
+| `400 Bad Request` | Invalid request (check your parameters) |
+| `401 Unauthorized` | Authentication failed or missing |
+| `403 Forbidden` | Authenticated but not authorized |
+| `404 Not Found` | Resource doesn't exist |
+| `429 Too Many Requests` | Rate limit exceeded |
+| `500 Internal Server Error` | Server error (retry with backoff) |
+
+## Request Headers
+
+Required headers for all requests:
+
+```
+Authorization: Bearer {token}
+Content-Type: application/json  # For POST/PUT/PATCH
+```
+
+Optional headers:
+
+```
+Accept: application/json
+X-Request-ID: {uuid}  # For request tracing
+```
+
+## Rate Limit Headers
+
+Response headers include rate limit information:
+
+```
+X-RateLimit-Limit: 1000
+X-RateLimit-Remaining: 999
+X-RateLimit-Reset: 1640995200
+Retry-After: 60  # When rate limited
+```
+
+## Pagination
+
+List endpoints support cursor-based pagination using `limit` and `cursor` query parameters:
+
+```bash
+# First page
+curl "https://api.coline.app/v1/workspaces/acme/drives/d123/files?limit=50"
+
+# Next page
+curl "https://api.coline.app/v1/workspaces/acme/drives/d123/files?limit=50&cursor=eyJpZCI6..."
+```
+
+## IDs and References
+
+Most resources have IDs starting with a prefix:
+
+| Prefix | Resource Type |
+|--------|---------------|
+| `ws_` | Workspace |
+| `drive_` | Drive |
+| `file_` | File |
+| `channel_` | Channel |
+| `dm_` | Direct Message |
+| `user_` | User |
+| `taskboard_` | Taskboard |
+| `task_` | Task |
+| `note_` | Note |
+| `doc_` | Doc |
+| `event_` | Calendar Event |
+| `message_` | Message |
+
+## Time Format
+
+All timestamps are ISO 8601 format in UTC:
+
+```
+2026-04-05T14:30:00Z
+```
+
+## SDK
+
+Use the official SDK for easier integration:
+
+```typescript
+import { ColineApiClient } from '@colineapp/sdk'
+
+const client = new ColineApiClient({
+  baseUrl: 'https://api.coline.app',
+  apiKey: process.env.COLINE_API_KEY
+})
+
+const ws = client.workspace('ws_abc123')
+const files = await ws.listDriveFiles('drive_xyz')
+```
+
+## API Categories
+
+The API is organized into these categories:
+
+- **Files & Drives** — File management, uploads, organization
+- **Channels & Messages** — Team communication
+- **Direct Messages** — Private conversations
+- **Calendar** — Events and scheduling
+- **Tasks** — Taskboards and project management
+- **Notes & Docs** — Content creation
+- **Search** — Cross-workspace search
+- **Apps** — App platform for integrations
+
+## Next Steps
+
+- [Errors](/docs/api/errors) — Error handling guide
+- [Rate Limits](/docs/api/rate-limits) — Rate limiting details
+- [Endpoints](/docs/api/endpoints) — Endpoint reference

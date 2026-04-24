@@ -1,0 +1,551 @@
+---
+title: Examples
+description: Code examples and recipes for common tasks.
+---
+
+## SDK Examples
+
+Common patterns and recipes for building with the Coline SDK.
+
+## File Management
+
+### Upload and Share a File
+
+```typescript
+import { ColineApiClient } from '@colineapp/sdk'
+
+const client = new ColineApiClient({
+  baseUrl: 'https://api.coline.app',
+  apiKey: process.env.COLINE_API_KEY
+})
+
+const ws = client.workspace('ws_abc123')
+
+async function uploadAndShare(fileBuffer: Buffer, fileName: string) {
+  // Upload file
+  const result = await ws.uploadFile({
+    data: new Blob([fileBuffer]),
+    fileName,
+    mimeType: 'application/pdf',
+    driveId: 'drive_shared'
+  })
+  
+  console.log(`File uploaded: ${result.file.id}`)
+  
+  // Send to channel with mention
+  await ws.sendChannelMessage('channel_general', {
+    content: Message
+      .text('📄 New file uploaded: ')
+      .mention('file', result.file.name)
+      .toInput()
+  })
+  
+  return result.file
+}
+```
+
+### Sync Files to External Storage
+
+```typescript
+async function syncFilesToS3(driveId: string) {
+  // Paginate through all files
+  for await (const file of paginateFiles(ws, driveId)) {
+    // Download and upload to S3
+    const content = await downloadFile(file.id)
+    await uploadToS3(file.name, content)
+    
+    // Log progress
+    console.log(`Synced: ${file.name}`)
+  }
+}
+
+async function* paginateFiles(ws: ColineWorkspace, driveId: string) {
+  let cursor: string | undefined
+  
+  do {
+    const result = await ws.listDriveFiles(driveId, {
+      limit: 100,
+      cursor
+    })
+    
+    for (const file of result.files) {
+      yield file
+    }
+    
+    cursor = result.page.nextCursor ?? undefined
+  } while (cursor)
+}
+```
+
+## Notes & Docs
+
+### Create Daily Standup Notes
+
+```typescript
+async function createStandupNotes(workspaceSlug: string, userName: string) {
+  const today = new Date().toISOString().split('T')[0]
+  
+  const note = await ws.createNote({
+    title: `Standup Notes - ${today}`,
+    body: [
+      `# Daily Standup - ${today}`,
+      '',
+      '## Yesterday',
+      '- ',
+      '',
+      '## Today',
+      '- ',
+      '',
+      '## Blockers',
+      '- None'
+    ].join('\n'),
+    driveId: 'drive_personal'
+  })
+  
+  // Share in standup channel
+  await ws.sendChannelMessage('channel_standup', {
+    content: Message
+      .text(`Standup notes for ${today}: `)
+      .mention('file', note.title)
+      .toInput()
+  })
+  
+  return note
+}
+```
+
+### Generate Report from Notes
+
+```typescript
+async function generateReport(query: string) {
+  // Search for relevant notes
+  const notes = await ws.paginateNotes({ q: query })
+  
+  const sections: string[] = []
+  
+  for await (const note of notes) {
+    const detail = await ws.getNote(note.id)
+    sections.push(`## ${detail.title}\n\n${detail.body}`)
+  }
+  
+  // Create compiled doc
+  const doc = await ws.createDoc({
+    title: `Report: ${query}`,
+    content: {
+      blocks: sections.map(text => ({
+        type: 'paragraph',
+        content: text
+      }))
+    },
+    driveId: 'drive_reports'
+  })
+  
+  return doc
+}
+```
+
+## Messaging
+
+### Weekly Channel Summary
+
+```typescript
+async function weeklySummary(channelId: string) {
+  // Get messages from last 7 days
+  const oneWeekAgo = new Date()
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+  
+  const messages = await ws.listChannelMessages(channelId, { limit: 100 })
+  
+  // Extract action items (messages with "action item" or todo format)
+  const actionItems = messages.messages.filter(msg => 
+    msg.plaintext.toLowerCase().includes('action item') ||
+    msg.plaintext.includes('- [ ]')
+  )
+  
+  // Create summary note
+  const summary = await ws.createNote({
+    title: `Weekly Summary - ${new Date().toLocaleDateString()}`,
+    body: [
+      '# Weekly Channel Summary',
+      '',
+      `## Action Items (${actionItems.length})`,
+      ...actionItems.map(m => `- ${m.plaintext}`),
+      '',
+      `## Total Messages: ${messages.messages.length}`
+    ].join('\n'),
+    driveId: 'drive_summaries'
+  })
+  
+  return summary
+}
+```
+
+### Bot That Responds to Commands
+
+```typescript
+async function botResponder(channelId: string) {
+  // Get recent messages
+  const result = await ws.listChannelMessages(channelId, { limit: 20 })
+  
+  for (const msg of result.messages) {
+    // Skip own messages
+    if (msg.authorUserId === BOT_USER_ID) continue
+    
+    // Check for commands
+    if (msg.plaintext.startsWith('!status')) {
+      await ws.sendChannelMessage(channelId, {
+        content: Message
+          .text('✅ Bot is online and ready!')
+          .toInput()
+      })
+    }
+    
+    if (msg.plaintext.startsWith('!tasks')) {
+      const tasks = await ws.listTasks('taskboard_main', { limit: 5 })
+      const taskList = tasks.tasks.map(t => `• ${t.title}`).join('\n')
+      
+      await ws.sendChannelMessage(channelId, {
+        content: Message
+          .text(`📋 Top 5 tasks:\n${taskList}`)
+          .toInput()
+      })
+    }
+  }
+}
+```
+
+## Tasks & Project Management
+
+### Sprint Report
+
+```typescript
+async function generateSprintReport(taskboardId: string) {
+  const tasks = await ws.listTasks(taskboardId)
+  
+  // Group by status
+  const byStatus: Record<string, number> = {}
+  const byAssignee: Record<string, number> = {}
+  
+  for (const task of tasks.tasks) {
+    byStatus[task.statusId] = (byStatus[task.statusId] || 0) + 1
+    
+    for (const assignee of task.assignees) {
+      byAssignee[assignee.userId] = (byAssignee[assignee.userId] || 0) + 1
+    }
+  }
+  
+  // Create report doc
+  const report = await ws.createDoc({
+    title: `Sprint Report - ${new Date().toLocaleDateString()}`,
+    content: {
+      blocks: [
+        {
+          type: 'paragraph',
+          content: '# Sprint Status Report'
+        },
+        {
+          type: 'paragraph',
+          content: `## By Status\n${Object.entries(byStatus)
+            .map(([status, count]) => `- ${status}: ${count}`)
+            .join('\n')}`
+        },
+        {
+          type: 'paragraph',
+          content: `## Workload Distribution\n${Object.entries(byAssignee)
+            .map(([user, count]) => `- ${user}: ${count} tasks`)
+            .join('\n')}`
+        }
+      ]
+    },
+    driveId: 'drive_reports'
+  })
+  
+  return report
+}
+```
+
+### Create Tasks from Messages
+
+```typescript
+async function createTasksFromMessages(channelId: string, taskboardId: string) {
+  const messages = await ws.listChannelMessages(channelId, { limit: 50 })
+  
+  const createdTasks: string[] = []
+  
+  for (const msg of messages.messages) {
+    // Look for messages starting with "TODO:"
+    if (msg.plaintext.toLowerCase().startsWith('todo:')) {
+      const title = msg.plaintext.replace(/^todo:/i, '').trim()
+      
+      const task = await ws.createTask(taskboardId, {
+        title,
+        description: `From message by ${msg.authorUserId}`,
+        priority: 'medium'
+      })
+      
+      createdTasks.push(task.task.id)
+      
+      // React to show processed
+      await ws.addReaction(msg.id, '✅')
+    }
+  }
+  
+  return createdTasks
+}
+```
+
+## Calendar
+
+### Find Meeting Conflicts
+
+```typescript
+async function findConflicts(eventId: string) {
+  const event = await ws.getCalendarEvent(eventId)
+  
+  // Get all events in same time range
+  const rangeEvents = await ws.listCalendarEvents({
+    start: event.startTime,
+    end: event.endTime
+  })
+  
+  // Find overlapping events with shared attendees
+  const conflicts = rangeEvents.events.filter(e => {
+    if (e.id === eventId) return false
+    
+    const sharedAttendees = e.attendees.filter(a => 
+      event.attendees.some(ea => ea.userId === a.userId)
+    )
+    
+    return sharedAttendees.length > 0
+  })
+  
+  return conflicts
+}
+```
+
+### Schedule Follow-up Meeting
+
+```typescript
+async function scheduleFollowUp(originalEventId: string) {
+  const original = await ws.getCalendarEvent(originalEventId)
+  
+  // Schedule 1 week later
+  const startTime = new Date(original.startTime)
+  startTime.setDate(startTime.getDate() + 7)
+  
+  const endTime = new Date(original.endTime)
+  endTime.setDate(endTime.getDate() + 7)
+  
+  const followUp = await ws.createCalendarEvent({
+    title: `Follow-up: ${original.title}`,
+    startTime: startTime.toISOString(),
+    endTime: endTime.toISOString(),
+    attendees: original.attendees.map(a => a.userId),
+    description: `Follow-up to ${original.title}`
+  })
+  
+  // Notify attendees
+  await ws.sendChannelMessage('channel_general', {
+    content: Message
+      .text(`📅 Follow-up scheduled: `)
+      .mention('file', followUp.event.title)
+      .toInput()
+  })
+  
+  return followUp
+}
+```
+
+## Integration Patterns
+
+### Webhook Handler
+
+```typescript
+import { verifyAppRequestSignature, COLINE_SIGNATURE_HEADER, COLINE_TIMESTAMP_HEADER } from '@colineapp/sdk'
+
+app.post('/webhooks/coline', async (req, res) => {
+  // Verify signature
+  const signature = req.headers[COLINE_SIGNATURE_HEADER] as string
+  const timestamp = req.headers[COLINE_TIMESTAMP_HEADER] as string
+  
+  const isValid = await verifyAppRequestSignature({
+    secret: process.env.COLINE_WEBHOOK_SECRET,
+    signature,
+    timestamp,
+    body: JSON.stringify(req.body)
+  })
+  
+  if (!isValid) {
+    return res.status(401).send('Invalid signature')
+  }
+  
+  const { type, data } = req.body
+  
+  switch (type) {
+    case 'file.created':
+      await handleFileCreated(data)
+      break
+    case 'task.updated':
+      await handleTaskUpdated(data)
+      break
+    case 'message.created':
+      await handleMessageCreated(data)
+      break
+  }
+  
+  res.send('OK')
+})
+
+async function handleFileCreated(data: { fileId: string }) {
+  const file = await ws.getFile(data.fileId)
+  
+  // Process new file
+  if (file.fileType === 'sheet') {
+    // Import to external system
+    await importToDatabase(file)
+  }
+}
+```
+
+### OAuth Integration
+
+```typescript
+import { createOauthState, createPkceCodeChallenge } from '@colineapp/sdk'
+
+// Step 1: Generate authorization URL
+app.get('/auth/coline', (req, res) => {
+  const state = createOauthState()
+  const { codeVerifier, codeChallenge } = createPkceCodeChallenge()
+  
+  // Store for later
+  req.session.oauthState = state
+  req.session.codeVerifier = codeVerifier
+  
+  const authUrl = client.buildLoginWithColineAuthorizeUrl({
+    clientId: CLIENT_ID,
+    redirectUri: 'https://your-app.com/auth/callback',
+    scope: 'files:read messages:read',
+    state,
+    codeChallenge,
+    codeChallengeMethod: 'S256'
+  })
+  
+  res.redirect(authUrl)
+})
+
+// Step 2: Handle callback
+app.get('/auth/callback', async (req, res) => {
+  const { code, state } = req.query
+  
+  // Verify state
+  if (state !== req.session.oauthState) {
+    return res.status(400).send('Invalid state')
+  }
+  
+  // Exchange code for token
+  const tokenResponse = await fetch('https://api.coline.app/v1/oauth/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      grant_type: 'authorization_code',
+      code,
+      redirect_uri: 'https://your-app.com/auth/callback',
+      client_id: CLIENT_ID,
+      client_secret: CLIENT_SECRET,
+      code_verifier: req.session.codeVerifier
+    })
+  })
+  
+  const { access_token } = await tokenResponse.json()
+  
+  // Store token and redirect
+  req.session.colineToken = access_token
+  res.redirect('/dashboard')
+})
+```
+
+## Error Handling
+
+### Retry with Exponential Backoff
+
+```typescript
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  maxRetries = 3
+): Promise<T> {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await fn()
+    } catch (error) {
+      if (isColineApiError(error) && error.isRetryable) {
+        const delay = Math.pow(2, i) * 1000
+        console.log(`Retrying in ${delay}ms...`)
+        await sleep(delay)
+        continue
+      }
+      throw error
+    }
+  }
+  throw new Error('Max retries exceeded')
+}
+
+// Usage
+const file = await withRetry(() => ws.getFile('file_123'))
+```
+
+### Graceful Degradation
+
+```typescript
+async function getFileWithFallback(fileId: string) {
+  try {
+    return await ws.getFile(fileId)
+  } catch (error) {
+    if (isColineApiError(error)) {
+      if (error.status === 404) {
+        console.log('File not found, using default')
+        return getDefaultFile()
+      }
+      if (error.status === 403) {
+        console.log('No access, returning restricted view')
+        return getRestrictedView(fileId)
+      }
+    }
+    throw error
+  }
+}
+```
+
+## Testing
+
+### Mock Client for Tests
+
+```typescript
+// test-helpers.ts
+export function createMockClient() {
+  return {
+    workspace: () => ({
+      getFile: jest.fn(),
+      listDriveFiles: jest.fn(),
+      sendChannelMessage: jest.fn()
+    })
+  }
+}
+
+// my-feature.test.ts
+const mockWs = createMockClient()
+
+mockWs.workspace().getFile.mockResolvedValue({
+  id: 'file_123',
+  name: 'test.pdf'
+})
+
+// Test your code
+const result = await processFile(mockWs, 'file_123')
+expect(result).toBeDefined()
+```
+
+## Next Steps
+
+- [TypeScript SDK](/docs/sdk/typescript) — Complete SDK reference
+- [API Reference](/docs/api) — REST API documentation
+- [Authentication](/docs/authentication) — Auth patterns and best practices

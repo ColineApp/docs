@@ -1,0 +1,401 @@
+---
+title: Tab API
+description: The world's fastest autocomplete model, built for everything.
+---
+
+## Tab
+
+Tab is Coline's intelligent autocomplete. Like Cursor Tab for code, but for everything in your workspace — notes, docs, messages, tasks, and calendar events.
+
+Tab predicts what you'll write next and shows it as ghost text. Press **Tab** to accept, or keep typing to ignore.
+
+## How It Works
+
+1. **You type** — Tab watches what you're writing
+2. **Tab predicts** — AI suggests the next words/lines
+3. **Ghost text appears** — The suggestion shows in muted text
+4. **Press Tab to accept** — Or just keep typing to ignore
+
+## Features
+
+- **Lightning fast** — 120ms debounce, streaming completions
+- **Every surface** — Works in notes, docs, messages, tasks, calendar
+- **Context aware** — Understands your workspace, files, and conversations
+- **Natural flow** — Matches your tone and writing style
+- **Multi-line** — Suggests paragraphs, not just words
+- **Smart deduplication** — Won't repeat what you already typed
+
+## Using Tab
+
+Tab is built into the Coline UI. No API calls needed for normal usage — just start typing in any supported editor.
+
+### Keyboard Shortcuts
+
+| Key | Action |
+|-----|--------|
+| `Tab` | Accept the current suggestion |
+| `Escape` | Dismiss the suggestion |
+| Continue typing | Ignore and keep writing |
+
+### Supported Surfaces
+
+| Surface | Where It Works |
+|---------|----------------|
+| **Notes** | Block-based editor, any text block |
+| **Docs** | Rich text paragraphs, headings, lists |
+| **Messages** | Channel and DM message composer |
+| **Tasks** | Task descriptions and comments |
+| **Calendar** | Event descriptions |
+
+## Tab API (Programmatic Access)
+
+Build custom Tab experiences using the API.
+
+### Authentication
+
+Same authentication as the rest of the Coline API:
+
+```bash
+Authorization: Bearer {api_key}
+```
+
+### Endpoints
+
+#### List Models
+
+```http
+GET /api/v1/tab/models
+```
+
+Returns available Tab models.
+
+**Response:**
+
+```json
+{
+  "data": {
+    "models": [
+      {
+        "id": "tab-v1",
+        "object": "model",
+        "created": 1775200000,
+        "owned_by": "coline",
+        "pricing": {
+          "inputPerMillionUsd": 0.2,
+          "outputPerMillionUsd": 0.5
+        },
+        "capabilities": {
+          "streaming": true,
+          "surfaces": ["notes", "docs", "messages", "tasks", "calendar"]
+        }
+      }
+    ]
+  }
+}
+```
+
+#### Create Completion
+
+```http
+POST /api/v1/tab/chat/completions
+```
+
+Get an inline completion for the current cursor position.
+
+**Request Body:**
+
+```typescript
+{
+  model?: string;              // "tab-v1" (default)
+  stream?: boolean;          // true for streaming (recommended)
+  tab_context: {
+    surface: "notes" | "docs" | "messages" | "tasks" | "calendar";
+    workspace_slug: string;         // Your workspace slug
+    entity_id: string;              // File ID, channel ID, etc.
+    documentType: "plaintext" | "markdown";
+    activeTextBeforeCursor: string; // Text before cursor (max 16k chars)
+    activeTextAfterCursor?: string; // Text after cursor (max 16k chars)
+    surroundingContext?: string;    // Additional context (max 32k chars)
+    blockKind?: string;             // For notes/docs: paragraph, heading, etc.
+    noteTitle?: string;             // Note title for context
+    documentTitle?: string;         // Doc title for context
+    taskboardFileId?: string;       // Required for tasks surface
+  };
+  max_completion_tokens?: number;   // Max 500
+}
+```
+
+**Example Request:**
+
+```bash
+curl https://api.coline.app/v1/tab/chat/completions \
+  -H "Authorization: Bearer col_ws_xxx" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "stream": true,
+    "tab_context": {
+      "surface": "docs",
+      "workspace_slug": "acme",
+      "entity_id": "doc_123",
+      "documentType": "markdown",
+      "activeTextBeforeCursor": "Our Q3 goals include ",
+      "documentTitle": "Q3 Planning"
+    },
+    "max_completion_tokens": 100
+  }'
+```
+
+**Streaming Response (SSE):**
+
+```
+data: {"choices":[{"delta":{"content":" launching"}}]}
+
+data: {"choices":[{"delta":{"content":" the"}}]}
+
+data: {"choices":[{"delta":{"content":" new"}}]}
+data: [DONE]
+```
+
+## Using the SDK
+
+### Stream a Completion
+
+```typescript
+import { ColineApiClient } from '@colineapp/sdk'
+
+const client = new ColineApiClient({
+  baseUrl: 'https://api.coline.app',
+  apiKey: process.env.COLINE_API_KEY
+})
+
+// Stream completion text
+for await (const text of client.streamTabText({
+  tab_context: {
+    surface: 'notes',
+    workspace_slug: 'acme',
+    entity_id: 'note_123',
+    documentType: 'markdown',
+    activeTextBeforeCursor: 'Action items:\n- [ ] '
+  },
+  max_completion_tokens: 100
+})) {
+  // Append to ghost text in your UI
+  editor.showGhostText(text)
+}
+```
+
+### Non-Streaming Completion
+
+```typescript
+const response = await client.createTabChatCompletion({
+  tab_context: {
+    surface: 'messages',
+    workspace_slug: 'acme',
+    entity_id: 'channel_456',
+    documentType: 'plaintext',
+    activeTextBeforeCursor: 'Can you review the '
+  },
+  max_completion_tokens: 50,
+  stream: false  // Complete response in one request
+})
+
+const suggestion = response.choices[0].message.content
+```
+
+## Implementation Tips
+
+### 1. Debounce Input
+
+Tab triggers after 120ms of no typing:
+
+```typescript
+let debounceTimer: NodeJS.Timeout
+
+editor.onInput(() => {
+  clearTimeout(debounceTimer)
+  debounceTimer = setTimeout(() => {
+    requestTabCompletion()
+  }, 120) // Match Tab's debounce
+})
+```
+
+### 2. Handle Overlapping Text
+
+Tab may include text the user already typed. Strip duplicates:
+
+```typescript
+import { sanitizeTabSuggestion } from '@colineapp/sdk'
+
+const cleanSuggestion = sanitizeTabSuggestion({
+  activeTextBeforeCursor: 'Hello wor',
+  rawSuggestion: 'rld, how are you?'
+})
+// Returns: "ld, how are you?"
+```
+
+### 3. Show Minimum Characters
+
+Don't show suggestions shorter than 2 characters:
+
+```typescript
+if (suggestion.length < 2) {
+  hideGhostText()
+}
+```
+
+### 4. Limit Context Size
+
+Send only relevant context to minimize latency:
+
+```typescript
+activeTextBeforeCursor: text.slice(-600),  // Last 600 chars
+activeTextAfterCursor: text.slice(0, 80),   // Next 80 chars
+surroundingContext: nearbyBlocks.slice(0, 500) // 500 chars of context
+```
+
+## Configuration
+
+### Default Behavior
+
+| Setting | Value |
+|---------|-------|
+| Debounce | 120ms |
+| Max output tokens | 500 |
+| Min visible chars | 2 |
+| Temperature | 0.2 |
+| Top P | Default (not set) |
+
+### Temperature
+
+Lower = more predictable, higher = more creative:
+
+- `0.0` - Very conservative, stays close to your text
+- `0.2` (default) - Balanced, natural completions
+- `0.5` - More varied suggestions
+
+## Pricing
+
+| Type | Price |
+|------|-------|
+| Input | $0.20 per million tokens |
+| Output | $0.50 per million tokens |
+
+**Example:** A typical 50-token completion costs ~$0.000025. Super cheap.
+
+## Rate Limits
+
+Tab shares the same rate limits as the main API:
+
+| Auth Type | Read/Stream | Write |
+|-----------|-------------|-------|
+| API Key | 300 / minute | 60 / minute |
+| Session | 200 / minute | 40 / minute |
+
+## Surfaces Deep Dive
+
+### Notes
+
+Works in any text block:
+- Paragraphs
+- Headings (H1, H2, H3)
+- Lists (bulleted, numbered, todo)
+- Quotes
+- Callouts
+
+```typescript
+tab_context: {
+  surface: 'notes',
+  blockKind: 'paragraph',  // or 'heading1', 'bulleted-list', etc.
+  noteTitle: 'Meeting Notes'
+}
+```
+
+### Docs
+
+Rich text editing with formatting awareness:
+
+```typescript
+tab_context: {
+  surface: 'docs',
+  documentTitle: 'Project Spec',
+  documentType: 'markdown'
+}
+```
+
+### Messages
+
+Chat completions with conversation context:
+
+```typescript
+tab_context: {
+  surface: 'messages',
+  surroundingContext: '[conversation history]\n---\n[composing] '
+}
+```
+
+### Tasks
+
+Task descriptions with status/priority awareness:
+
+```typescript
+tab_context: {
+  surface: 'tasks',
+  taskboardFileId: 'file_taskboard_123'
+}
+```
+
+## Ghost Text UI
+
+Tab suggestions appear as ghost text — muted text after the cursor:
+
+```
+Hello wor[ld, how are you?]
+         ↑
+      cursor
+      [ghost text in gray]
+```
+
+**Accept:** Press Tab or click the suggestion
+**Ignore:** Keep typing
+**Dismiss:** Press Escape
+
+## System Prompts
+
+Tab uses surface-specific system prompts for best results:
+
+- **Notes/Docs:** Continue writing naturally, match formatting
+- **Messages:** Keep it conversational, short and punchy
+- **Tasks:** Descriptive, actionable, matches task metadata
+
+## Error Handling
+
+```typescript
+try {
+  for await (const text of client.streamTabText(request)) {
+    showSuggestion(text)
+  }
+} catch (error) {
+  if (isColineApiError(error)) {
+    if (error.status === 429) {
+      // Rate limited — back off
+      await sleep(1000)
+    }
+  }
+}
+```
+
+## Best Practices
+
+1. **Always stream** — Ghost text should appear progressively
+2. **Debounce 120ms** — Don't trigger on every keystroke
+3. **Sanitize suggestions** — Remove overlapping text
+4. **Show min 2 chars** — Ignore tiny suggestions
+5. **Accept on Tab** — It's literally in the name 
+6. **Dismiss on type** — Keep typing = ignore suggestion
+7. **Limit context** — Send only nearby text for speed
+
+## Next Steps
+
+- [Try the Playground](https://coline.app/developers/console) — Test Tab live
+- [SDK Reference](/docs/sdk) — Full SDK documentation
+- [Rate Limits](/docs/api/rate-limits) — API limits and best practices

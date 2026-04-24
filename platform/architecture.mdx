@@ -1,0 +1,348 @@
+---
+title: Architecture
+description: How Coline is built for scale, security, and real-time collaboration.
+---
+
+## Architecture
+
+Coline is built on modern infrastructure designed for performance, security, and reliability. This overview explains the technical foundation without getting lost in implementation details.
+
+## Design Principles
+
+### Workspace Isolation
+
+Every workspace is a fortress. Your data is logically isolated from other workspaces at every layer. This isn't just multi-tenancy — it's complete separation of data, compute, and storage.
+
+### Edge-First
+
+Code runs close to users. Static assets served from global CDN. Real-time connections established to nearest edge. Minimum latency, maximum performance.
+
+### Stateless Where Possible
+
+Application servers don't hold session state. Any request can be handled by any server. Enables horizontal scaling and fault tolerance.
+
+### Stateful Where Necessary
+
+Real-time collaboration requires state. WebSocket connections are pinned to specific servers for the duration of the session. This enables live cursors, instant updates, and conflict resolution.
+
+## Infrastructure Layers
+
+### Edge Network
+
+**Content Delivery**
+- Static assets cached globally
+- File uploads and downloads
+- Real-time connection establishment
+
+**Request Routing**
+- Geo-based routing to nearest data center
+- Load balancing across application servers
+- WebSocket upgrade handling
+
+### Application Layer
+
+**API Services**
+- REST API for CRUD operations
+- GraphQL for complex queries
+- WebSocket API for real-time updates
+
+**Authentication**
+- JWT-based session management
+- OAuth 2.0 for third-party integrations
+- API key authentication for service accounts
+
+**Authorization**
+- Permission evaluation at edge
+- Workspace-scoped access control
+- Role-based and attribute-based policies
+
+### Data Layer
+
+**Primary Database**
+- Relational data model
+- Workspace-scoped schemas
+- Real-time replication
+- Point-in-time recovery
+
+**Search Index**
+- Full-text search across all content
+- Real-time index updates
+- Faceted search and filtering
+
+**File Storage**
+- Object storage for file content
+- Version history preserved
+- Global CDN for file delivery
+- Thumbnail and preview generation
+
+**Cache Layer**
+- Session data
+- Hot file metadata
+- Permission evaluations
+- Search results
+
+## Real-Time Collaboration
+
+### WebSocket Connections
+
+Persistent connections enable instant updates:
+
+**What travels over WebSocket:**
+- Cursor positions
+- Content changes (operational transforms)
+- Presence indicators (who's online, who's viewing)
+- Notifications and alerts
+
+**Connection Lifecycle:**
+1. Client establishes WebSocket to nearest edge
+2. Server authenticates and authorizes
+3. Client subscribes to specific resources (files, channels)
+4. Server pushes updates as they happen
+5. Connection closes on logout or timeout
+
+### Operational Transforms
+
+Multiple people editing simultaneously without conflicts:
+
+- Changes broken down into operations
+- Operations transformed to account for concurrent edits
+- Applied in consistent order across all clients
+- Result: seamless real-time collaboration
+
+**Supported editors:**
+- Docs (rich text operational transforms)
+- Sheets (cell-level operations)
+- Boards (card move/resize operations)
+- Notes (block-level operations)
+
+### Presence
+
+See who's active:
+
+- **Online status** — Green dot when viewing
+- **Cursor tracking** — See where others are editing
+- **Viewing indicators** — "3 people viewing this doc"
+- **Typing indicators** — "Sarah is typing..."
+
+## Security Architecture
+
+### Data Encryption
+
+**In Transit**
+- TLS 1.3 for all connections
+- Certificate pinning for mobile apps
+- Strict transport security headers
+
+**At Rest**
+- Database encryption with workspace-scoped keys
+- File storage encrypted per object
+- Backup encryption with separate key hierarchy
+
+### Authentication
+
+**Session Management**
+- Short-lived access tokens (15 minutes)
+- Long-lived refresh tokens (30 days)
+- Token binding to device fingerprint
+- Automatic rotation on suspicious activity
+
+**Multi-Factor Authentication**
+- TOTP (Google Authenticator, etc.)
+- WebAuthn/FIDO2 (security keys)
+- Recovery codes for account recovery
+
+### Authorization
+
+**Permission Evaluation**
+- Evaluated at edge for speed
+- Cached for repeated checks
+- Invalidated on permission changes
+- Audit logged for compliance
+
+**Data Access Patterns**
+- Row-level security in database
+- Query scoping to workspace
+- Parameterized queries prevent injection
+- Field-level redaction for sensitive data
+
+### Code Execution Security
+
+Kairo's code execution runs in sandboxes:
+
+- Isolated from host system
+- No filesystem access
+- Network access controlled (blocked by default)
+- Resource limits enforced (CPU, memory, time)
+- Audit logging of all executions
+
+## Scaling Strategies
+
+### Horizontal Scaling
+
+**Application Servers**
+- Stateless design allows adding servers
+- Load balancer distributes traffic
+- Auto-scaling based on CPU/memory
+
+**Database Scaling**
+- Read replicas for query distribution
+- Connection pooling
+- Query optimization and indexing
+- Archival of old data
+
+**File Storage**
+- Object storage scales infinitely
+- CDN absorbs download traffic
+- Multi-region replication
+
+### Caching
+
+**Edge Caching**
+- Static assets cached globally
+- File previews and thumbnails
+- Public file content
+
+**Application Caching**
+- Session data in memory
+- Permission evaluations
+- Hot file metadata
+
+**Database Caching**
+- Query result cache
+- Connection pooling
+- Prepared statement cache
+
+### Rate Limiting
+
+Protect the platform from abuse:
+
+- **API rate limits** — Per-user, per-endpoint
+- **WebSocket limits** — Connection count and message rate
+- **File upload limits** — Size and frequency
+- **Search limits** — Query complexity and frequency
+
+## Reliability
+
+### Uptime Targets
+
+- **Platform** — 99.99% uptime
+- **Real-time** — 99.9% connection stability
+- **File delivery** — 99.999% availability via CDN
+
+### Disaster Recovery
+
+**Data Backup**
+- Continuous replication to secondary region
+- Hourly incremental backups
+- Daily full backups
+- 30-day retention minimum
+
+**Recovery Procedures**
+- Automatic failover for database
+- Manual failover for edge regions
+- Documented runbooks
+- Regular disaster recovery drills
+
+### Monitoring
+
+**Health Checks**
+- Endpoint availability
+- Database connectivity
+- File storage accessibility
+- WebSocket connection health
+
+**Performance Metrics**
+- API response times
+- Database query latency
+- File upload/download speeds
+- Real-time message latency
+
+**Alerting**
+- PagerDuty integration
+- Severity-based escalation
+- Runbook links in alerts
+- Post-incident reviews
+
+## Compliance
+
+### Data Residency
+
+Workspaces can specify data location:
+- US (default)
+- EU
+- Other regions (on request)
+
+Data stays in chosen region. Backups replicated within region.
+
+### Audit Logging
+
+Comprehensive audit trail:
+- User actions (view, edit, share)
+- Admin actions (member add, permission change)
+- System actions (backup, restore)
+- Exportable for compliance review
+
+### Data Retention
+
+Configurable retention policies:
+- File versions (default: 30 days)
+- Deleted files (default: 30 days)
+- Message history (configurable)
+- Audit logs (7 years)
+
+### Certifications
+
+- SOC 2 Type II
+- GDPR compliant
+- HIPAA Business Associate Agreement available
+
+## For Developers
+
+### API Rate Limits
+
+Authenticated requests:
+- 1,000 requests per minute per user
+- Burst allowance for interactive use
+- Webhook delivery guaranteed (retry with backoff)
+
+### Webhook Reliability
+
+- Signature verification (HMAC)
+- Automatic retry with exponential backoff
+- Dead letter queue for failed deliveries
+- Idempotency keys for safe retry
+
+### SDK Architecture
+
+- Type-safe clients (TypeScript)
+- Automatic retry with backoff
+- Request deduplication
+- Local caching for metadata
+
+## Performance Benchmarks
+
+### API Latency
+
+- P50: 50ms
+- P95: 200ms
+- P99: 500ms
+
+(Authenticated, non-cached requests from edge)
+
+### Real-Time
+
+- Cursor sync: {'<'}50ms
+- Content sync: {'<'}100ms
+- Presence update: {'<'}200ms
+
+### File Operations
+
+- Small file upload ({'<'}1MB): {'<'}2s
+- Large file upload (100MB): {'<'}30s
+- File download (cached): {'<'}100ms
+
+## Next Steps
+
+- [API Reference](/docs/api) — How to interact with the platform
+- [Security](/docs/developers/security) — Securing your integration
+- [Rate Limits](/docs/developers/rate-limits) — Working within platform limits

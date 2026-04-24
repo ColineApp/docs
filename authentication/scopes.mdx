@@ -1,0 +1,285 @@
+---
+title: Scopes
+description: Permission scopes define what your app can access.
+---
+
+## Scopes
+
+Scopes control what resources your app can access and what actions it can perform. Request only the scopes your app actually needs — users are more likely to approve apps with limited, well-defined permissions.
+
+## File Scopes
+
+### `files:read`
+
+Read files, folders, and drives.
+
+**Includes:**
+- List and browse drives
+- Read file content
+- View file metadata
+- Download attachments
+- See version history
+
+**Example use case:** Sync files to external storage, backup tools, read-only viewers
+
+### `files:write`
+
+Create, modify, and delete files.
+
+**Includes:**
+- Create new files
+- Edit existing files
+- Move and rename files
+- Delete files
+- Upload attachments
+
+**Example use case:** Content creation tools, importers, editors
+
+### `files:admin`
+
+Manage drive permissions and sharing.
+
+**Includes:**
+- Share drives with users
+- Modify permissions
+- Archive and restore drives
+- Manage drive settings
+
+**Example use case:** Enterprise admin tools, workspace management
+
+## Message Scopes
+
+### `messages:read`
+
+Read channel messages and threads.
+
+**Includes:**
+- List channels
+- Read message history
+- View threads
+- See reactions and attachments
+
+**Example use case:** Archiving tools, analytics, notification bridges
+
+### `messages:write`
+
+Send messages and create threads.
+
+**Includes:**
+- Post to channels
+- Reply in threads
+- Add reactions
+- Upload message attachments
+
+**Example use case:** Chat bots, notification services, integrations
+
+## Task Scopes
+
+### `tasks:read`
+
+Read tasks and taskboards.
+
+**Includes:**
+- List taskboards
+- Read task details
+- View status columns
+- See assignees and due dates
+
+**Example use case:** Reporting tools, external project management sync
+
+### `tasks:write`
+
+Create and modify tasks.
+
+**Includes:**
+- Create tasks
+- Update status and fields
+- Assign users
+- Set due dates
+- Move tasks between boards
+
+**Example use case:** Issue trackers, project management integrations, automation tools
+
+## Calendar Scopes
+
+### `calendar:read`
+
+Read calendar events.
+
+**Includes:**
+- List events
+- Read event details
+- See attendee lists
+- View availability
+
+**Example use case:** Scheduling assistants, calendar sync tools
+
+### `calendar:write`
+
+Create and modify events.
+
+**Includes:**
+- Create events
+- Update event details
+- Invite attendees
+- Delete events
+
+**Example use case:** Meeting schedulers, booking systems, event management
+
+## Workspace Scopes
+
+### `workspace:read`
+
+Read workspace information.
+
+**Includes:**
+- Workspace name and settings
+- Member list
+- Channel list
+- Drive list
+
+**Example use case:** Directory sync, org chart tools
+
+### `workspace:write`
+
+Manage workspace settings.
+
+**Includes:**
+- Modify workspace settings
+- Manage integrations
+- Configure webhooks
+
+**Example use case:** Enterprise admin tools, workspace provisioning
+
+## Kairo Scopes
+
+### `kairo:read`
+
+Read Kairo conversations and memory.
+
+**Includes:**
+- Access conversation history
+- Read saved memories
+
+**Example use case:** Analytics, conversation export
+
+### `kairo:execute`
+
+Execute code in Kairo sandboxes.
+
+**Includes:**
+- Run JavaScript code
+- Access execution results
+
+**Example use case:** Automation tools, custom calculations
+
+## Webhook Scopes
+
+### `webhooks:read`
+
+Read webhook configurations.
+
+**Includes:**
+- List webhooks
+- View webhook settings
+
+### `webhooks:write`
+
+Create and manage webhooks.
+
+**Includes:**
+- Create webhooks
+- Update webhook settings
+- Delete webhooks
+
+## Scope Best Practices
+
+### Request Minimum Permissions
+
+**Good:**
+```
+files:read messages:read
+```
+
+**Bad:**
+```
+files:read files:write files:admin messages:read messages:write
+```
+
+Only request what you need. Users trust apps with limited scopes.
+
+### Progressive Permission Requests
+
+Start with read-only scopes. Request write access only when needed:
+
+1. Initial auth: `files:read`
+2. When user clicks "Edit": Request `files:write`
+
+### Document Your Scopes
+
+In your app description, explain why each scope is needed:
+
+> "This app needs `files:read` to sync your documents and `messages:read` to archive important conversations."
+
+### Handle Scope Errors
+
+If a user denies a scope, handle gracefully:
+
+```typescript
+try {
+  await coline.files.create({ name: 'New Doc' })
+} catch (error) {
+  if (error.code === 'INSUFFICIENT_SCOPE') {
+    // Prompt user to re-authorize with files:write scope
+    showPermissionPrompt()
+  }
+}
+```
+
+## Scope Combinations
+
+**Read-Only Backup Tool:**
+```
+files:read messages:read
+```
+
+**Project Management Integration:**
+```
+tasks:read tasks:write files:read calendar:read
+```
+
+**Chat Bot:**
+```
+messages:read messages:write workspace:read
+```
+
+**Full Admin Tool:**
+```
+workspace:read workspace:write files:admin webhooks:write
+```
+
+## Checking Granted Scopes
+
+After authorization, verify what scopes were granted:
+
+```typescript
+// From token exchange response
+const { scope } = await exchangeCodeForToken(code)
+const grantedScopes = scope.split(' ')
+
+if (!grantedScopes.includes('files:write')) {
+  // Show limited functionality warning
+}
+```
+
+Users can approve partial scopes — your app should handle this.
+
+## Revoking Scopes
+
+Users can revoke specific scopes from their settings. Handle `403 Forbidden` errors by checking if required scopes are still valid.
+
+## Next Steps
+
+- [API Keys](/docs/authentication/api-keys) — Simple server-to-server auth
+- [OAuth 2.0](/docs/authentication/oauth) — User authorization flow
+- [Security](/docs/authentication/security) — Best practices

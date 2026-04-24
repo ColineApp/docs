@@ -1,0 +1,271 @@
+---
+title: First Steps
+description: Your first integration with Coline.
+---
+
+## First Steps
+
+After installing the SDK and making your first API call, here's what to learn next.
+
+## Understanding the Basics
+
+### 1. The Client
+
+The SDK exports `ColineApiClient` as the main entry point:
+
+```typescript
+import { ColineApiClient } from '@colineapp/sdk'
+
+const client = new ColineApiClient({
+  baseUrl: 'https://api.coline.app',
+  apiKey: process.env.COLINE_API_KEY
+})
+```
+
+### 2. Workspace Context
+
+Most operations require a workspace context. Use `client.workspace()` to get a scoped client:
+
+```typescript
+const ws = client.workspace('ws_abc123')
+
+// Now all operations are scoped to this workspace
+const drives = await ws.listDrives()
+const files = await ws.listDriveFiles('drive_xyz', { limit: 50 })
+```
+
+### 3. Working with Files
+
+Files live in drives. Each file has a `fileId` you use for operations:
+
+```typescript
+// List files in a drive
+const { files, page } = await ws.listDriveFiles('drive_abc', {
+  limit: 50,
+  fileType: 'doc' // optional filter
+})
+
+// Get file details
+const file = await ws.getFile('file_xyz')
+
+// Update a file
+await ws.updateFile('file_xyz', {
+  name: 'New Name',
+  color: 'blue'
+})
+```
+
+### 4. Messages and Channels
+
+Channels are scoped to the workspace:
+
+```typescript
+// List channels
+const channels = await ws.listChannels()
+
+// Send a message to a channel
+await ws.sendChannelMessage('channel_123', {
+  content: [{ type: 'text', text: 'Hello from the API!' }]
+})
+
+// List messages in a channel
+const messages = await ws.listChannelMessages('channel_123', {
+  limit: 50
+})
+```
+
+### 5. Calendar Events
+
+```typescript
+// List events in a date range
+const events = await ws.listCalendarEvents({
+  start: '2026-04-01T00:00:00Z',
+  end: '2026-04-30T23:59:59Z'
+})
+
+// Create an event
+const event = await ws.createCalendarEvent({
+  title: 'Team Sync',
+  startTime: '2026-04-10T10:00:00Z',
+  endTime: '2026-04-10T11:00:00Z',
+  attendees: ['user_123', 'user_456']
+})
+```
+
+## Common Patterns
+
+### Pagination
+
+List endpoints return paginated results:
+
+```typescript
+const result = await ws.listDriveFiles('drive_abc', { limit: 50 })
+
+// Check if there's more
+if (result.page.hasMore) {
+  const nextPage = await ws.listDriveFiles('drive_abc', {
+    limit: 50,
+    cursor: result.page.nextCursor
+  })
+}
+```
+
+### Auto-pagination
+
+For convenience, use the async generator to iterate through all items:
+
+```typescript
+// Automatically handles pagination
+for await (const note of ws.paginateNotes({ q: 'search term' })) {
+  console.log(note.title)
+}
+```
+
+### Error Handling
+
+The SDK throws `ColineApiError` for API errors:
+
+```typescript
+import { ColineApiError, isColineApiError } from '@colineapp/sdk'
+
+try {
+  const file = await ws.getFile('file_xyz')
+} catch (error) {
+  if (isColineApiError(error)) {
+    console.log('Status:', error.status)
+    console.log('Code:', error.code)
+    console.log('Type:', error.type)
+    
+    // Check if retryable
+    if (error.isRetryable) {
+      // Retry with backoff
+    }
+  }
+}
+```
+
+**Common error codes:**
+- `401` — Authentication failed (invalid or expired API key)
+- `403` — Forbidden (insufficient permissions)
+- `404` — Resource not found
+- `429` — Rate limited
+- `500+` — Server error (usually retryable)
+
+## Webhook Integration
+
+Listen for events in real-time from Coline:
+
+```typescript
+import { verifyAppRequestSignature, COLINE_SIGNATURE_HEADER, COLINE_TIMESTAMP_HEADER } from '@colineapp/sdk'
+
+app.post('/webhooks/coline', async (req, res) => {
+  const signature = req.headers[COLINE_SIGNATURE_HEADER] as string
+  const timestamp = req.headers[COLINE_TIMESTAMP_HEADER] as string
+  
+  const isValid = await verifyAppRequestSignature({
+    secret: process.env.COLINE_WEBHOOK_SECRET,
+    signature,
+    timestamp,
+    body: JSON.stringify(req.body)
+  })
+  
+  if (!isValid) {
+    return res.status(401).send('Invalid signature')
+  }
+  
+  // Process the webhook
+  const { type, data } = req.body
+  console.log('Received:', type, data)
+  
+  res.status(200).send('OK')
+})
+```
+
+## OAuth Apps
+
+Build apps that work across multiple workspaces:
+
+```typescript
+import { createOauthState, createPkceCodeChallenge } from '@colineapp/sdk'
+
+// Generate state and PKCE
+const state = createOauthState()
+const { codeVerifier, codeChallenge } = createPkceCodeChallenge()
+
+// Store these for later
+session.oauthState = state
+session.codeVerifier = codeVerifier
+
+// Build authorization URL
+const authUrl = client.buildLoginWithColineAuthorizeUrl({
+  clientId: process.env.COLINE_CLIENT_ID,
+  redirectUri: 'https://your-app.com/auth/callback',
+  scope: 'files:read messages:read',
+  state,
+  codeChallenge,
+  codeChallengeMethod: 'S256'
+})
+
+// Redirect user to Coline
+res.redirect(authUrl)
+```
+
+### Handling the Callback
+
+```typescript
+// Verify state
+if (req.query.state !== session.oauthState) {
+  throw new Error('Invalid state')
+}
+
+// Exchange code for token using standard OAuth flow
+const tokenResponse = await fetch('https://api.coline.app/v1/oauth/token', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    grant_type: 'authorization_code',
+    code: req.query.code,
+    redirect_uri: 'https://your-app.com/auth/callback',
+    client_id: process.env.COLINE_CLIENT_ID,
+    client_secret: process.env.COLINE_CLIENT_SECRET,
+    code_verifier: session.codeVerifier
+  })
+})
+
+const { access_token } = await tokenResponse.json()
+
+// Use the access token
+const userClient = new ColineApiClient({
+  baseUrl: 'https://api.coline.app',
+  apiKey: access_token // OAuth tokens work as API keys
+})
+```
+
+## Testing Your Integration
+
+### Sandbox Workspace
+
+Create a test workspace for development:
+
+1. Create a new workspace in Coline
+2. Generate an API key for that workspace
+3. Use the sandbox key for testing
+4. Delete the workspace when done
+
+### Debug Mode
+
+Enable debug logging to see all requests:
+
+```typescript
+const client = new ColineApiClient({
+  baseUrl: 'https://api.coline.app',
+  apiKey: process.env.COLINE_API_KEY,
+  debug: true // Logs all requests and responses
+})
+```
+
+## Next Steps
+
+- **[SDK Reference](/docs/sdk)**: Complete API documentation
+- **[Integrations](/docs/integrations)**: Build apps and webhooks
+- **[Authentication](/docs/authentication)**: API keys and OAuth details

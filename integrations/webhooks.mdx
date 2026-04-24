@@ -1,0 +1,394 @@
+---
+title: Webhooks
+description: Receive real-time events from Coline.
+---
+
+## Webhooks
+
+Webhooks notify your app when events happen in Coline. Instead of polling, Coline sends HTTP requests to your server when relevant events occur.
+
+## Use Cases
+
+- **Sync** — Keep external systems in sync with Coline
+- **Trigger** — Run automations when events happen
+- **Notify** — Send notifications to external services
+- **Log** — Audit workspace activity
+
+## Supported Events
+
+| Event | Description |
+|-------|-------------|
+| `file.created` | New file created |
+| `file.updated` | File modified |
+| `file.deleted` | File moved to trash |
+| `message.created` | New message in channel/DM |
+| `message.updated` | Message edited |
+| `task.created` | New task created |
+| `task.updated` | Task status/priority changed |
+| `calendar.event.created` | Event scheduled |
+| `member.joined` | User joined workspace |
+| `app.installed` | Your app was installed |
+| `app.uninstalled` | Your app was removed |
+
+## Setting Up Webhooks
+
+### 1. Create Webhook Endpoint
+
+```typescript
+// app/api/webhooks/coline/route.ts
+import { NextRequest } from 'next/server'
+import { verifyAppRequestSignature, COLINE_SIGNATURE_HEADER, COLINE_TIMESTAMP_HEADER } from '@colineapp/sdk'
+
+export async function POST(request: NextRequest) {
+  // Get headers
+  const signature = request.headers.get(COLINE_SIGNATURE_HEADER)
+  const timestamp = request.headers.get(COLINE_TIMESTAMP_HEADER)
+  const deliveryId = request.headers.get('X-Coline-Delivery')
+  
+  if (!signature || !timestamp) {
+    return new Response('Missing headers', { status: 401 })
+  }
+  
+  // Get raw body
+  const body = await request.text()
+  
+  // Verify signature
+  const isValid = await verifyAppRequestSignature({
+    secret: process.env.COLINE_WEBHOOK_SECRET!,
+    signature,
+    timestamp,
+    body
+  })
+  
+  if (!isValid) {
+    return new Response('Invalid signature', { status: 401 })
+  }
+  
+  // Parse event
+  const event = JSON.parse(body)
+  
+  // Handle event
+  await handleWebhookEvent(event)
+  
+  // Return 200 to acknowledge receipt
+  return new Response('OK', { status: 200 })
+}
+
+async function handleWebhookEvent(event: { type: string; data: unknown }) {
+  switch (event.type) {
+    case 'file.created':
+      await handleFileCreated(event.data)
+      break
+    case 'message.created':
+      await handleMessageCreated(event.data)
+      break
+    case 'task.updated':
+      await handleTaskUpdated(event.data)
+      break
+    default:
+      console.log('Unhandled event:', event.type)
+  }
+}
+```
+
+### 2. Configure Webhook in Coline
+
+Register your webhook URL in the Developer Console:
+
+1. Go to `https://coline.app/developers/console`
+2. Select your workspace
+3. Navigate to your app
+4. Click "Webhooks"
+5. Add URL: `https://your-app.com/api/webhooks/coline`
+6. Select events to receive
+7. Save
+
+### 3. Handle Events
+
+#### File Created
+
+```typescript
+async function handleFileCreated(data: {
+  workspaceId: string
+  fileId: string
+  fileType: string
+  name: string
+  authorUserId: string
+  createdAt: string
+}) {
+  // Sync to external system
+  await syncToExternalCRM({
+    id: data.fileId,
+    name: data.name,
+    type: data.fileType
+  })
+  
+  // Log for audit
+  console.log(`File ${data.name} created by ${data.authorUserId}`)
+}
+```
+
+#### Message Created
+
+```typescript
+async function handleMessageCreated(data: {
+  workspaceId: string
+  messageId: string
+  channelId?: string
+  dmId?: string
+  authorUserId: string
+  content: string
+  createdAt: string
+}) {
+  // Analyze for sentiment
+  const sentiment = await analyzeSentiment(data.content)
+  
+  // Alert on negative mentions
+  if (sentiment.score < -0.5) {
+    await sendAlertToSlack({
+      text: `Negative message detected: ${data.content.slice(0, 100)}...`
+    })
+  }
+}
+```
+
+#### Task Updated
+
+```typescript
+async function handleTaskUpdated(data: {
+  workspaceId: string
+  taskboardId: string
+  taskId: string
+  title: string
+  statusId: string
+  assigneeUserIds: string[]
+  previousValues: {
+    statusId?: string
+    assigneeUserIds?: string[]
+  }
+}) {
+  // Check if status changed to "done"
+  if (data.statusId === 'status_done' && 
+      data.previousValues.statusId !== 'status_done') {
+    // Send completion notification
+    await sendNotification({
+      userIds: data.assigneeUserIds,
+      title: 'Task Completed',
+      body: `${data.title} is done!`
+    })
+  }
+}
+```
+
+## Security
+
+### Signature Verification
+
+Always verify webhook signatures:
+
+```typescript
+import { verifyAppRequestSignature } from '@colineapp/sdk'
+
+const isValid = await verifyAppRequestSignature({
+  secret: process.env.COLINE_WEBHOOK_SECRET,
+  signature: request.headers.get('X-Coline-Signature'),
+  timestamp: request.headers.get('X-Coline-Timestamp'),
+  body: rawBody
+})
+
+if (!isValid) {
+  throw new Error('Invalid signature')
+}
+```
+
+### Replay Protection
+
+Check delivery ID to prevent duplicate processing:
+
+```typescript
+const processedDeliveries = new Set<string>()
+
+async function handleWebhook(request: Request) {
+  const deliveryId = request.headers.get('X-Coline-Delivery')
+  
+  if (processedDeliveries.has(deliveryId)) {
+    return new Response('Already processed', { status: 200 })
+  }
+  
+  // Process event...
+  
+  processedDeliveries.add(deliveryId)
+}
+```
+
+### Timestamp Validation
+
+Reject old requests (older than 5 minutes):
+
+```typescript
+const timestamp = request.headers.get('X-Coline-Timestamp')
+const timestampMs = parseInt(timestamp) * 1000
+const now = Date.now()
+
+if (now - timestampMs > 5 * 60 * 1000) {
+  return new Response('Request too old', { status: 401 })
+}
+```
+
+## Error Handling
+
+### Retry Logic
+
+Coline retries failed webhooks with exponential backoff:
+
+| Attempt | Delay |
+|---------|-------|
+| 1 | Immediate |
+| 2 | 1 second |
+| 3 | 2 seconds |
+| 4 | 4 seconds |
+| 5 | 8 seconds |
+
+Return non-2xx status codes to trigger retry.
+
+### Graceful Degradation
+
+```typescript
+async function handleWebhook(event: WebhookEvent) {
+  try {
+    await processEvent(event)
+  } catch (error) {
+    // Log but don't crash
+    console.error('Webhook processing failed:', error)
+    
+    // Queue for retry
+    await webhookQueue.add(event)
+    
+    // Still return 200 to stop retries
+    return new Response('Queued for retry', { status: 200 })
+  }
+}
+```
+
+## Testing Webhooks
+
+### Local Development
+
+Use ngrok to test webhooks locally:
+
+```bash
+# Install ngrok
+npm install -g ngrok
+
+# Start your dev server
+npm run dev
+
+# Expose to internet
+ngrok http 3000
+
+# Copy HTTPS URL to Developer Console webhook settings
+```
+
+### Replay Events
+
+In Developer Console:
+
+1. Go to your app → Webhooks
+2. Find a delivery in the log
+3. Click "Replay"
+
+### Test Payloads
+
+```typescript
+// test/webhook.test.ts
+const testPayload = {
+  type: 'file.created',
+  data: {
+    workspaceId: 'ws_123',
+    fileId: 'file_456',
+    fileType: 'doc',
+    name: 'Test Doc',
+    authorUserId: 'user_789',
+    createdAt: new Date().toISOString()
+  }
+}
+
+// Sign the payload
+const signature = await signPayload(testPayload, WEBHOOK_SECRET)
+
+// Send test request
+await fetch('http://localhost:3000/api/webhooks/coline', {
+  method: 'POST',
+  headers: {
+    'X-Coline-Signature': signature,
+    'X-Coline-Timestamp': String(Math.floor(Date.now() / 1000)),
+    'X-Coline-Delivery': 'test-123',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify(testPayload)
+})
+```
+
+## Best Practices
+
+### Do
+
+- ✅ Verify signatures
+- ✅ Return 200 quickly (process async if needed)
+- ✅ Handle idempotency
+- ✅ Log all events
+- ✅ Queue for retry on failure
+- ✅ Validate payload schema
+
+### Don't
+
+- ❌ Process synchronously for >5 seconds
+- ❌ Ignore signature verification
+- ❌ Process same delivery twice
+- ❌ Return 500 for expected errors
+- ❌ Block on external API calls
+
+## Advanced Patterns
+
+### Event Queue
+
+For high-volume apps, use a queue:
+
+```typescript
+import { Queue } from 'bull'
+
+const webhookQueue = new Queue('webhooks', redisConnection)
+
+// Add to queue
+webhookQueue.add(event, {
+  attempts: 3,
+  backoff: { type: 'exponential', delay: 1000 }
+})
+
+// Process separately
+webhookQueue.process(async (job) => {
+  await handleEvent(job.data)
+})
+```
+
+### Event Filtering
+
+Only process relevant events:
+
+```typescript
+const INTERESTING_FILE_TYPES = ['doc', 'sheet', 'contact']
+
+async function handleFileCreated(data) {
+  if (!INTERESTING_FILE_TYPES.includes(data.fileType)) {
+    return // Ignore
+  }
+  
+  // Process...
+}
+```
+
+## Next Steps
+
+- [Building Apps](/docs/integrations/building) — Build native integrations
+- [App Platform](/docs/integrations/framework) — App architecture
+- [SDK Reference](/docs/sdk) — Complete SDK docs

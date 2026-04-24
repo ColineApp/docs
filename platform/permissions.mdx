@@ -1,0 +1,384 @@
+---
+title: Permissions
+description: Access control from workspace to individual files.
+---
+
+## Permissions
+
+Coline uses a unified permission model that spans from the workspace level down to individual files. Everything follows the same rules: who can see it, who can edit it, who can share it.
+
+## Permission Levels
+
+### Workspace Roles
+
+Roles determine what you can do within a workspace.
+
+**Owner**
+- Full control over workspace
+- Manage billing and subscription
+- Delete workspace
+- Transfer ownership
+- All admin and member capabilities
+
+**Admin**
+- Manage workspace settings
+- Add/remove members
+- Manage apps and integrations
+- Configure security policies
+- Access audit logs
+- Create public channels
+- All member capabilities
+
+**Member**
+- Create and collaborate on content
+- Join public channels
+- Create private channels
+- Invite external guests (if enabled)
+- Use apps and integrations
+- Access allowed drives and files
+
+**Guest** (optional, admin-enabled)
+- Limited workspace access
+- Only see explicitly shared content
+- Cannot create public channels
+- Cannot invite other guests
+
+### Drive Permissions
+
+Drive permissions control access to file storage.
+
+**Full Access**
+- Read all files
+- Create new files
+- Edit existing files
+- Delete files
+- Share files with others
+- Manage drive settings
+
+**Edit**
+- Read all files
+- Create new files
+- Edit existing files
+- Cannot delete others' files
+- Cannot manage drive settings
+
+**Comment**
+- Read all files
+- Add comments
+- Cannot edit content
+- Cannot create new files
+
+**View**
+- Read all files
+- Cannot comment or edit
+- Cannot see version history (optional setting)
+
+**No Access**
+- Cannot see drive exists
+- Cannot access any files
+- Removed from search results
+
+### File Permissions
+
+Individual files can override drive defaults.
+
+**Explicit Permissions**
+- Specific users or groups
+- View, comment, or edit
+- Expiration dates
+- Password protection
+
+**Link Sharing**
+- Anyone with link (view/comment/edit)
+- Workspace members only
+- Expiration and password
+
+**Inheritance**
+- Files inherit drive permissions by default
+- Explicit file permissions override drive
+- Folder permissions can cascade
+
+### Channel Permissions
+
+Channels have visibility and membership controls.
+
+**Public Channels**
+- All workspace members can join
+- All members can read history
+- All members can post messages
+- Only admins can archive/delete
+
+**Private Channels**
+- Invite-only membership
+- Non-members cannot see channel exists
+- Members can add other members (configurable)
+- Only admins or creators can archive
+
+**DM Permissions**
+- Only participants can access
+- Workspace admins cannot read content
+- Participants can leave (1:1) or remove others (group)
+- Cannot add people to existing DMs (creates new group)
+
+## Permission Inheritance
+
+Permissions flow downward with granularity:
+
+```
+Workspace Role
+    ↓
+Drive Access
+    ↓
+Folder Permissions (optional)
+    ↓
+File Permissions
+```
+
+**Inheritance Rules:**
+1. Workspace role determines base capabilities
+2. Drive access filters what you can reach
+3. File permissions can restrict further
+4. Explicit permissions override inherited ones
+
+**Examples:**
+
+*Scenario 1: Workspace member, drive editor*
+- Can create files in the drive
+- Can edit files with drive-default permissions
+- Cannot edit a file explicitly restricted to view-only
+
+*Scenario 2: Workspace admin, drive view-only*
+- Admin role grants workspace management
+- Drive permissions limit file operations
+- Can override via explicit file grants
+
+*Scenario 3: Guest user, specific file access*
+- No workspace-level drive access
+- Explicit permission on one file
+- Can only see and access that file
+
+## Sharing Models
+
+### Direct Sharing
+
+Grant access to specific people:
+
+**Users**
+- By email (external guests)
+- By username (workspace members)
+- By group (teams, departments)
+
+**Permission Levels**
+- View, comment, edit
+- Time-limited access
+- Notification on access
+
+**Use for:**
+- Sensitive documents with specific audience
+- External collaboration
+- Temporary project access
+
+### Link Sharing
+
+Create shareable URLs:
+
+**Link Types**
+- **View** — Read-only, no account required
+- **Comment** — Can add comments with account
+- **Edit** — Full editing with account
+
+**Link Settings**
+- Expiration date
+- Password protection
+- Workspace-restricted
+- One-time use (view once)
+
+**Use for:**
+- Broad distribution
+- Public documentation
+- Easy collaboration without managing lists
+
+### Drive Sharing
+
+Share entire drives:
+
+**Models**
+- **All workspace members** — Default for team drives
+- **Specific people** — Curated access
+- **Public** — Anyone with link (rare)
+
+**Cascading Permissions**
+- New files inherit drive permissions
+- Changes to drive permissions apply to all files
+- Explicit file permissions survive drive changes
+
+## Permission Visibility
+
+### What You Can See
+
+**You can always see:**
+- Public channels (existence and membership)
+- Drives you have access to
+- Files shared with you
+- Events you're invited to
+- Your own DMs and group DMs
+
+**You cannot see:**
+- Private channels you're not in (don't appear in list)
+- Drives with no access (no existence hint)
+- Files not shared with you (search won't find)
+- Other people's DMs (complete privacy)
+
+### Permission Indicators
+
+UI shows permission status:
+
+- **Lock icon** — Private/restricted
+- **Eye icon** — View-only
+- **Pencil icon** — Editable
+- **Share icon** — Shared with others
+- **Globe icon** — Public access
+
+## Managing Permissions
+
+### Granting Access
+
+**From the file:**
+1. Click Share button
+2. Add people by email or username
+3. Set permission level
+4. Optional: Set expiration
+5. Notify via message (optional)
+
+**From the drive:**
+1. Drive settings → Sharing
+2. Set default permissions
+3. Add specific people with different access
+4. Manage link sharing settings
+
+**From the channel:**
+1. Channel settings → Members
+2. Invite workspace members
+3. External guests (if enabled)
+4. Set member roles (if private)
+
+### Revoking Access
+
+**Individual:**
+- Remove specific user from file permissions
+- Change permission level (edit → view)
+- Revoke link (generate new link)
+
+**Bulk:**
+- Change drive default (affects all inheriting files)
+- Remove external guests en masse
+- Archive channel (preserves history, restricts new access)
+
+### Audit and Review
+
+**Who has access:**
+- File permissions panel shows all users
+- Drive settings show member list
+- Channel member list with roles
+
+**Access logs:**
+- View history (who opened, when)
+- Edit history (who changed, what changed)
+- Share history (who granted access)
+
+**Review tools:**
+- External access report
+- Orphaned permissions (users no longer in workspace)
+- Overly broad access (files with public links)
+
+## Permission Conflicts
+
+### Priority Order
+
+When permissions conflict, most specific wins:
+
+1. **Explicit file permission** — Highest priority
+2. **Folder permission** — If set
+3. **Drive default permission** — Base for files
+4. **Workspace role** — Global capabilities
+
+**Example:**
+- Drive default: Edit access for all members
+- File explicitly: View-only for member Alice
+- Result: Alice has view-only (explicit wins)
+
+### Common Conflicts
+
+*Can't access a file I should see:*
+- Check drive permissions first
+- Verify file hasn't been moved to restricted drive
+- Confirm explicit file permission hasn't been set
+
+*Guest can see too much:*
+- Review drive sharing settings
+- Check for public links
+- Audit inherited permissions
+
+*Channel member can't edit file:*
+- Channel access ≠ file access
+- File might be in private drive
+- Explicit file permissions might override
+
+## Security Best Practices
+
+### Workspace Level
+
+- Enable 2FA for all members (admin setting)
+- Restrict guest invites to admins
+- Require approval for public links
+- Regular audit of external access
+
+### Drive Level
+
+- Default new drives to private
+- Explicitly grant access rather than "all members"
+- Review drive membership quarterly
+- Archive unused drives
+
+### File Level
+
+- Review permissions before sharing externally
+- Set expiration on sensitive links
+- Use password protection for extra-sensitive content
+- Remove orphaned permissions (former employees)
+
+### Channel Level
+
+- Prefer public channels for transparency
+- Use private channels for sensitive topics
+- Regular review of channel membership
+- Archive inactive channels
+
+## Troubleshooting
+
+### "You don't have permission"
+
+1. Check if you have workspace access
+2. Verify drive permissions
+3. Look for explicit file restrictions
+4. Contact file owner or admin
+
+### "Link not found"
+
+1. Link may have been revoked
+2. File may have been deleted
+3. Workspace may have been archived
+4. Check with link creator
+
+### "Can't add member"
+
+1. Verify you have permission to share
+2. Check if target user has workspace access
+3. Confirm external guests are enabled
+4. Check if you've hit member limits
+
+## Next Steps
+
+- [Files](/docs/platform/files) — Content that permissions protect
+- [Containers](/docs/platform/containers) — Where permissions apply
+- [API Security](/docs/developers/security) — Programmatic access control

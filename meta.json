@@ -1,0 +1,23 @@
+{
+  "title": "Documentation",
+  "pages": [
+    "index",
+    "---Using Coline---",
+    "getting-started",
+    "files",
+    "calendar",
+    "tasks",
+    "notes",
+    "docs",
+    "channels",
+    "kairo",
+    "---Platform---",
+    "platform",
+    "---Building on Coline---",
+    "developers",
+    "authentication",
+    "api",
+    "sdk",
+    "integrations"
+  ]
+}

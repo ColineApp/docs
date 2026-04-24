@@ -1,0 +1,223 @@
+---
+title: Primitives
+description: The building blocks that power everything in Coline.
+---
+
+## Primitives
+
+Every piece of data in Coline is built from eight primitives. These aren't just types — they're the conceptual building blocks that let you transform, connect, and move work between any context.
+
+## The Eight Primitives
+
+### `message`
+
+Conversations and threaded discussions.
+
+- Used in: Channels, DMs, calendar events, task comments
+- Properties: Author, timestamp, content parts, thread relationships
+- Can contain: Text, mentions, attachments, reactions
+
+**Example transformations:**
+- A message thread becomes a note (save important discussion)
+- A message becomes a task (create work from conversation)
+- Messages aggregate into a doc (compile meeting notes)
+
+### `string`
+
+Text content, labels, names, and descriptions.
+
+- Used in: File names, task titles, property values, search indexes
+- Properties: Plain or formatted text, length limits, encoding
+- Validated: Sanitized for security, indexed for search
+
+**Example transformations:**
+- A sheet cell becomes a task title
+- A doc paragraph becomes a board card label
+- A note title becomes a channel topic
+
+### `number`
+
+Metrics, counts, calculations, and measurements.
+
+- Used in: Spreadsheet calculations, task estimates, priorities
+- Properties: Integers, decimals, currency, percentages
+- Formatted: With units (hours, dollars, points)
+
+**Example transformations:**
+- Sum of sheet column becomes a doc metric
+- Task count becomes a board column badge
+- Story points aggregate into a sprint velocity
+
+### `url`
+
+Links to files, external resources, and references.
+
+- Used in: File references, web links, embeds, attachments
+- Properties: Protocol, domain, path, query parameters
+- Resolved: Preview unfurls, internal links validated
+
+**Example transformations:**
+- External URL becomes an embedded iframe in a doc
+- File reference becomes a card attachment on a board
+- Mention link becomes a bidirectional backlink in notes
+
+### `file`
+
+Attachments, uploads, and binary content.
+
+- Used in: Message attachments, file embeds, asset libraries
+- Properties: MIME type, size, storage location, thumbnails
+- Handled: Images, videos, PDFs, code files, archives
+
+**Example transformations:**
+- Uploaded image becomes a slide background
+- PDF attachment becomes a searchable doc excerpt
+- Video file becomes a board card preview
+
+### `date`
+
+Timestamps, deadlines, scheduling, and duration.
+
+- Used in: Due dates, event times, created/modified timestamps, reminders
+- Properties: Absolute time, timezone, recurrence rules, duration
+- Formatted: Relative ("2 days ago"), absolute ("Mar 15"), duration ("1h 30m")
+
+**Example transformations:**
+- Calendar event date populates a sheet deadline column
+- Task due date becomes a board card color (overdue = red)
+- Created date becomes a note's daily page grouping
+
+### `user`
+
+People, assignees, authors, and mentions.
+
+- Used in: Task assignments, message authors, file owners, permissions
+- Properties: Identity, role, presence, workspace membership
+- Referenced: @mentions, assignee fields, permission grants
+
+**Example transformations:**
+- Task assignees become event invitees for a review meeting
+- Channel members populate a sheet stakeholder column
+- Message mentions generate notification routing
+
+### `boolean`
+
+Flags, status indicators, and binary state.
+
+- Used in: Completion status, approval states, visibility toggles
+- Properties: True/false, defaults, computed values
+- Displayed: Checkboxes, toggles, status badges
+
+**Example transformations:**
+- Task completion becomes a doc checklist item status
+- File starred state becomes a board favorite indicator
+- Approval boolean becomes a slide progress tracker
+
+## Why Primitives Matter
+
+### Universal Composition
+
+A board card is just a bundle of primitives:
+- `string` — Title
+- `string` — Description  
+- `user` — Assignee
+- `date` — Due date
+- `boolean` — Complete flag
+- `url` — Attachments
+- `number` — Priority score
+
+A spreadsheet row is the same bundle, displayed differently.
+
+### Type Safety
+
+Primitives enforce consistency across the platform. When you move data from a sheet to a board, the `date` stays a `date`, the `user` stays a `user`. No data loss, no format conversion errors.
+
+### Search and Discovery
+
+Primitives power universal search. Search for a `user` and find every file they own, every message they sent, every task assigned to them. Search for a `date` range and find all work from that period across every file type.
+
+### API Consistency
+
+The API uses primitives for all data exchange. When you read a task or write to a sheet, you're working with the same primitive types. No special cases, no type mapping hell.
+
+## Primitive Transformations
+
+### Conversion Rules
+
+Primitives transform predictably:
+
+| From | To | Result |
+|------|-----|--------|
+| `date` | `string` | Formatted date text |
+| `number` | `string` | Formatted number text |
+| `user` | `string` | User's display name |
+| `boolean` | `string` | "Yes"/"No" or "Complete"/"Pending" |
+| `string` | `number` | Parsed if numeric, null if not |
+| `url` | `file` | Downloaded and stored if valid |
+| `message` | `string` | Plain text extraction |
+
+### Lossless vs. Lossy
+
+**Lossless transformations** preserve all data:
+- Board card to sheet row (all fields map)
+- Note to doc (blocks convert to rich text)
+- Task to calendar event (date, assignees transfer)
+
+**Lossy transformations** extract subset:
+- Doc to slide (headings become slides, body text summarized)
+- Sheet to board (rows become cards, formulas computed to values)
+- Channel thread to note (messages flattened to document)
+
+## Working with Primitives
+
+### In the UI
+
+You don't think about primitives directly. When you create a task, you're filling in fields. When you write a formula, you're referencing values. Primitives are the underlying system making it all consistent.
+
+### In Formulas
+
+Sheet formulas reference primitives:
+
+```
+=IF(DueDate < TODAY(), "Overdue", "On Track")
+=SUM(StoryPoints)
+=CONCAT(Assignee.FirstName, " ", Assignee.LastName)
+```
+
+### In the API
+
+SDK responses use primitives:
+
+```typescript
+const task = await coline.tasks.get({ taskId: "..." });
+// task.dueDate is a Date (primitive)
+// task.assignee is a User (primitive)
+// task.storyPoints is a Number (primitive)
+```
+
+### In Automations
+
+Triggers and actions use primitives:
+
+- **Trigger:** "When `date` field changes"
+- **Condition:** "If `boolean` is true"
+- **Action:** "Set `user` to current user"
+
+## Primitive Storage
+
+Primitives are stored efficiently based on their type:
+
+- `message` — Message content parts, searchable index
+- `string` — Full-text search index, exact match support
+- `number` — Numeric indexes for sorting and ranges
+- `url` — Normalized, validated, preview cached
+- `file` — Binary storage with CDN delivery
+- `date` — Timestamp with timezone handling
+- `user` — Reference to user record with denormalized name
+- `boolean` — Bit field, indexed for filtering
+
+## Next Steps
+
+- [Files](/docs/platform/files) — How primitives compose into file types
+- [Containers](/docs/platform/containers) — Where primitives live and get shared
+- [Permissions](/docs/platform/permissions) — Access control at the primitive level

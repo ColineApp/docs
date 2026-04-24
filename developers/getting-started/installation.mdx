@@ -1,0 +1,74 @@
+---
+title: Installation
+description: Install the Coline SDK for your platform.
+---
+
+## Installation
+
+The Coline SDK is available for multiple platforms. Choose the one that fits your stack.
+
+## TypeScript / JavaScript
+
+### npm
+
+```bash
+npm install @colineapp/sdk
+```
+
+### yarn
+
+```bash
+yarn add @colineapp/sdk
+```
+
+### pnpm
+
+```bash
+pnpm add @colineapp/sdk
+```
+
+### Requirements
+
+- Node.js 18.0.0 or higher
+- TypeScript 5.0+ (for TypeScript projects)
+
+### Import
+
+```typescript
+// ES Modules (recommended)
+import { Coline } from '@colineapp/sdk'
+
+// CommonJS
+const { Coline } = require('@colineapp/sdk')
+```
+
+## Python
+
+Coming soon. Subscribe to our developer newsletter for updates.
+
+## Other Languages
+
+We currently support TypeScript/JavaScript. Additional languages are on the roadmap:
+
+- Python (Q2 2026)
+- Go (Q3 2026)
+- Rust (Q4 2026)
+
+For other languages, use the REST API directly. The API is designed to be simple and consistent, making it easy to build clients in any language.
+
+## Verifying Installation
+
+Test your installation:
+
+```typescript
+import { Coline } from '@colineapp/sdk'
+
+const coline = new Coline({ apiKey: 'test' })
+console.log('SDK initialized')
+```
+
+## Next Steps
+
+- **[Quickstart](/docs/developers/getting-started/quickstart)**: Make your first API call
+- **[Authentication](/docs/authentication)**: Set up API keys or OAuth
+- **[SDK Reference](/docs/sdk)**: Explore the full SDK API

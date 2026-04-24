@@ -1,0 +1,135 @@
+---
+title: Overview
+description: How Coline's platform unifies your work into a single system.
+---
+
+## Platform Overview
+
+Coline is built on a simple idea: your work should live in one place, not scattered across a dozen different apps. Everything in Coline is a file. A doc, a task, a message, a calendar event — all files. This lets you transform, connect, and move work between contexts without copy-pasting or context switching.
+
+## The Three Layers
+
+Coline's architecture has three layers that work together:
+
+### 1. Primitives
+
+The building blocks that compose everything:
+
+- `message` — Conversations and threads
+- `string` — Text content and labels
+- `number` — Metrics, counts, calculations
+- `url` — Links to files, external resources
+- `file` — Attachments and references
+- `date` — Timestamps, deadlines, scheduling
+- `user` — People, assignees, mentions
+- `boolean` — Flags, status indicators
+
+These primitives enable universal conversion. A row in a spreadsheet becomes a card on a board. A section of a doc becomes a slide. A message thread becomes a task. The data stays the same; only the view changes.
+
+### 2. Files
+
+Every piece of content is a file with a type:
+
+| Type | Purpose |
+|------|---------|
+| `.doc` | Traditional rich text documents |
+| `.note` | Block-based networked notes with backlinks |
+| `.sheet` | Structured data with typed columns and formulas |
+| `.board` | Visual workspaces for cards and workflows |
+| `.slide` | Presentation decks from blocks |
+| `.code` | Code files (full IDE coming soon) |
+| `.taskboard` | Project management with statuses and sprints |
+
+Files live in virtual drives with granular permissions. You can share a single file, a folder, or an entire drive. Files can be moved, duplicated, versioned, and transformed.
+
+### 3. Containers
+
+Where files live and people collaborate:
+
+**Workspaces** — The top-level boundary. Everything is scoped to a workspace: your files, your channels, your permissions. Workspaces can be personal (just you) or team (shared with others).
+
+**Virtual Drives** — File storage with purpose. A drive might be "Projects," "Personal," or "Archive." Each drive has its own permission settings.
+
+**Channels** — Public or private collaboration spaces. Each channel has tabs: messages, files, folders, or any custom view you need.
+
+**DMs** — Direct conversations between two or more people.
+
+**Calendar Events** — Scheduled containers with date, invitees, message threads, and voice calls.
+
+## Universal Content
+
+Because everything is built from the same primitives, content flows between contexts:
+
+- **Doc to Task** — Turn a project brief into a taskboard with one click
+- **Message to Note** — Save an important thread to your knowledge base
+- **Sheet to Board** — Visualize spreadsheet rows as cards on a kanban
+- **Board to Doc** — Export a project roadmap as a formatted document
+
+The underlying data doesn't change. You just change how you view and interact with it.
+
+## Permissions and Access
+
+Coline uses workspace-scoped permissions with granularity from the workspace level down to individual files.
+
+**Workspace Level**
+- Owners can manage billing, members, and workspace settings
+- Admins can manage apps, integrations, and security
+- Members can create and collaborate on content
+
+**Drive Level**
+- Drives can be shared or private
+- Folder-level permissions inherit from drives
+- Individual files can have custom permissions
+
+**Container Level**
+- Public channels are open to all workspace members
+- Private channels are invite-only
+- DMs are private between participants
+- Calendar events respect attendee permissions
+
+**File Level**
+- Share individual files via link or direct permission
+- Star files for quick access
+- Track versions and changes
+
+## Integrations
+
+Third-party apps integrate as "headless apps" that work with Coline's primitives. An integration can:
+
+- Sync external data into Coline files
+- Post messages to channels
+- Create tasks from external triggers
+- Embed external content in tabs
+
+Integrations use the same permission model as users. They can only access what the installing user can access.
+
+## Real-World Example
+
+Here's how the three layers work together in practice:
+
+**Product Team Workflow**
+
+1. **Planning in a Doc** — PM writes Q2 roadmap in a `.doc` with goals and timelines
+2. **Tasks in a Board** — Engineering lead converts roadmap sections into a `.taskboard` with sprint assignments
+3. **Tracking in Channels** — #product channel has tabs: Messages, Roadmap (doc), Sprint Board, Bugs (folder)
+4. **Knowledge in Notes** — Engineers save technical decisions in `.note` files with backlinks to the roadmap
+5. **Data in Sheets** — Product ops tracks metrics in `.sheet` files linked from the channel
+6. **Review in Slides** — Exec summary auto-generated from the roadmap doc as `.slide` deck
+
+All of this lives in one workspace. No copy-pasting between Notion, Slack, Trello, and Google Docs. One system, multiple views of the same work.
+
+## For Developers
+
+If you're building on Coline, you interact with the same three layers:
+
+- **Primitives** — API responses use these types consistently
+- **Files** — Create, read, update via the Files API
+- **Containers** — Post messages, manage channels, schedule events
+
+The SDK abstracts the complexity. You work with typed objects, not raw primitives.
+
+## Next Steps
+
+- [Files](/docs/platform/files) — Deep dive into file types and capabilities
+- [Containers](/docs/platform/containers) — How channels, DMs, and calendar work
+- [Permissions](/docs/platform/permissions) — Detailed access control documentation
