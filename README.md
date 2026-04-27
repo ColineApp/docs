@@ -1,4 +1,9 @@
-# Coline Docs Content
+---
+title: Coline Docs
+description: Coline documentation.
+---
+
+# Coline Docs
 
 MDX pages and Fumadocs navigation for [docs.coline.app](https://docs.coline.app).
 
