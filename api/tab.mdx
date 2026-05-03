@@ -1,11 +1,11 @@
 ---
 title: Tab API
-description: The world's fastest autocomplete model, built for everything.
+description: OpenAI-compatible autocomplete for any editor.
 ---
 
 ## Tab
 
-Tab is Coline's intelligent autocomplete. Like Cursor Tab for code, but for everything in your workspace — notes, docs, messages, tasks, and calendar events.
+Tab is Coline's intelligent autocomplete. Like Cursor Tab for code, but as a simple OpenAI-compatible primitive for any editor — code editors, notes apps, docs, email composers, issue trackers, messages, tasks, and more.
 
 Tab predicts what you'll write next and shows it as ghost text. Press **Tab** to accept, or keep typing to ignore.
 
@@ -19,7 +19,7 @@ Tab predicts what you'll write next and shows it as ghost text. Press **Tab** to
 ## Features
 
 - **Lightning fast** — 120ms debounce, streaming completions
-- **Every surface** — Works in notes, docs, messages, tasks, calendar
+- **Any surface** — Works in code editors, notes apps, docs, email composers, issue trackers, messages, tasks, calendar, and custom editors
 - **Context aware** — Understands your workspace, files, and conversations
 - **Natural flow** — Matches your tone and writing style
 - **Multi-line** — Suggests paragraphs, not just words
@@ -41,6 +41,8 @@ Tab is built into the Coline UI. No API calls needed for normal usage — just s
 
 | Surface | Where It Works |
 |---------|----------------|
+| **Custom** | Any editor that can send text before/after the cursor |
+| **Code** | Public OpenAI-compatible editor integrations |
 | **Notes** | Block-based editor, any text block |
 | **Docs** | Rich text paragraphs, headings, lists |
 | **Messages** | Channel and DM message composer |
@@ -86,7 +88,7 @@ Returns available Tab models.
         },
         "capabilities": {
           "streaming": true,
-          "surfaces": ["notes", "docs", "messages", "tasks", "calendar"]
+          "surfaces": ["any", "code", "notes", "docs", "messages", "tasks", "calendar"]
         }
       }
     ]
@@ -109,17 +111,19 @@ Get an inline completion for the current cursor position.
   model?: string;              // "tab-v1" (default)
   stream?: boolean;          // true for streaming (recommended)
   tab_context: {
-    surface: "notes" | "docs" | "messages" | "tasks" | "calendar";
+    surface: string;                // "code", "notes", "email", "issue", etc.
     workspace_slug: string;         // Your workspace slug
-    entity_id: string;              // File ID, channel ID, etc.
-    documentType: "plaintext" | "markdown";
-    activeTextBeforeCursor: string; // Text before cursor (max 16k chars)
-    activeTextAfterCursor?: string; // Text after cursor (max 16k chars)
-    surroundingContext?: string;    // Additional context (max 32k chars)
-    blockKind?: string;             // For notes/docs: paragraph, heading, etc.
-    noteTitle?: string;             // Note title for context
-    documentTitle?: string;         // Doc title for context
-    taskboardFileId?: string;       // Required for tasks surface
+    entity_id: string;              // File path, file ID, channel ID, etc.
+    document_type: "plaintext" | "markdown";
+    active_text_before_cursor: string; // Text before cursor (max 16k chars)
+    active_text_after_cursor?: string; // Text after cursor (max 16k chars)
+    surrounding_context?: string;    // Additional context (max 32k chars)
+    code_language?: string;          // For code: typescript, python, rust, etc.
+    file_path?: string;              // For code: src/app.ts, lib/foo.py, etc.
+    block_kind?: string;             // Optional editor-specific block/type hint
+    note_title?: string;             // Note title for context
+    document_title?: string;         // Doc title for context
+    taskboard_file_id?: string;      // Required for tasks surface
   };
   max_completion_tokens?: number;   // Max 500
 }
@@ -137,11 +141,35 @@ curl https://api.coline.app/v1/tab/chat/completions \
       "surface": "docs",
       "workspace_slug": "acme",
       "entity_id": "doc_123",
-      "documentType": "markdown",
-      "activeTextBeforeCursor": "Our Q3 goals include ",
-      "documentTitle": "Q3 Planning"
+      "document_type": "markdown",
+      "active_text_before_cursor": "Our Q3 goals include ",
+      "document_title": "Q3 Planning"
     },
     "max_completion_tokens": 100
+  }'
+```
+
+**Code Editor Request:**
+
+```bash
+curl https://api.coline.app/v1/tab/chat/completions \
+  -H "Authorization: Bearer col_ws_xxx" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "tab-v1",
+    "stream": true,
+    "tab_context": {
+      "surface": "code",
+      "workspace_slug": "acme",
+      "entity_id": "src/app.ts",
+      "document_type": "plaintext",
+      "code_language": "typescript",
+      "file_path": "src/app.ts",
+      "active_text_before_cursor": "export function add(a: number, b: number) {\n  return ",
+      "active_text_after_cursor": "\n}",
+      "surrounding_context": "package: @acme/app"
+    },
+    "max_completion_tokens": 80
   }'
 ```
 
@@ -174,8 +202,8 @@ for await (const text of client.streamTabText({
     surface: 'notes',
     workspace_slug: 'acme',
     entity_id: 'note_123',
-    documentType: 'markdown',
-    activeTextBeforeCursor: 'Action items:\n- [ ] '
+    document_type: 'markdown',
+    active_text_before_cursor: 'Action items:\n- [ ] '
   },
   max_completion_tokens: 100
 })) {
@@ -192,8 +220,8 @@ const response = await client.createTabChatCompletion({
     surface: 'messages',
     workspace_slug: 'acme',
     entity_id: 'channel_456',
-    documentType: 'plaintext',
-    activeTextBeforeCursor: 'Can you review the '
+    document_type: 'plaintext',
+    active_text_before_cursor: 'Can you review the '
   },
   max_completion_tokens: 50,
   stream: false  // Complete response in one request
@@ -227,7 +255,7 @@ Tab may include text the user already typed. Strip duplicates:
 import { sanitizeTabSuggestion } from '@colineapp/sdk'
 
 const cleanSuggestion = sanitizeTabSuggestion({
-  activeTextBeforeCursor: 'Hello wor',
+  active_text_before_cursor: 'Hello wor',
   rawSuggestion: 'rld, how are you?'
 })
 // Returns: "ld, how are you?"
@@ -248,9 +276,9 @@ if (suggestion.length < 2) {
 Send only relevant context to minimize latency:
 
 ```typescript
-activeTextBeforeCursor: text.slice(-600),  // Last 600 chars
-activeTextAfterCursor: text.slice(0, 80),   // Next 80 chars
-surroundingContext: nearbyBlocks.slice(0, 500) // 500 chars of context
+active_text_before_cursor: text.slice(-600),  // Last 600 chars
+active_text_after_cursor: text.slice(0, 80),  // Next 80 chars
+surrounding_context: nearbyBlocks.slice(0, 500) // 500 chars of context
 ```
 
 ## Configuration
@@ -293,6 +321,38 @@ Tab shares the same rate limits as the main API:
 
 ## Surfaces Deep Dive
 
+### Any Editor
+
+The only required idea is cursor context. Use any stable surface name that helps you segment analytics and prompt behavior:
+
+```typescript
+tab_context: {
+  surface: 'email',
+  workspace_slug: 'acme',
+  entity_id: 'draft_123',
+  document_type: 'plaintext',
+  active_text_before_cursor: 'Hey Maya,\n\nFollowing up on ',
+  active_text_after_cursor: '',
+  surrounding_context: 'Thread subject: Launch plan'
+}
+```
+
+### Code
+
+OpenAI-compatible autocomplete for code editors:
+
+```typescript
+tab_context: {
+  surface: 'code',
+  entity_id: 'src/app.ts',
+  document_type: 'plaintext',
+  code_language: 'typescript',
+  file_path: 'src/app.ts',
+  active_text_before_cursor: 'const total = ',
+  active_text_after_cursor: '\nconsole.log(total)'
+}
+```
+
 ### Notes
 
 Works in any text block:
@@ -305,8 +365,8 @@ Works in any text block:
 ```typescript
 tab_context: {
   surface: 'notes',
-  blockKind: 'paragraph',  // or 'heading1', 'bulleted-list', etc.
-  noteTitle: 'Meeting Notes'
+  block_kind: 'paragraph',  // or 'heading1', 'bulleted-list', etc.
+  note_title: 'Meeting Notes'
 }
 ```
 
@@ -317,8 +377,8 @@ Rich text editing with formatting awareness:
 ```typescript
 tab_context: {
   surface: 'docs',
-  documentTitle: 'Project Spec',
-  documentType: 'markdown'
+  document_title: 'Project Spec',
+  document_type: 'markdown'
 }
 ```
 
@@ -329,7 +389,7 @@ Chat completions with conversation context:
 ```typescript
 tab_context: {
   surface: 'messages',
-  surroundingContext: '[conversation history]\n---\n[composing] '
+  surrounding_context: '[conversation history]\n---\n[composing] '
 }
 ```
 
@@ -340,7 +400,7 @@ Task descriptions with status/priority awareness:
 ```typescript
 tab_context: {
   surface: 'tasks',
-  taskboardFileId: 'file_taskboard_123'
+  taskboard_file_id: 'file_taskboard_123'
 }
 ```
 
@@ -363,6 +423,7 @@ Hello wor[ld, how are you?]
 
 Tab uses surface-specific system prompts for best results:
 
+- **Code:** Continue code naturally, match language, indentation, and local style
 - **Notes/Docs:** Continue writing naturally, match formatting
 - **Messages:** Keep it conversational, short and punchy
 - **Tasks:** Descriptive, actionable, matches task metadata
