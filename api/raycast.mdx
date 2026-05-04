@@ -1,0 +1,35 @@
+---
+title: Raycast
+description: Search, create, and open Coline workspace content from Raycast.
+---
+
+The Coline Raycast extension lets you access your workspace without leaving the keyboard.
+
+## Commands
+
+- **Search** — find anything in your workspace
+- **Taskboards** — browse boards and tasks
+- **Create Task** — add a task to any board
+- **Create Note** — start a new note
+- **Upcoming Events** — see what's next on your calendar
+- **Create Event** — add a calendar event
+- **Open Workspace** — jump to Coline in the browser
+
+## Setup
+
+1. Install the extension from the [Raycast Store](https://www.raycast.com/store).
+2. Create a workspace API key in **Settings → API Keys**.
+3. Grant the scopes needed by the commands you use:
+   - `workspace.read` — search
+   - `files.read` / `files.write` — notes
+   - `taskboards.read` / `taskboards.write` — tasks
+   - `calendar.read` / `calendar.write` — calendar
+4. Paste the key into the extension preferences when prompted.
+
+## Preferences
+
+| Preference | Value |
+|---|---|
+| API Base URL | `https://api.coline.app` |
+| API Path Prefix | `/v1` |
+| Web Base URL | `https://coline.app` |
