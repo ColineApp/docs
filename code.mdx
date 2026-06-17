@@ -21,6 +21,20 @@ Each code workspace includes:
 
 Coline Code is designed for full-project workflows rather than isolated file editing.
 
+## Projects & Repositories
+
+Code projects are organized around repositories and shared workspaces.
+
+Teams can:
+
+- Open and manage connected repositories
+- Browse project files and folders
+- Work across documentation, source code, and configuration together
+- Coordinate engineering work alongside tasks, notes, and discussions
+- Keep project context connected to the rest of the workspace
+
+Repository access and available workflows depend on workspace permissions and configured integrations.
+
 ## Editor Features
 
 ### Monaco-Based Editor
@@ -94,15 +108,16 @@ Coline Code supports git-based development workflows directly inside the workspa
 
 Version control actions are designed to work alongside collaborative editing and AI-assisted changes.
 
-## Supported Projects
+## Supported Languages & Frameworks
 
 Coline Code works well for:
 
 - TypeScript and JavaScript applications
-- Python projects
-- Configuration repositories
-- Documentation sites
-- Scripts and automation tools
+- React and Next.js projects
+- Python services and scripts
+- Infrastructure and configuration repositories
+- Documentation sites and MDX content
+- Automation tools and internal utilities
 - Full-stack web applications
 
 Language tooling and framework support may vary by workspace configuration.
@@ -127,8 +142,21 @@ Depending on workspace configuration, teams can:
 - Edit deployment configuration
 - Coordinate release workflows
 - Use Kairo to automate repetitive development tasks
+- Connect external CI/CD and deployment systems
 
 Runtime execution environments, deployment infrastructure, and build tooling may differ between organizations and integrations.
+
+## Permissions & Access
+
+Workspace admins can control:
+
+- Repository access
+- Editing permissions
+- Git provider integrations
+- Deployment and environment access
+- AI usage policies and approvals
+
+Kairo actions inside Coline Code follow the same workspace permission model used throughout Coline.
 
 ## Limitations
 
@@ -140,6 +168,7 @@ Examples include:
 - Git provider availability depending on configuration
 - Language-specific tooling varying by project type
 - Deployment workflows managed through external services
+- Some runtime and debugging workflows requiring external infrastructure
 
 ## Related Docs
 
