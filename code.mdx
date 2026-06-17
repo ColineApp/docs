@@ -5,9 +5,21 @@ description: Build, edit, and manage code projects directly inside Coline.
 
 ## Coline Code
 
-Coline Code is the development workspace built into Coline. It combines code editing, project navigation, AI assistance, and collaboration tools in a shared workspace.
+Coline Code is the integrated development workspace inside Coline. It combines project management, file editing, AI assistance, and git workflows in a shared collaborative environment.
 
-Use Coline Code to work on application code, scripts, configuration files, documentation, and automation projects without switching between separate tools.
+Use Coline Code to work on application code, scripts, infrastructure configuration, documentation, and automation projects without switching between separate tools.
+
+## Workspace Overview
+
+Each code workspace includes:
+
+- A Monaco-based editor
+- Project and file navigation
+- Integrated git workflows
+- AI-assisted editing with Kairo
+- Shared collaboration features tied to the rest of your workspace
+
+Coline Code is designed for full-project workflows rather than isolated file editing.
 
 ## Editor Features
 
@@ -20,23 +32,26 @@ The editor includes:
 - Inline search and replace
 - Automatic indentation and formatting support
 - Keyboard shortcuts similar to VS Code
+- Split-pane editing for multi-file workflows
 
 ### Project Navigation
 
-Browse and manage project files with the built-in file explorer:
+Browse and manage repositories with the built-in file explorer:
 
 - Nested folders and file trees
 - Quick file switching
 - Drag-and-drop organization
 - Context actions for creating, renaming, and deleting files
+- Fast navigation between related source files
 
 ### Multi-File Workflows
 
-Coline Code is designed for full project workflows rather than single-file editing:
+Coline Code supports working across entire repositories:
 
 - Open and edit multiple files at once
-- Navigate between related files quickly
 - Keep documentation, configuration, and source code together
+- Review changes across a project before committing
+- Coordinate code changes with tasks and discussions
 
 ## AI-Powered Development
 
@@ -52,26 +67,29 @@ Ask Kairo to:
 - Fix errors
 - Write tests
 - Update documentation
+- Review implementation approaches
 
 ### Workspace Context
 
-Kairo can use context from your Coline workspace while helping with development tasks:
+Kairo can use context from the rest of your Coline workspace while helping with development tasks:
 
 - Reference docs and notes
 - Review related tasks
 - Summarize technical discussions
 - Generate code from product requirements
+- Connect engineering work with project planning
 
 For sandboxed JavaScript execution and automation workflows, see [Kairo Code Execution](/docs/kairo/code-execution).
 
 ## Git & Version Control
 
-Coline Code supports git-based development workflows:
+Coline Code supports git-based development workflows directly inside the workspace:
 
 - View changed files
 - Review diffs
 - Stage and commit changes
 - Switch branches
+- Pull and push repository updates
 - Work with remote repositories
 
 Version control actions are designed to work alongside collaborative editing and AI-assisted changes.
@@ -97,6 +115,31 @@ Because Coline Code is part of the broader Coline workspace, development work st
 - Reference docs and discussions
 - Collaborate in shared workspaces
 - Use channels for engineering communication
+- Keep technical planning and implementation together
+
+## Environments & Runtime Workflows
+
+Coline Code focuses on collaborative editing and repository workflows inside Coline.
+
+Depending on workspace configuration, teams can:
+
+- Manage application repositories
+- Edit deployment configuration
+- Coordinate release workflows
+- Use Kairo to automate repetitive development tasks
+
+Runtime execution environments, deployment infrastructure, and build tooling may differ between organizations and integrations.
+
+## Limitations
+
+Current capabilities may vary based on workspace permissions and connected integrations.
+
+Examples include:
+
+- Repository access controlled by workspace roles
+- Git provider availability depending on configuration
+- Language-specific tooling varying by project type
+- Deployment workflows managed through external services
 
 ## Related Docs
 
