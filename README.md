@@ -25,6 +25,7 @@ sdk/                   SDK guides & examples
 ## Editing
 
 - Pages are MDX. Navigation is `meta.json`.
+- `brand.mdx` is the canonical Coline brand system reference for Meridian, Ember, Kairo Opal, and product neutrals.
 - The docs app at `apps/docs` mounts this directory and builds with Fumadocs.
 
 ## License
