@@ -1,0 +1,167 @@
+---
+title: Brand System
+description: The Coline color system and usage rules.
+---
+
+# Coline Brand System
+
+Coline should feel like dark infrastructure with one clear signal color.
+
+```txt
+Coline = Meridian.
+Product = Obsidian + Meridian.
+Marketing = Meridian + Ember.
+Kairo = Opal.
+Themes = user-owned.
+```
+
+## Meridian
+
+Meridian is the primary Coline brand color.
+
+```css
+--meridian-50:  #e5f6ff;
+--meridian-100: #cde9ff;
+--meridian-200: #acd1ff;
+--meridian-300: #8bb6ff;
+--meridian-400: #6b99f3;
+--meridian-500: #6393f2;
+--meridian-600: #436ec4;
+--meridian-700: #3257a2;
+--meridian-800: #233f7a;
+--meridian-900: #0f244e;
+```
+
+Use Meridian for:
+
+- Primary actions
+- Selected states
+- Links
+- Focus rings
+- Message bubbles
+- Branded charts
+- Small glows and accents
+
+`500` is the brand color.
+`600` and `700` are preferred for product UI.
+
+## Ember
+
+Ember is the warm marketing complement.
+
+```css
+--ember-50:  #ffe9e2;
+--ember-100: #ffd4c8;
+--ember-200: #ffb4a4;
+--ember-300: #ff9281;
+--ember-400: #ed705f;
+--ember-500: #ef6b5a;
+--ember-600: #bc4336;
+--ember-700: #9a3227;
+--ember-800: #742219;
+--ember-900: #4a0d08;
+```
+
+Use Ember for:
+
+- Hero gradients
+- Launch visuals
+- OG images
+- Rare emphasis moments
+
+Do not use Ember for standard product actions, warnings, or destructive UI.
+
+## Product Neutrals
+
+The default product feel is restrained and neutral.
+
+```css
+--bg: #09090b;
+--surface: #111113;
+--surface-raised: #18181b;
+--surface-soft: #202025;
+--border: #27272a;
+--text: #fafafa;
+--text-muted: #a1a1aa;
+--text-faint: #71717a;
+```
+
+Regular product UI should avoid decorative gradients.
+
+## Kairo Opal Palette
+
+Kairo has its own identity separate from the Coline brand.
+
+```css
+--kairo-violet: #a78bfa;
+--kairo-indigo: #818cf8;
+--kairo-blue:   #60a5fa;
+--kairo-cyan:   #67e8f9;
+```
+
+```css
+linear-gradient(
+  var(--kairo-angle),
+  #a78bfa,
+  #818cf8,
+  #60a5fa,
+  #67e8f9,
+  #a78bfa
+)
+```
+
+Use the opal gradient only for Kairo-specific experiences.
+
+## Daybreak Gradient
+
+The primary marketing atmosphere is Daybreak.
+
+```css
+background: linear-gradient(180deg,
+  #060f21 0%,
+  #0f244e 40%,
+  #3257a2 60%,
+  #6b99f3 78%,
+  #ffb4a4 93%,
+  #ffe9e2 100%
+);
+```
+
+Use it for:
+
+- Homepage heroes
+- Splash screens
+- Launch graphics
+- Major brand moments
+
+## User Theme Accents
+
+Theme accents are user customization, not the core brand.
+
+```css
+meridian:  #6393f2;
+iris:      #6366f1;
+blue:      #3b82f6;
+sky:       #0ea5e9;
+sage:      #22c55e;
+amber:     #f59e0b;
+coral:     #f43f5e;
+tangerine: #f97316;
+violet:    #a855f7;
+teal:      #14b8a6;
+rose:      #ec4899;
+neutral:   #64748b;
+```
+
+Meridian should remain the default accent.
+
+## Semantic Colors
+
+Semantic colors should communicate meaning only.
+
+```css
+--success: #22c55e;
+--warning: #f59e0b;
+--info:    #3b82f6;
+--error:   oklch(0.577 0.245 27.325);
+```
