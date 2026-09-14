@@ -1,24 +1,107 @@
 ---
 title: Sheets
-description: Structured data with typed columns, formulas, and views.
+description: Structured data with typed columns, formulas, multiple views, and simultaneous editing.
 ---
 
 ## Sheets
 
-Sheets are structured data tables with typed columns, formulas, and multiple views. Think database meets spreadsheet: typed data with the flexibility of a grid.
+A sheet holds structured data. Columns have types, formulas recalculate, and the
+same rows can be read as a grid, board, calendar, timeline or chart. Several
+people can work in one sheet at the same time without overwriting each other,
+because every change describes the specific cells it touches.
 
-## Features
+## Collaboration
 
-- **Typed columns** — Text, number, date, boolean, url, select, multi-select
-- **Formulas** — Auto-complete formula editor with cell references
-- **Views** — Grid, calendar, gallery, and custom view types
-- **Relations** — Link records between sheets
-- **Permissions** — Row-level access control
-- **Import/Export** — CSV, JSON, and API access
+- **Simultaneous editing** — every change is an operation naming the exact cells
+  it touches. Concurrent edits to different cells both apply; concurrent edits to
+  the same cell resolve by server order.
+- **Presence** — see who is in the sheet, where their cursor is, and which cell
+  they are typing into.
+- **Comments** — comment on a row or a cell, reply in a thread, resolve when
+  done. `@`-mentions arrive as normal Coline notifications.
+- **Offline safety** — edits queue while you are disconnected and flush on
+  reconnect. Nothing is dropped silently.
 
-## Kairo Integration
+## Columns
 
-- "Calculate the average of this column"
-- "Find duplicates"
-- "Create a chart"
-- "Generate a pivot table"
+Text, number, currency, percent, rating, progress, duration, email, phone,
+checkbox, date, URL, select, multi-select, person, attachment, auto-number,
+created time, updated time, formula, relation, lookup, and rollup.
+
+- **Person** columns resolve to workspace members.
+- **Attachment** columns link Drive files.
+- **Relation** columns link records in another table; **lookup** and **rollup**
+  read through those links.
+
+## Views
+
+Grid, board, calendar, gallery, timeline, chart, pivot, and form. Each view has
+its own filters, sorts, grouping, hidden columns, row height and conditional
+formatting — the underlying data is shared.
+
+Charts support bar, line, area, scatter and pie with real axes and legends.
+
+## Formulas
+
+Write `=` in a cell or define a formula column. The formula bar offers function
+and column suggestions as you type. Recalculation is incremental: editing a cell
+only recomputes the formulas that actually depend on it.
+
+## Automations
+
+Create rules that run server-side when data changes:
+
+- **Triggers** — a row is created, a cell changes, or a field becomes a specific
+  value.
+- **Conditions** — the same filter operators used by views.
+- **Actions** — set a field, clear a field, stamp the current time, copy one
+  field to another, or create a row.
+
+Automations write through the ordinary edit path, so their changes are
+versioned, broadcast live and undoable. Each rule shows its recent runs,
+including skips and failures.
+
+## Version history
+
+Every change is recorded with who made it and when. Save a named version before
+a large edit, compare it against the current state cell by cell, and restore it —
+restoring saves the current state first, so it is itself reversible.
+
+## Permissions
+
+Drive controls who can reach a sheet. Within a sheet you can additionally set
+per-person roles — owner, editor, commenter, viewer — and protect specific
+columns or rows so only owners can change them. Protections are enforced on the
+server.
+
+## Import and export
+
+- **Import** — CSV, TSV, Excel (`.xlsx`) and JSON. Column types are inferred from
+  the data, so numbers, dates, currency and select lists arrive ready to sort and
+  summarise. Import into a new table or append onto an existing one.
+- **Export** — CSV, Excel and JSON. Exports honour the active view: filters,
+  sorts, column order and hidden columns all carry through.
+
+## Kairo integration
+
+- "Read this sheet and tell me what's incomplete"
+- "Make me a project tracker with 20 rows"
+- "Fill the category column based on the company names"
+- "Remove duplicate rows and normalise the dates"
+- "Add a formula column for total = price × quantity"
+
+Kairo edits sheets through the same operation path people do, so its changes
+appear live for collaborators and can be undone.
+
+## API
+
+The public API is versioned under `/api/v1`:
+
+- `GET /workspaces/{slug}/sheets` — list sheets
+- `POST /workspaces/{slug}/sheets` — create a sheet
+- `GET /workspaces/{slug}/sheets/{sheetId}` — workbook structure
+- `GET /workspaces/{slug}/sheets/{sheetId}/rows?tableId=…` — paginated rows
+- `POST /workspaces/{slug}/sheets/{sheetId}/rows` — add, update or delete rows
+- `POST /workspaces/{slug}/sheets/{sheetId}/ops` — apply operations directly
+- `POST /workspaces/{slug}/sheets/{sheetId}/import` — import a file
+- `GET /workspaces/{slug}/sheets/{sheetId}/export?format=csv|xlsx|json`
