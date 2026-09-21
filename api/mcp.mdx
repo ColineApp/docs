@@ -22,7 +22,7 @@ https://mcp.coline.app/.well-known/oauth-authorization-server
 Protected resource metadata:
 
 ```text
-https://mcp.coline.app/.well-known/oauth-protected-resource
+https://mcp.coline.app/.well-known/oauth-protected-resource/mcp
 ```
 
 ## Authentication
@@ -32,7 +32,10 @@ Coline MCP uses **OAuth with Login with Coline**.
 - No API keys are required for MCP clients
 - The MCP server redirects users to Coline's OAuth flow
 - After the user signs in, the MCP server issues MCP-native tokens for the client
+- Both the client login and the upstream Coline login use S256 PKCE
 - The server refreshes its upstream Coline access token during MCP refresh-token exchange
+- Omitting scopes requests read access. Request `taskboards.write` or `calendar.write` explicitly when needed
+- Tool and resource discovery reflects the permissions on the current access token
 
 Current MCP scopes:
 
@@ -41,14 +44,18 @@ Current MCP scopes:
 - `taskboards.write`
 - `calendar.read`
 - `calendar.write`
+- `tools.read` — discover and run read tools across Coline and installed apps
+- `tools.write` — run mutations, subject to resource permissions and app approvals
 
 ## Current Tool Surface
 
-The current hosted MCP release is intentionally narrow.
+The MCP server exposes the same operations as Coline browser tools. Each request uses your existing workspace permissions.
 
 Taskboards:
 
 - `list_workspaces`
+- `search_workspace`
+- `get_workspace_overview`
 - `list_taskboards`
 - `resolve_task_reference`
 - `list_tasks`
@@ -64,7 +71,9 @@ Calendar:
 - `create_calendar_event`
 - `update_calendar_event`
 
-Planned next surfaces include task comments, attachments, and broader workspace search.
+`search_workspace` finds accessible files, tasks, messages, app documents, and mail. Use its cursor for subsequent pages. `get_workspace_overview` reads taskboards and calendar events concurrently. Calendar reads accept windows of up to 93 days; split longer ranges into separate calls.
+
+`list_tasks` defaults to 25 results and omits descriptions. Set `includeDescriptions: true` or call `get_task` for full details. `possiblyMore` indicates that the result reached the requested limit; it does not mean the entire board has been listed.
 
 ## Cursor Setup
 
@@ -133,12 +142,36 @@ Example: calendar assistance
 2. It loads a single event with `get_calendar_event`
 3. It creates or updates events as needed
 
-## Protocol Notes
+## Protocol and agent features
 
-- Transport: Streamable HTTP
-- Authentication: OAuth 2.1 style public-client flow with PKCE
-- Dynamic client registration: supported
-- Unauthenticated MCP requests return OAuth-style token errors rather than anonymous access
+- MCP 2026-07-28 through SDK v2 and stateless Streamable HTTP. Requests carry their own protocol context.
+- Ordinary 2025 clients can initialize and use tools, resources, and prompts through the SDK's stateless compatibility transport. Persistent sessions and standalone GET streams are not used.
+- Every tool advertises input/output schemas and read-only, destructive, idempotency, and external-interaction hints.
+- Successful tool results include `structuredContent.data` and a compact JSON text equivalent. Execution failures use `isError`.
+- Requests propagate cancellation to the API and have a 30-second deadline. Mutations are never automatically retried. After a timeout, read back the current state before retrying a create.
+- OAuth supports dynamic client registration and client ID metadata documents. A 401 challenge points to protected-resource metadata. Follow that challenge rather than assuming an error response body.
+
+Resources:
+
+- `coline://guide`: workflow and retry instructions
+- `coline://workspaces`: accessible workspaces
+- `coline://workspaces/{workspaceSlug}/taskboards`: boards and status IDs
+- `coline://workspaces/{workspaceSlug}/taskboards/{taskboardId}/tasks/{taskId}`: task details
+
+Workflow prompts:
+
+- `triage_task`: resolve and inspect a task before proposing an update
+- `plan_workspace`: review boards and calendar context for a time range
+
+The server does not advertise tasks, sampling, elicitation, subscriptions, or MCP Apps. Code operations use Coline's existing durable sessions; those are not MCP Tasks. Installed Coline app tools execute through the catalog; they do not supply embedded MCP Apps interfaces.
+
+## WebMCP
+
+On browsers that support WebMCP, Coline registers tools through `document.modelContext`. Signed-in users get the workspace tools above; signed-out users get public documentation, pricing, and status tools. Tools execute through the same authenticated APIs, and successful writes refresh the interface.
+
+Registration uses an `AbortSignal` so tools are removed on navigation or unmount. Execution cancellation reaches the API. Unsupported browsers load no tool catalog and make no discovery requests.
+
+WebMCP is a browser proposal, separate from the remote MCP transport. Chrome currently requires the WebMCP origin trial or its testing flag. See [Chrome WebMCP documentation](https://developer.chrome.com/docs/ai/webmcp/) and the [imperative API](https://developer.chrome.com/docs/ai/webmcp/imperative-api).
 
 ## Related Docs
 
@@ -146,3 +179,42 @@ Example: calendar assistance
 - [Scopes](/docs/authentication/scopes)
 - [API Endpoints](/docs/api/endpoints)
 - [TypeScript SDK](/docs/sdk/typescript)
+
+
+## App tool discovery and execution
+
+The shared MCP/WebMCP entry points are `search_tools`, `get_tool_schema`,
+`execute_read_tool`, and `execute_write_tool`. Start with `list_workspaces`,
+then search for an app or action. Follow `nextCursor`; fetch the exact schema
+before calling a discovered tool. Inputs and permissions are checked again on
+execution. A read token cannot execute mutations, including by claiming they
+are reads.
+
+The catalog covers Notes, Docs, Sheets, Drive, Messages, Mail, Taskboards,
+Calendar, Kairo memory, Code projects and sessions, Upstream issues,
+repositories and change requests, and the declared tools of active installed
+apps with the `ai.tools` grant. Installed tool names retain their canonical
+`app-key.tool_name` form. There is no 40-tool discovery cap.
+
+Code execution uses the existing durable session pipeline. Read the session
+for progress and results. External providers, billing limits, and workspace
+policies still apply. Kairo chat rendering, chat questions, sandbox execution
+bound to a Kairo conversation, and device/machine-resident controls require
+those runtimes; they are not standalone remote tools.
+
+An installed app action can return `status: "requires_approval"` with an
+`approvalUrl` and `approvalId`. The action has not run. Show that URL to the
+user and wait. After the user approves in Coline, repeat the exact call with
+`approvalId` alongside `name` and `input`. Approval is bound to the user,
+workspace, tool, input, and app version; it expires in five minutes and is
+consumed once. Modified inputs, expired approvals, and replays fail.
+
+`coline://workspaces/{workspaceSlug}/tools/{name}` exposes a discovered tool's
+schema as a resource. The `work_with_app` prompt guides discovery, execution,
+and read-back.
+
+To verify against disposable AX data:
+
+```bash
+pnpm ax:exec pnpm --filter @colineapp/web exec tsx --conditions=react-server scripts/verify-mcp-tools.ts
+```
