@@ -1,0 +1,70 @@
+---
+title: Develop and publish
+description: Check and preview locally, push versions, and publish privately or to the App Store.
+---
+
+## Develop locally
+
+From your project:
+
+```bash
+npm run check   # types, manifest, logic and React bundle; no upload
+npm run dev     # local preview with simulated data
+npx coline-app preview --screenshots .coline/screenshots   # capture each state
+```
+
+Local preview uses simulated data, so it doesn't prove production permissions or external services. `preview.seed.ts` can provide fake `net.fetch` responses and connections that are already made, and preview runs queued background jobs automatically.
+
+### Credentials
+
+Create a workspace API key with `apps.write` in the [developer console](https://coline.app/developers/console) and set it as `COLINE_API_KEY`. Set `COLINE_BASE_URL` only if you target a different Coline instance. Keep keys out of app source and version control.
+
+## Push a version
+
+```bash
+npx coline-app push --version 0.1.0
+```
+
+To keep one development version current while you work, install it in your workspace once and run:
+
+```bash
+npm run push:watch -- --internal
+```
+
+Reload Coline after each change. The CLI bundles from your installed dependencies and keeps imported CSS and inline assets. Coline validates, rebuilds and hashes the uploaded artifact before serving it.
+
+## Build in Coline Code
+
+You can also describe the app and let an agent build it:
+
+1. In [Code](/code), choose **Create project**, then **Coline App**, pick a template and describe the app. Code creates the repository, scaffolds the template and starts an agent.
+2. The agent builds and checks the app against simulated data. Iterate until the preview looks right.
+3. Press **Publish** in the project's Code settings to install a new version in your workspace.
+
+Agents never receive publishing credentials. Workspace admins get a project-scoped key with `apps.publish`, used only when a person presses Publish. You can also ask Kairo to build an app; it drafts the brief and opens this flow for you to confirm.
+
+## Diagnose
+
+Open your app under [Apps](https://coline.app/developers/apps) in the developer portal, install it in a workspace, and check **Overview** and **Executions**. Failed runs explain the likely cause and link to the release or installation setting that fixes it. Errors in the execution log are redacted.
+
+## Distribute
+
+| Option | Who can install |
+| --- | --- |
+| **Private** | Only your workspace |
+| **Unlisted install link** | Anyone you send the link to |
+| **App Store** | Any workspace, after review |
+
+To list in the App Store, submit a version for review from the developer portal. Reviewers see the full manifest: permissions, network hosts, tools and their effects. The developer portal also manages the store listing (screenshots, description, version notes), review feedback, install links, per-install health and analytics.
+
+### Updates
+
+When a new version asks for no new permissions, workspaces that allow automatic updates get it automatically. If it asks for more, a workspace admin has to approve it before it installs. Admins can roll back to any approved version.
+
+### Paid apps
+
+Paid apps aren't available yet. Apps must not take payments for Coline users through their own billing flows.
+
+## Runtime limits
+
+Each install has limits on capability calls, network requests, AI calls and daily executions, so one misbehaving app can't affect a workspace. See [runtime limits](/sdk/reference#runtime-limits).

@@ -1,462 +1,95 @@
 ---
-title: Tab API
-description: OpenAI-compatible autocomplete for any editor.
+title: Tab
+description: Inline completions for any editor, through an OpenAI-compatible endpoint.
 ---
 
-## Tab
+Tab suggests what you'll write next and shows it as ghost text at the cursor. Press **Tab** to accept it, **Escape** to dismiss it, or keep typing to ignore it. It's built into Coline's editors, and the same completions are available to your own editors through the API.
 
-Tab is Coline's intelligent autocomplete. Like Cursor Tab for code, but as a simple OpenAI-compatible primitive for any editor — code editors, notes apps, docs, email composers, issue trackers, messages, tasks, and more.
+## In Coline
 
-Tab predicts what you'll write next and shows it as ghost text. Press **Tab** to accept, or keep typing to ignore.
+Tab works in Notes, Docs, the Messages composer, task descriptions and fields, calendar event descriptions, and the Code editor. Suggestions use the text around the cursor, the document's title, and your local date. Turn it off in your account settings if you don't want it.
 
-## How It Works
+## API
 
-1. **You type** — Tab watches what you're writing
-2. **Tab predicts** — AI suggests the next words/lines
-3. **Ghost text appears** — The suggestion shows in muted text
-4. **Press Tab to accept** — Or just keep typing to ignore
+```text
+POST https://coline.app/api/v1/tab/chat/completions
+```
 
-## Features
+The endpoint follows the OpenAI chat completions format, so OpenAI-compatible clients work with it. Coline-specific context goes in `tab_context`. It needs an [API key](/authentication/api-keys) or OAuth token with the `ai.invoke` scope, and is billed to the workspace's API credits.
 
-- **Lightning fast** — 120ms debounce, streaming completions
-- **Any surface** — Works in code editors, notes apps, docs, email composers, issue trackers, messages, tasks, calendar, and custom editors
-- **Context aware** — Understands your workspace, files, and conversations
-- **Natural flow** — Matches your tone and writing style
-- **Multi-line** — Suggests paragraphs, not just words
-- **Smart deduplication** — Won't repeat what you already typed
+### Models
 
-## Using Tab
+`GET /api/v1/tab/models` lists models and prices. It needs no auth.
 
-Tab is built into the Coline UI. No API calls needed for normal usage — just start typing in any supported editor.
+| Model | Surfaces | Input, per million tokens | Output, per million tokens |
+| --- | --- | --- | --- |
+| `tab-v1` (default) | `any`, `notes`, `docs`, `messages`, `tasks`, `calendar` | $0.20 | $0.50 |
+| `tab-1-code` | `code` | $0.08 | $0.28 |
 
-### Keyboard Shortcuts
-
-| Key | Action |
-|-----|--------|
-| `Tab` | Accept the current suggestion |
-| `Escape` | Dismiss the suggestion |
-| Continue typing | Ignore and keep writing |
-
-### Supported Surfaces
-
-| Surface | Where It Works |
-|---------|----------------|
-| **Custom** | Any editor that can send text before/after the cursor |
-| **Code** | Public OpenAI-compatible editor integrations |
-| **Notes** | Block-based editor, any text block |
-| **Docs** | Rich text paragraphs, headings, lists |
-| **Messages** | Channel and DM message composer |
-| **Tasks** | Task descriptions and comments |
-| **Calendar** | Event descriptions |
-
-## Tab API (Programmatic Access)
-
-Build custom Tab experiences using the API.
-
-### Authentication
-
-Same authentication as the rest of the Coline API:
+### Request
 
 ```bash
-Authorization: Bearer {api_key}
-```
-
-### Endpoints
-
-#### List Models
-
-```http
-GET /api/v1/tab/models
-```
-
-Returns available Tab models.
-
-**Response:**
-
-```json
-{
-  "data": {
-    "models": [
-      {
-        "id": "tab-v1",
-        "object": "model",
-        "created": 1775200000,
-        "owned_by": "coline",
-        "pricing": {
-          "inputPerMillionUsd": 0.2,
-          "outputPerMillionUsd": 0.5
-        },
-        "capabilities": {
-          "streaming": true,
-          "surfaces": ["any", "code", "notes", "docs", "messages", "tasks", "calendar"]
-        }
-      }
-    ]
-  }
-}
-```
-
-#### Create Completion
-
-```http
-POST /api/v1/tab/chat/completions
-```
-
-Get an inline completion for the current cursor position.
-
-**Request Body:**
-
-```typescript
-{
-  model?: string;              // "tab-v1" (default)
-  stream?: boolean;          // true for streaming (recommended)
-  tab_context: {
-    surface: string;                // "code", "notes", "email", "issue", etc.
-    workspace_slug: string;         // Your workspace slug
-    entity_id: string;              // File path, file ID, channel ID, etc.
-    document_type: "plaintext" | "markdown";
-    active_text_before_cursor: string; // Text before cursor (max 16k chars)
-    active_text_after_cursor?: string; // Text after cursor (max 16k chars)
-    surrounding_context?: string;    // Additional context (max 32k chars)
-    code_language?: string;          // For code: typescript, python, rust, etc.
-    file_path?: string;              // For code: src/app.ts, lib/foo.py, etc.
-    block_kind?: string;             // Optional editor-specific block/type hint
-    note_title?: string;             // Note title for context
-    document_title?: string;         // Doc title for context
-    taskboard_file_id?: string;      // Required for tasks surface
-  };
-  max_completion_tokens?: number;   // Max 500
-}
-```
-
-**Example Request:**
-
-```bash
-curl https://api.coline.app/v1/tab/chat/completions \
-  -H "Authorization: Bearer col_ws_xxx" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "stream": true,
-    "tab_context": {
-      "surface": "docs",
-      "workspace_slug": "acme",
-      "entity_id": "doc_123",
-      "document_type": "markdown",
-      "active_text_before_cursor": "Our Q3 goals include ",
-      "document_title": "Q3 Planning"
-    },
-    "max_completion_tokens": 100
-  }'
-```
-
-**Code Editor Request:**
-
-```bash
-curl https://api.coline.app/v1/tab/chat/completions \
-  -H "Authorization: Bearer col_ws_xxx" \
+curl https://coline.app/api/v1/tab/chat/completions \
+  -H "Authorization: Bearer col_ws_..." \
   -H "Content-Type: application/json" \
   -d '{
     "model": "tab-v1",
     "stream": true,
+    "max_completion_tokens": 100,
     "tab_context": {
-      "surface": "code",
-      "workspace_slug": "acme",
-      "entity_id": "src/app.ts",
-      "document_type": "plaintext",
-      "code_language": "typescript",
-      "file_path": "src/app.ts",
-      "active_text_before_cursor": "export function add(a: number, b: number) {\n  return ",
-      "active_text_after_cursor": "\n}",
-      "surrounding_context": "package: @acme/app"
-    },
-    "max_completion_tokens": 80
+      "surface": "docs",
+      "entity_id": "doc_123",
+      "document_type": "markdown",
+      "document_title": "Q3 planning",
+      "active_text_before_cursor": "Our goals for the quarter are ",
+      "active_text_after_cursor": ""
+    }
   }'
 ```
 
-**Streaming Response (SSE):**
+| Field | | |
+| --- | --- | --- |
+| `model` | Optional | `tab-v1` by default. Use `tab-1-code` with the `code` surface |
+| `stream` | Optional | `true` streams Server-Sent Events. Recommended |
+| `max_completion_tokens` | Optional | 1 to 500. Defaults to 500. `max_tokens` also works |
+| `temperature`, `top_p` | Optional | Temperature defaults to 0.2 |
+| `messages` | Optional | If you don't send `tab_context`, the last user message is used as the text before the cursor |
+| `tab_context` | Recommended | See below |
 
-```
-data: {"choices":[{"delta":{"content":" launching"}}]}
+`tab_context`:
 
-data: {"choices":[{"delta":{"content":" the"}}]}
+| Field | | |
+| --- | --- | --- |
+| `surface` | Required | `notes`, `docs`, `messages`, `tasks`, `calendar`, `code`, or any short name for your editor (`any` works too) |
+| `active_text_before_cursor` | Required | Up to 16,000 characters |
+| `active_text_after_cursor` | Optional | Up to 16,000 characters |
+| `surrounding_context` | Optional | Other useful context, up to 32,000 characters |
+| `document_type` | Optional | `markdown` (default) or `plaintext` |
+| `entity_id` | Optional | An ID for the document or file, for caching and analytics |
+| `workspace_slug` | Optional | Defaults to the API key's workspace |
+| `document_title`, `note_title` | Optional | Title of the document being edited |
+| `block_kind` | Optional | The kind of block at the cursor, such as `paragraph` or `bulleted-list` |
+| `code_language`, `file_path` | Code | For the `code` surface |
+| `completion_mode` | Code | `line` for one line, `block` for several |
+| `client_local_date` | Optional | The person's local date, such as `2026-10-12 Mon`, so relative dates come out right |
+| `taskboard_file_id` | Tasks | Required when `surface` is `tasks` |
 
-data: {"choices":[{"delta":{"content":" new"}}]}
+### Response
+
+Streaming responses are standard chat completion chunks, ending with `[DONE]`:
+
+```text
+data: {"object":"chat.completion.chunk","choices":[{"index":0,"delta":{"content":" shipping"},"finish_reason":null}]}
+
+data: {"object":"chat.completion.chunk","choices":[{"index":0,"delta":{"content":" the new"},"finish_reason":null}]}
+
 data: [DONE]
 ```
 
-## Using the SDK
+Without streaming you get one `chat.completion` object with the text in `choices[0].message.content` and token counts in `usage`.
 
-### Stream a Completion
+Insert the text at the cursor as ghost text. Tab doesn't repeat what's already after the cursor.
 
-```typescript
-import { ColineApiClient } from '@colineapp/sdk'
+## Credits
 
-const client = new ColineApiClient({
-  baseUrl: 'https://api.coline.app',
-  apiKey: process.env.COLINE_API_KEY
-})
-
-// Stream completion text
-for await (const text of client.streamTabText({
-  tab_context: {
-    surface: 'notes',
-    workspace_slug: 'acme',
-    entity_id: 'note_123',
-    document_type: 'markdown',
-    active_text_before_cursor: 'Action items:\n- [ ] '
-  },
-  max_completion_tokens: 100
-})) {
-  // Append to ghost text in your UI
-  editor.showGhostText(text)
-}
-```
-
-### Non-Streaming Completion
-
-```typescript
-const response = await client.createTabChatCompletion({
-  tab_context: {
-    surface: 'messages',
-    workspace_slug: 'acme',
-    entity_id: 'channel_456',
-    document_type: 'plaintext',
-    active_text_before_cursor: 'Can you review the '
-  },
-  max_completion_tokens: 50,
-  stream: false  // Complete response in one request
-})
-
-const suggestion = response.choices[0].message.content
-```
-
-## Implementation Tips
-
-### 1. Debounce Input
-
-Tab triggers after 120ms of no typing:
-
-```typescript
-let debounceTimer: NodeJS.Timeout
-
-editor.onInput(() => {
-  clearTimeout(debounceTimer)
-  debounceTimer = setTimeout(() => {
-    requestTabCompletion()
-  }, 120) // Match Tab's debounce
-})
-```
-
-### 2. Handle Overlapping Text
-
-Tab may include text the user already typed. Strip duplicates:
-
-```typescript
-import { sanitizeTabSuggestion } from '@colineapp/sdk'
-
-const cleanSuggestion = sanitizeTabSuggestion({
-  active_text_before_cursor: 'Hello wor',
-  rawSuggestion: 'rld, how are you?'
-})
-// Returns: "ld, how are you?"
-```
-
-### 3. Show Minimum Characters
-
-Don't show suggestions shorter than 2 characters:
-
-```typescript
-if (suggestion.length < 2) {
-  hideGhostText()
-}
-```
-
-### 4. Limit Context Size
-
-Send only relevant context to minimize latency:
-
-```typescript
-active_text_before_cursor: text.slice(-600),  // Last 600 chars
-active_text_after_cursor: text.slice(0, 80),  // Next 80 chars
-surrounding_context: nearbyBlocks.slice(0, 500) // 500 chars of context
-```
-
-## Configuration
-
-### Default Behavior
-
-| Setting | Value |
-|---------|-------|
-| Debounce | 120ms |
-| Max output tokens | 500 |
-| Min visible chars | 2 |
-| Temperature | 0.2 |
-| Top P | Default (not set) |
-
-### Temperature
-
-Lower = more predictable, higher = more creative:
-
-- `0.0` - Very conservative, stays close to your text
-- `0.2` (default) - Balanced, natural completions
-- `0.5` - More varied suggestions
-
-## Pricing
-
-| Type | Price |
-|------|-------|
-| Input | $0.20 per million tokens |
-| Output | $0.50 per million tokens |
-
-**Example:** A typical 50-token completion costs ~$0.000025. Super cheap.
-
-## Rate Limits
-
-Tab shares the same rate limits as the main API:
-
-| Auth Type | Read/Stream | Write |
-|-----------|-------------|-------|
-| API Key | 300 / minute | 60 / minute |
-| Session | 200 / minute | 40 / minute |
-
-## Surfaces Deep Dive
-
-### Any Editor
-
-The only required idea is cursor context. Use any stable surface name that helps you segment analytics and prompt behavior:
-
-```typescript
-tab_context: {
-  surface: 'email',
-  workspace_slug: 'acme',
-  entity_id: 'draft_123',
-  document_type: 'plaintext',
-  active_text_before_cursor: 'Hey Maya,\n\nFollowing up on ',
-  active_text_after_cursor: '',
-  surrounding_context: 'Thread subject: Launch plan'
-}
-```
-
-### Code
-
-OpenAI-compatible autocomplete for code editors:
-
-```typescript
-tab_context: {
-  surface: 'code',
-  entity_id: 'src/app.ts',
-  document_type: 'plaintext',
-  code_language: 'typescript',
-  file_path: 'src/app.ts',
-  active_text_before_cursor: 'const total = ',
-  active_text_after_cursor: '\nconsole.log(total)'
-}
-```
-
-### Notes
-
-Works in any text block:
-- Paragraphs
-- Headings (H1, H2, H3)
-- Lists (bulleted, numbered, todo)
-- Quotes
-- Callouts
-
-```typescript
-tab_context: {
-  surface: 'notes',
-  block_kind: 'paragraph',  // or 'heading1', 'bulleted-list', etc.
-  note_title: 'Meeting Notes'
-}
-```
-
-### Docs
-
-Rich text editing with formatting awareness:
-
-```typescript
-tab_context: {
-  surface: 'docs',
-  document_title: 'Project Spec',
-  document_type: 'markdown'
-}
-```
-
-### Messages
-
-Chat completions with conversation context:
-
-```typescript
-tab_context: {
-  surface: 'messages',
-  surrounding_context: '[conversation history]\n---\n[composing] '
-}
-```
-
-### Tasks
-
-Task descriptions with status/priority awareness:
-
-```typescript
-tab_context: {
-  surface: 'tasks',
-  taskboard_file_id: 'file_taskboard_123'
-}
-```
-
-## Ghost Text UI
-
-Tab suggestions appear as ghost text — muted text after the cursor:
-
-```
-Hello wor[ld, how are you?]
-         ↑
-      cursor
-      [ghost text in gray]
-```
-
-**Accept:** Press Tab or click the suggestion
-**Ignore:** Keep typing
-**Dismiss:** Press Escape
-
-## System Prompts
-
-Tab uses surface-specific system prompts for best results:
-
-- **Code:** Continue code naturally, match language, indentation, and local style
-- **Notes/Docs:** Continue writing naturally, match formatting
-- **Messages:** Keep it conversational, short and punchy
-- **Tasks:** Descriptive, actionable, matches task metadata
-
-## Error Handling
-
-```typescript
-try {
-  for await (const text of client.streamTabText(request)) {
-    showSuggestion(text)
-  }
-} catch (error) {
-  if (isColineApiError(error)) {
-    if (error.status === 429) {
-      // Rate limited — back off
-      await sleep(1000)
-    }
-  }
-}
-```
-
-## Best Practices
-
-1. **Always stream** — Ghost text should appear progressively
-2. **Debounce 120ms** — Don't trigger on every keystroke
-3. **Sanitize suggestions** — Remove overlapping text
-4. **Show min 2 chars** — Ignore tiny suggestions
-5. **Accept on Tab** — It's literally in the name 
-6. **Dismiss on type** — Keep typing = ignore suggestion
-7. **Limit context** — Send only nearby text for speed
-
-## Next Steps
-
-- [Try the Playground](https://coline.app/developers/console) — Test Tab live
-- [SDK Reference](/sdk) — Full SDK documentation
-- [Rate Limits](/api/rate-limits) — API limits and best practices
+Each call reserves the most it could cost from the workspace's API credit balance, then refunds the difference when it finishes. If the balance is too low, the call fails with `402 INSUFFICIENT_CREDITS`. Add credits in the [developer console](https://coline.app/developers/console) under **Credits**; the minimum purchase is $5. The console's **Tab playground** lets you try completions first.

@@ -1,0 +1,167 @@
+---
+title: SDK reference
+description: Permissions, tool effects, capability operations, chat cards and runtime limits.
+---
+
+This reference is generated from `@colineapp/sdk` 0.6.0's own contract tables.
+
+## Permissions
+
+Declared in the manifest, approved by a workspace admin at install, and shown to people with exactly this wording. Every capability call needs its permission declared and granted.
+
+| Permission | Shown to people as |
+| --- | --- |
+| `references.read` | Resolve names and links for workspace objects you can access. |
+| `tasks.read` | Read tasks and task board statuses you can access. |
+| `tasks.write` | Create, edit, and delete tasks on your behalf. |
+| `calendar.read` | Read calendar events you can access. |
+| `calendar.write` | Create, edit, and cancel calendar events on your behalf. |
+| `messages.read` | Read conversations and task or event comments you can access. |
+| `messages.write` | Send messages and comments on your behalf. |
+| `members.read` | See who is in the workspace (names, handles, avatars). |
+| `files.read` | Read files the installing user can access. |
+| `files.write` | Create and update files on behalf of users. |
+| `drives.app` | Use its own app drive for files it creates. |
+| `storage.app` | Store app data (key-value state and records) in the workspace. |
+| `search.index` | Add its content to workspace search. |
+| `search.query` | Search the workspace on behalf of users. |
+| `notifications.write` | Send notifications to workspace members. |
+| `ai.generate` | Use Coline AI models (billed to the workspace). |
+| `ai.tools` | Offer tools that Kairo and agents can run. |
+| `events.emit` | Emit ambient events into the workspace. |
+| `webhooks.subscribe` | Receive workspace events at its backend. |
+| `commands.register` | Add commands to the command palette. |
+| `realtime.subscribe` | Receive live updates for its own surfaces. |
+| `network.external` | Call the external services it lists (through Coline, with the app's own credentials). |
+| `jobs.run` | Run background work after you leave, on your behalf or its own. |
+| `endpoints.receive` | Receive requests from the external services it lists at private URLs. |
+| `connections.use` | Ask you to connect accounts on the services it lists, and use them for you. |
+| `public.pages` | Publish pages that people outside the workspace can open when an admin turns them on. |
+
+## Tool effects
+
+An effect isn't a label. The runtime enforces it as a ceiling on what a tool's code can do, on both sides of the trust boundary.
+
+| Effect | Means |
+| --- | --- |
+| `read` | Reads workspace data. Kairo runs these without asking |
+| `write` | Creates or updates data. Whether Kairo asks first depends on the person's [permission mode](/kairo/overview#permission-modes) |
+| `destructive` | Deletes or irreversibly changes data. Kairo asks first unless the person chose Full access |
+| `external` | Causes effects outside Coline, such as email or calls to external APIs. Kairo asks first unless the person chose Full access |
+
+## Capability operations
+
+Every `coline.*` call maps to one operation with one required permission and one mutation class. A tool's effect must allow the operation's class, or the call fails with `effect_ceiling_exceeded`.
+
+
+| Operation | Mutation | Permission |
+| --- | --- | --- |
+| `ai.generate` | read | `ai.generate` |
+| `ai.images.generate` | write | `ai.generate` |
+| `ai.jobs.cancel` | write | `ai.generate` |
+| `ai.jobs.events` | read | `ai.generate` |
+| `ai.jobs.get` | read | `ai.generate` |
+| `ai.jobs.list` | read | `ai.generate` |
+| `ai.models` | read | `ai.generate` |
+| `ai.run` | write | `ai.generate` |
+| `calendar.create` | write | `calendar.write` |
+| `calendar.delete` | destructive | `calendar.write` |
+| `calendar.get` | read | `calendar.read` |
+| `calendar.list` | read | `calendar.read` |
+| `calendar.update` | write | `calendar.write` |
+| `connections.connect` | read | `connections.use` |
+| `connections.disconnect` | write | `connections.use` |
+| `connections.get` | read | `connections.use` |
+| `connections.list` | read | `connections.use` |
+| `drives.getAppDrive` | read | `drives.app` |
+| `endpoints.list` | read | `endpoints.receive` |
+| `endpoints.url` | read | `endpoints.receive` |
+| `events.emit` | write | `events.emit` |
+| `files.completeUpload` | write | `files.write` |
+| `files.create` | write | `files.write` |
+| `files.createUpload` | write | `files.write` |
+| `files.get` | read | `files.read` |
+| `files.getDocument` | read | `files.read` |
+| `files.list` | read | `files.read` |
+| `files.move` | write | `files.write` |
+| `files.preview` | read | `files.read` |
+| `files.readUrl` | read | `files.read` |
+| `files.saveAs` | write | `files.write` |
+| `files.trash` | destructive | `files.write` |
+| `files.update` | write | `files.write` |
+| `files.updateDocument` | write | `files.write` |
+| `files.upload` | write | `files.write` |
+| `jobs.cancel` | write | `jobs.run` |
+| `jobs.checkpoint` | read | `jobs.run` |
+| `jobs.enqueue` | write | `jobs.run` |
+| `jobs.get` | read | `jobs.run` |
+| `jobs.list` | read | `jobs.run` |
+| `jobs.progress` | read | `jobs.run` |
+| `members.get` | read | `members.read` |
+| `members.list` | read | `members.read` |
+| `messages.list` | read | `messages.read` |
+| `messages.send` | write | `messages.write` |
+| `navigation.navigate` | read | None |
+| `navigation.openAppHome` | read | None |
+| `navigation.openFile` | read | None |
+| `navigation.openReference` | read | None |
+| `net.fetch` | read | `network.external` |
+| `notifications.create` | write | `notifications.write` |
+| `pickers.confirm` | read | None |
+| `pickers.destination` | read | None |
+| `pickers.file` | read | None |
+| `pickers.member` | read | None |
+| `realtime.publish` | write | `realtime.subscribe` |
+| `realtime.subscribe` | read | `realtime.subscribe` |
+| `references.resolve` | read | `references.read` |
+| `search.index.delete` | write | `search.index` |
+| `search.index.upsert` | write | `search.index` |
+| `search.query` | read | `search.query` |
+| `storage.batch` | write | `storage.app` |
+| `storage.kv.delete` | write | `storage.app` |
+| `storage.kv.get` | read | `storage.app` |
+| `storage.kv.list` | read | `storage.app` |
+| `storage.kv.set` | write | `storage.app` |
+| `storage.records.aggregate` | read | `storage.app` |
+| `storage.records.batch` | write | `storage.app` |
+| `storage.records.count` | read | `storage.app` |
+| `storage.records.delete` | destructive | `storage.app` |
+| `storage.records.deleteMany` | destructive | `storage.app` |
+| `storage.records.get` | read | `storage.app` |
+| `storage.records.insert` | write | `storage.app` |
+| `storage.records.insertMany` | write | `storage.app` |
+| `storage.records.query` | read | `storage.app` |
+| `storage.records.setAccess` | destructive | `storage.app` |
+| `storage.records.sync` | read | `storage.app` |
+| `storage.records.update` | write | `storage.app` |
+| `storage.records.updateMany` | write | `storage.app` |
+| `tasks.board` | read | `tasks.read` |
+| `tasks.create` | write | `tasks.write` |
+| `tasks.delete` | destructive | `tasks.write` |
+| `tasks.get` | read | `tasks.read` |
+| `tasks.list` | read | `tasks.read` |
+| `tasks.update` | write | `tasks.write` |
+| `tools.invoke` | write | `ai.tools` |
+| `workspace.get` | read | None |
+
+## Chat cards
+
+Tool result cards and inline file surfaces render inside conversations, so they accept this subset of tree nodes. Home, preview and editor surfaces can use every node.
+
+`Alert`, `Avatar`, `Badge`, `Button`, `Card`, `Chart`, `CodeBlock`, `Divider`, `FileCard`, `Heading`, `Image`, `KeyValue`, `Link`, `List`, `Progress`, `Reference`, `Stack`, `Stat`, `Table`, `Text`, `UserChip`
+
+## Runtime limits
+
+Generous by default, and every limit fails closed with a named error that the execution log shows.
+
+| Limit | Value |
+| --- | --- |
+| Capability calls | 120 burst, refilling 20 per second, per install |
+| `net.fetch` | 20 burst, refilling 2 per second, per install |
+| `ai.generate` | 200 calls per install per day |
+| Executions | 10,000 per install per day (tools, renders and schedules) |
+| Logic bundle | 5 MB |
+| Client bundle | 8 MB |
+| Storage | 5,000 key-value keys, 200,000 records per collection, 200 kB per value |
+| Realtime events | 32 kB per event payload |
+| Background job attempt | Up to 15 minutes |

@@ -1,0 +1,56 @@
+---
+title: Developers
+description: The ways to build on Coline, and where to get credentials.
+---
+
+There are four ways to work with Coline from code. They share one permission model: a request can only reach what its credential's scopes allow, and, when it acts for a person, only what that person can already open.
+
+| Surface | Use it to | Auth |
+| --- | --- | --- |
+| [REST API](/api) | Read and write calendars, sheets, tasks, files and apps from a server or script | [API key](/authentication/api-keys) or [OAuth token](/authentication/oauth) |
+| [MCP server](/api/mcp) | Give an agent or coding tool that speaks MCP access to a workspace | OAuth, set up by the MCP client |
+| [Tab](/api/tab) | Add Coline's inline completions to an editor | API key with `ai.invoke` |
+| [App SDK](/sdk) | Build an app that adds tools, file types and screens to a workspace | API key with `apps.write` to push |
+
+## The developer console
+
+The console at [coline.app/developers/console](https://coline.app/developers/console) is where you manage credentials and usage for a workspace:
+
+- **API keys:** create and revoke workspace keys and choose their scopes.
+- **OAuth clients:** register apps that sign people in with Coline, with their redirect URLs.
+- **Installed apps:** configure apps installed in the workspace.
+- **Request logs:** recent requests with status codes and timings.
+- **Credits:** the workspace's prepaid API credit balance, used by Tab and other metered calls.
+- **Tab playground:** try Tab completions before wiring them into an editor.
+
+Only workspace owners and admins can create API keys and OAuth clients.
+
+## Your first request
+
+1. Open the console, pick a workspace, and create an API key with the `files.read` scope.
+2. List the sheets in that workspace. Use the workspace's slug (the part after `coline.app/` in its URL) or its ID:
+
+```bash
+curl "https://coline.app/api/v1/workspaces/acme/sheets?limit=5" \
+  -H "Authorization: Bearer col_ws_..."
+```
+
+3. Read the result from the `data` field. Errors come back as `{ "error": { "code", "message" } }` with a matching HTTP status. See [errors](/api/errors).
+
+An API key belongs to one workspace and acts as the workspace, not as a person. Routes that act for a person, such as calendar and `GET /api/v1/me/workspaces`, need an [OAuth token](/authentication/oauth) instead.
+
+The full list of routes is in the [endpoint reference](/api/endpoints). The machine-readable description is at `https://coline.app/api/v1/openapi/app-platform`, and `https://coline.app/.well-known/api-catalog` links it with the OAuth metadata and status endpoint.
+
+## Discovery for agents
+
+| URL | What it is |
+| --- | --- |
+| `https://coline.app/llms.txt` | Agent index for Coline |
+| `https://docs.coline.app/llms.txt` | Index of these docs, linking each page's Markdown |
+| `https://coline.app/.well-known/mcp/server-card.json` | MCP server card |
+| `https://coline.app/.well-known/agent-skills/index.json` | Agent skills for the API and the MCP server |
+| `https://coline.app/.well-known/api-catalog` | API catalog (RFC 9727) |
+| `https://coline.app/.well-known/oauth-authorization-server` | OAuth authorization server metadata |
+| `https://coline.app/.well-known/oauth-protected-resource` | Protected resource metadata (RFC 9728) |
+
+For Upstream, the public API, CLI and agent docs live on [upstream.codes](https://upstream.codes/llms.txt). See [Upstream](/upstream).

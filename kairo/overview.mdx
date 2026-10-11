@@ -1,109 +1,56 @@
 ---
-title: Overview
-description: Kairo is Coline's AI assistant, available throughout the platform.
+title: Kairo
+description: Coline's agent, and how to work with it.
 ---
 
-## Kairo AI
+Kairo is the agent built into Coline. It can read everything you can open in your workspace, and act in it on your behalf: drafting, editing, searching, scheduling, filing tasks, running code and working on the web. It never sees anything you can't.
 
-Kairo is your AI assistant in Coline. The main way to talk to Kairo is the **Kairo page** — a dedicated chat interface where you can have ongoing conversations, ask complex questions, and get work done without switching contexts.
+## Where to find it
 
-## The Kairo Page
+| | |
+| --- | --- |
+| **Kairo page** | Full conversations, with history, search and attachments |
+| **Kairo sidebar** (`⌘.`) | A side panel next to whatever you're working on |
+| **Search** (`⌘K`) | Ask a quick question from the command bar |
+| **Quick dialog** (`⇧⌘K`) | A floating Kairo from anywhere |
+| **`@kairo` in conversations** | Ask about a channel, DM or thread |
+| **In editors** | Draft and rewrite in Docs, Notes, Mail and Code |
 
-The Kairo page is your primary workspace for AI-assisted work. Open it from the sidebar or press `Cmd/Ctrl+Shift+K`.
+## It knows what you're looking at
 
-### What You Can Do
+The sidebar, `⌘K` and the quick dialog send what you have open and selected with each message: the email, doc, note, sheet, task, event, file or code you're on, and your selection. A **Looking at** chip shows what's included; dismiss it to leave it out. On the Kairo page, use **Attach what's open** in the `+` menu. Turn this off in Preferences.
 
-**Research across your workspace**
-- "Find every doc that mentions the API redesign"
-- "What did we decide about pricing in last month's meeting notes?"
-- "Show me all tasks assigned to Sarah that are overdue"
-- "Summarize the #engineering channel from the past week"
+## What it can do
 
-**Create and update content**
-- "Draft a project proposal based on our Q3 roadmap doc"
-- "Create tasks from the action items in this meeting"
-- "Update the API docs with the new endpoints we discussed"
+- **Your workspace:** search and read files, messages, mail, tasks, calendar and code. Create and edit docs, sheets, notes and tasks; draft and send mail and messages; schedule events; work with repositories and Change Requests. Installed [apps](/apps) add their own tools.
+- **The web:** search the web and read any page you point it to. Sources show as chips, and answers cite them inline.
+- **Visuals:** Kairo draws charts, tables and interactive views in its replies when they help, and updates them as it writes. Copy them as images, export PNG, HTML or CSV, or share a public link. Mermaid diagrams and math render too.
+- **Code:** run sandboxed JavaScript to compute, parse or check something, or hand repository work to [Code](/code).
+- **A computer:** start a cloud computer with a browser, terminal and desktop for work that needs one. See [Kairo's computer](/kairo/computer).
+- **Memory:** remember decisions, preferences and how your team works. See [memory](/kairo/memory).
 
-**Analyze and process data**
-- "Calculate the average completion time for sprint tasks"
-- "Analyze this sheet and tell me which customers haven't been contacted in 30 days"
-- "Generate a report of all bugs filed this month by severity"
+## Permission modes
 
-**Plan and organize**
-- "Help me prioritize these tasks by impact and effort"
-- "Find a 30-minute slot that works for everyone on the design team"
-- "What conflicts do I have on my calendar next week?"
+Choose how much Kairo may do without asking, from the composer:
 
-**Long-running work**
-The Kairo page keeps context across the conversation. Reference something from 20 messages ago and Kairo still knows what you're talking about. Pick up where you left off yesterday without re-explaining everything.
+| Mode | Kairo |
+| --- | --- |
+| **Default** | Reads and edits your workspace freely. Asks before sending, deleting, sharing, buying, or running commands |
+| **Auto** | A quick check reviews risky actions and asks only when something looks off or wasn't requested |
+| **Full access** | Does everything without asking |
 
-## Other Ways to Access Kairo
+Signing in to a website always comes back to you, since you have the password.
 
-### Command Bar (`Cmd/Ctrl+K`)
+## Models and reasoning
 
-Quick search and one-off commands without opening the full Kairo page:
+Pick a model from the model picker, a searchable list. The reasoning control next to it sets how hard Kairo thinks; higher levels take longer and use more credits. Supported models also have **Pro** mode for the hardest work. See [plans and credits](/plans#credits).
 
-- "Create a task: Review API docs"
-- "Find my notes from yesterday"
-- "What's on my calendar tomorrow?"
+## Conversations
 
-### @kairo in Channels
+- The Kairo sidebar lists conversations, with replies still in progress in their own section. Rename, link or delete any conversation.
+- Hand a conversation to a [crew member](/kairo/crew) when the work should keep going without you. Kairo starts it as their goal and links it in the chat.
+- Type `/` in the composer for commands and [skills](/kairo/customize#skills).
 
-Mention @kairo in any channel or DM for quick help with context:
+## Kairo in a team
 
-- "@kairo summarize this thread for me"
-- "@kairo what was the decision on the database?"
-- "@kairo extract the action items here"
-
-### Coline Code Assistance
-
-While working in [Coline Code](/code), ask Kairo for inline help across entire repositories:
-
-- "Continue writing from here"
-- "Rewrite this section more concisely"
-- "Help me write a formula for this calculation"
-- "Refactor this function to use async/await"
-- "Explain how this service is structured"
-- "Update the related tests and docs too"
-
-## How It Works
-
-Kairo has access to tools that let it interact with your workspace: search, read files, create tasks, update docs, run calculations, and more. Kairo only sees what you can see — it respects workspace permissions and cannot access private channels or files you don't have permission to view.
-
-Some actions require your approval before Kairo makes changes (creating tasks, sending messages, updating files).
-
-## Request Costs
-
-Kairo requests are counted with a model-specific multiplier. A standard request is `1×`; smaller or faster models can count as less, while larger reasoning models can count as more. The multiplier is applied once per completed Kairo response, based on the model used for that response.
-
-| Model | Request multiplier |
-| --- | ---: |
-| GPT-5.4 | 1.5× |
-| GPT-5.4 Mini | 0.75× |
-| GPT-5.4 Nano | 0.5× |
-| GPT-5.2 | 1.25× |
-| GPT-5.1 | 1× |
-| GPT-5 | 1× |
-| GPT-5 Mini | 0.5× |
-| GPT-5 Nano | 0.25× |
-| Claude Opus 4.6 | 4× |
-| Claude Sonnet 4.6 | 2× |
-| Claude Opus 4.5 | 4× |
-| Claude Sonnet 4.5 | 2× |
-| Nemotron 3 Super 120B | 0.25× |
-| MiniMax M2.5 | 0.5× |
-| Kimi K2.6 | 0.5× |
-| Kimi K2.5 | 0.5× |
-| Kimi K2 Thinking | 0.5× |
-| DeepSeek V3.2 | 0.5× |
-| DeepSeek V3.2 Speciale | 0.5× |
-| GLM-5 | 1× |
-| GPT-OSS 120B | 0.25× |
-| Gemma 4 26B | 0.25× |
-
-## Next Steps
-
-- [Coline Code](/code) — Build and manage projects inside Coline
-- [Tools](/kairo/tools) — See the full list of what Kairo can do
-- [Automations](/kairo/automations) — Set up Kairo to respond to events automatically
-- [Code Execution](/kairo/code-execution) — Run JavaScript for custom calculations
+In a team workspace, Kairo is a member you can DM and mention. It answers in shared conversations using only what's in that conversation and what everyone there can see. For agents with their own job, see [Kairo Crew](/kairo/crew).

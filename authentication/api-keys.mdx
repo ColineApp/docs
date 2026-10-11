@@ -1,178 +1,51 @@
 ---
-title: API Keys
-description: Server-to-server authentication with workspace-scoped keys.
+title: API keys
+description: Workspace API keys for servers, scripts and the app CLI.
 ---
 
-## API Keys
+A workspace API key lets a server or script call the Coline API without a person signing in. Each key belongs to one workspace, carries a fixed set of [scopes](/authentication/scopes), and acts as the workspace rather than as a member.
 
-API keys are the simplest way to authenticate with the Coline API. They're ideal for:
+## Create a key
 
-- Server-to-server integrations
-- Background scripts and automation
-- Internal tools
-- Testing and development
+1. Open the [developer console](https://coline.app/developers/console) and choose a workspace.
+2. Go to **API keys** and create a key.
+3. Name the key and pick its scopes.
+4. Copy the key. It's shown once. Coline stores only a hash, so a lost key can't be recovered; revoke it and create a new one.
 
-Each API key is scoped to a single workspace and has all the permissions of the user who created it.
+Only the workspace owner and admins can create or revoke keys. Keys start with `col_ws_`.
 
-## Creating an API Key
+## Use a key
 
-1. Go to [coline.app/developers/console](https://coline.app/developers/console)
-2. Select your workspace
-3. Navigate to **API Keys** in the sidebar
-4. Click **Create API Key**
-5. Give it a descriptive name (e.g., "CI/CD Pipeline", "Data Sync Script")
-6. Select the scopes you need (e.g., `workspace.read`, `apps.read`, `files.read`)
-7. Click **Create**
-8. **Copy the secret immediately** — it won't be shown again
-
-The secret starts with `col_ws_` followed by a unique identifier. Store it securely in your environment variables or secret manager.
-
-## Key Format
-
-API keys start with `col_ws_` followed by a unique identifier:
-
-```
-col_ws_a1b2c3d4e5f6...
-```
-
-## Using API Keys
-
-Include the key in the `Authorization` header:
+Send it as a bearer token:
 
 ```bash
-curl https://api.coline.app/v1/workspaces/acme/drives \
-  -H "Authorization: Bearer col_ws_xxx"
+curl https://coline.app/api/v1/workspaces/acme/sheets \
+  -H "Authorization: Bearer col_ws_..."
 ```
 
-With the SDK:
+The workspace in the URL must be the key's workspace, by slug or ID. A key for another workspace gets `403 API_KEY_WORKSPACE_MISMATCH`.
 
-```typescript
-import { ColineApiClient } from '@colineapp/sdk'
+## What a key can and can't do
 
-const client = new ColineApiClient({
-  baseUrl: 'https://api.coline.app',
-  apiKey: process.env.COLINE_API_KEY
-})
-```
+A key can call any route whose required scopes it holds. See the [endpoint reference](/api/endpoints) for the scope each route needs.
 
-## Permissions
+A key has no person behind it, so some routes refuse it with `403 USER_IDENTITY_REQUIRED`:
 
-API keys inherit the permissions of the creating user:
+- calendar routes, which act on a person's calendars and invitations
+- `GET /api/v1/me/workspaces` and `GET /api/v1/oauth/userinfo`
 
-- Can access all drives the user can access
-- Can read/write files based on user permissions
-- Can post to channels the user is a member of
-- Can manage calendar events the user owns or is invited to
+Use an [OAuth token](/authentication/oauth) for those.
 
-If you need different permission levels, create separate API keys from accounts with those permissions.
+Writes made with a key are recorded in the workspace audit log against the key, not a member.
 
-## Security Best Practices
+## Rate limits
 
-### Storage
+Each key gets 300 read requests and 60 write requests per minute. See [rate limits](/api/rate-limits).
 
-- **Never commit API keys to version control**
-- Store keys in environment variables
-- Use secret management systems (AWS Secrets Manager, HashiCorp Vault)
-- Rotate keys regularly
+## Revocation
 
-```typescript
-// Good
-const client = new ColineApiClient({
-  baseUrl: 'https://api.coline.app',
-  apiKey: process.env.COLINE_API_KEY
-})
+A key stops working as soon as an admin revokes it in the console. There is no grace period. Rotate a key by creating the new one, deploying it, then revoking the old one.
 
-// Bad
-const client = new ColineApiClient({
-  baseUrl: 'https://api.coline.app',
-  apiKey: 'col_ws_abc123...' // Never do this
-})
-```
+## Keys in the app CLI
 
-### Network Security
-
-- Only use API keys over HTTPS
-- Whitelist IP addresses if possible
-- Monitor for unusual API activity
-
-### Key Rotation
-
-Rotate keys periodically:
-
-1. Generate a new key
-2. Update your application to use the new key
-3. Test thoroughly
-4. Revoke the old key
-
-## Revoking Keys
-
-If a key is compromised or no longer needed:
-
-1. Go to [coline.app/developers/console](https://coline.app/developers/console)
-2. Select your workspace
-3. Navigate to **API Keys** in the sidebar
-4. Find the key in the list
-5. Click **Revoke**
-6. The key is immediately invalidated
-
-Revoked keys return `401 Unauthorized` on all requests.
-
-## Rate Limits
-
-API keys have the following rate limits:
-
-- **Read operations** (GET, HEAD): 300 requests per minute
-- **Write operations** (POST, PUT, PATCH, DELETE): 60 requests per minute
-
-Limits reset every 60 seconds. Rate limit headers are included in all responses:
-
-```
-X-RateLimit-Limit: 300
-X-RateLimit-Remaining: 299
-X-RateLimit-Reset: 1712345678
-```
-
-## Webhooks and API Keys
-
-When using webhooks with API key authentication:
-
-- Webhook signatures are verified using a separate secret
-- The webhook secret is different from the API key
-- Store both securely
-
-## Troubleshooting
-
-### 401 Unauthorized
-
-- Key is revoked or invalid
-- Key is scoped to a different workspace
-- Authorization header format is wrong (must be "Bearer {'{token}'}")
-
-### 403 Forbidden
-
-- Key is valid but lacks permission for the resource
-- User who created key lost access to the workspace
-- Resource is explicitly restricted
-
-### 429 Too Many Requests
-
-- Rate limit exceeded
-- Implement exponential backoff
-- Check `Retry-After` header
-
-## When to Use OAuth Instead
-
-Use OAuth instead of API keys when:
-
-- Building an app for multiple users/workspaces
-- Users need to grant limited permissions
-- App needs to act on behalf of users
-- You need refresh tokens for long-term access
-
-See [OAuth 2.0](/authentication/oauth) for third-party app authentication.
-
-## Next Steps
-
-- [OAuth 2.0](/authentication/oauth) — Authenticate on behalf of users
-- [Scopes](/authentication/scopes) — Available permission scopes
-- [Security Best Practices](/authentication/security) — Keep your integration secure
+The app CLI (`coline-app push`) reads a key with the `apps.write` scope from `COLINE_API_KEY`. Keep keys out of source control and app bundles; set them in your environment or secret store. See [develop locally](/sdk/publishing#develop-locally).

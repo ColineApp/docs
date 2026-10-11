@@ -1,81 +1,133 @@
 ---
-title: SDK
-description: The official Coline SDK for JavaScript and TypeScript.
+title: Build an app
+description: Scaffold, define, test and push your first Coline app.
 ---
 
-## Coline SDK
+A Coline app installs into a workspace as a set of capabilities: tools that Kairo and people can run, file types with their own previews and editors, home screens, schedules and more. Coline supplies sign-in, members, permissions, files, search, notifications, realtime, AI and billing, so an app doesn't build any of that. Apps run on Coline by default, with no servers to deploy.
 
-The official SDK for building on the Coline platform. TypeScript-first with full type safety, async generators for streaming, and ergonomic resource handles.
+The packages are open source under MIT: [`@colineapp/sdk`](https://www.npmjs.com/package/@colineapp/sdk), [`@colineapp/ui`](https://www.npmjs.com/package/@colineapp/ui) and [`create-coline-app`](https://www.npmjs.com/package/create-coline-app).
 
-## Installation
+## Before you start
+
+You need Node.js and npm. To push, you need a workspace [API key](/authentication/api-keys) with the `apps.write` scope, which a workspace admin can create in the [developer console](https://coline.app/developers/console).
+
+## 1. Scaffold
 
 ```bash
-npm install @colineapp/sdk
+npx create-coline-app my-app
+cd my-app && npm install && npm run check
 ```
 
-## Quick Start
+Pick a template with `--template`:
 
-```typescript
-import { ColineApiClient } from '@colineapp/sdk'
+| Template | You get |
+| --- | --- |
+| `backendless` (default) | A hosted React app with a file type, a Kairo tool and UI examples |
+| `editor` | A file type with a React block editor: autosave, conflict handling, previews and search |
+| `integration` | A GitHub OAuth connection, a webhook endpoint, a resumable sync job, an hourly schedule and a dashboard |
+| `external-backend` | Tools and screens served by your own Node server, signed by Coline |
 
-// Initialize the client
-const client = new ColineApiClient({
-  baseUrl: 'https://api.coline.app',
-  apiKey: process.env.COLINE_API_KEY
-})
+Every project includes an `AGENTS.md` and an agent skill with the full app contract, so coding agents can build with it.
 
-// Get a workspace-scoped client
-const ws = client.workspace('ws_abc123')
+## 2. Define the app
 
-// List files in a drive
-const files = await ws.listDriveFiles('drive_xyz')
+`app.config.ts` is the whole contract: permissions, surfaces, tools, file types and handlers.
 
-// Send a message
-await ws.sendChannelMessage('channel_123', {
-  content: [{ type: 'text', text: 'Hello from the SDK!' }]
-})
+```ts
+import { z } from "zod/v4";
+import { defineApp, defineFileType, defineTool, ui } from "@colineapp/sdk/v2";
+
+const todoFileType = defineFileType({
+  metadata: {
+    typeKey: "todos.todo",
+    name: "Todo",
+    indexable: true,
+    surfaces: { preview: { tier: "tree" }, inline: { tier: "tree" } },
+  },
+  runtime: {
+    renderPreview: (ctx) =>
+      ui.stack([ui.heading(ctx.file.name), ui.badge(String(ctx.document.status ?? "open"))]),
+    renderInline: (ctx) => ui.text(ctx.file.name),
+    index: {
+      title: (doc) => String(doc.title ?? "Todo"),
+      body: (doc) => String(doc.notes ?? ""),
+    },
+  },
+});
+
+const createTodo = defineTool({
+  name: "todos.create_todo",
+  description: "Create a todo with a title.",
+  input: z.object({ title: z.string().min(1) }),
+  effect: "write", // enforced as a ceiling at runtime
+  execute: async (input, ctx) => {
+    const file = await ctx.coline.files.create({
+      typeKey: "todos.todo",
+      name: input.title,
+      document: { title: input.title, status: "open" },
+    });
+    return {
+      output: { fileId: file.fileId },
+      card: ui.reference({ kind: "file", id: file.fileId }),
+    };
+  },
+});
+
+export default defineApp({
+  key: "todos",
+  name: "Todos",
+  permissions: ["files.read", "files.write", "ai.tools", "search.index"],
+  hosting: { default: "coline" },
+  surfaces: { home: { tier: "tree" } },
+  files: [todoFileType],
+  tools: [createTodo],
+  handlers: {
+    renderHome: async (ctx) => {
+      const { files } = await ctx.coline.files.list({ typeKey: "todos.todo" });
+      return ui.stack([
+        ui.heading("Todos"),
+        ...files.map((file) => ui.fileCard({ title: file.name, fileId: file.fileId })),
+      ]);
+    },
+  },
+});
 ```
 
-## SDK Features
+One definition produces two artifacts. The **manifest** says what the app may do; it's what reviewers and workspace admins approve. The **runtime bundle** is what the app does. Every call it makes is checked against the manifest, the workspace's grants, the acting person's access and the tool's declared effect.
 
-- **Type-safe** — Full TypeScript support with generated types
-- **Resource handles** — Chainable accessors for individual resources
-- **Auto-pagination** — Async generators for paginated lists
-- **Streaming** — First-class support for streaming responses
-- **Error handling** — Typed errors with retry indicators
-- **Message builder** — Fluent API for constructing rich messages
+## 3. Test
 
-## Main Exports
+`@colineapp/sdk/testing` runs the app against an in-memory workspace with the same API and permission checks as production.
 
-```typescript
-// Core clients
-export { ColineApiClient, ColineWorkspace } from '@colineapp/sdk'
+```ts
+import { expect, it } from "vitest";
+import { createTestWorkspace } from "@colineapp/sdk/testing";
+import app from "./app.config";
 
-// App platform
-export { ColineApp } from '@colineapp/sdk'
-
-// Message builder
-export { Message } from '@colineapp/sdk'
-
-// Error handling
-export { ColineApiError, isColineApiError } from '@colineapp/sdk'
-
-// OAuth helpers
-export { createOauthState, createPkceCodeChallenge } from '@colineapp/sdk'
-
-// Webhook verification
-export { verifyAppRequestSignature } from '@colineapp/sdk'
+it("creates a todo through the Kairo tool", async () => {
+  const ws = createTestWorkspace(app);
+  const result = await ws.invokeTool("todos.create_todo", { title: "Ship it" });
+  expect(result.card).not.toBeNull();
+  expect(ws.files.byType("todos.todo")).toHaveLength(1);
+});
 ```
 
-## Language Support
+`npm run check` validates types, the manifest, the logic bundle and the React bundle without uploading anything.
 
-| Language | Status | Package |
-|----------|--------|---------|
-| TypeScript | ✅ Ready | `@colineapp/sdk` |
-| Python | ⏳ Coming Q2 2026 | `coline` (planned) |
-| Go | ⏳ Coming Q3 2026 | `github.com/colineapp/sdk` |
+## 4. Push
 
-## Next Steps
+```bash
+export COLINE_API_KEY=col_ws_...
+npx coline-app push
+```
 
-- [TypeScript SDK](/sdk/typescript) — Complete TypeScript guide
-- [Examples](/sdk/examples) — Code examples and recipes
+The CLI builds the logic bundle, ships client source for React surfaces, and uploads a version. It lands as a draft that you can install privately in your workspace right away, or submit for review to list in the App Store. See [develop and publish](/sdk/publishing).
+
+## Next
+
+<Cards>
+  <Card title="How apps run" description="UI tiers and where your logic runs." href="/sdk/runtime" />
+  <Card title="Capability API" description="Files, storage, members, notifications and the network." href="/sdk/capabilities" />
+  <Card title="UI" description="Tree surfaces and React surfaces." href="/sdk/ui" />
+  <Card title="Full stack" description="Schedules, events, webhooks, jobs and connected accounts." href="/sdk/full-stack" />
+</Cards>

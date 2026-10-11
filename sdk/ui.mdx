@@ -1,0 +1,74 @@
+---
+title: UI
+description: Build interfaces from ui.* trees, or bring React.
+---
+
+## Tree surfaces
+
+Handlers return `ui.*` trees. Coline renders and themes them, so the app looks native in every theme and works on web, desktop, mobile and in Kairo chat from one definition.
+
+```ts
+import { ui, actions } from "@colineapp/sdk/v2";
+
+// Text
+ui.heading("My app");
+ui.text("Hello");
+ui.text("Something went wrong", { tone: "danger" });
+ui.badge("active", { tone: "positive" });
+ui.link("View docs", "https://docs.example.com", { external: true });
+
+// Layout
+ui.stack([/* ... */], { gap: "md" });
+ui.row([/* ... */], { gap: "sm" });
+ui.divider();
+
+// Actions
+ui.button("Save", { action: actions.custom("my-app.save") });
+ui.button("Open", { action: actions.openFile("file_123") });
+ui.button("Create", { action: actions.createFile({ name: "New", typeKey: "todos.todo" }) });
+
+// Media and code
+ui.image({ src: "https://...", alt: "Screenshot", width: 800, height: 400 });
+ui.codeBlock("const x = 42;", { language: "typescript" });
+
+// Form inputs, submitted through action handlers
+ui.input({ name: "title", label: "Title", placeholder: "Enter a title" });
+ui.select({
+  name: "priority",
+  label: "Priority",
+  options: [
+    { value: "low", label: "Low" },
+    { value: "high", label: "High" },
+  ],
+});
+
+// Data
+ui.table({
+  columns: [
+    { key: "name", label: "Name" },
+    { key: "status", label: "Status" },
+  ],
+  rows: [{ name: "Sprint planning", status: "Done" }],
+});
+
+// Workspace references, rendered as live previews
+ui.reference({ kind: "file", id: "file_123" });
+ui.fileCard({ title: "Q4 report", subtitle: "Updated yesterday", fileId: "file_123" });
+ui.userChip({ label: "Alice", userId: "user_123" });
+ui.emptyState({ title: "No items yet", description: "Create your first item." });
+```
+
+Tool result cards and inline file surfaces appear inside conversations, so they accept a smaller set of nodes. See [chat cards](/sdk/reference#chat-cards).
+
+## React surfaces
+
+Set a surface to `{ tier: "react", entry: "main.tsx" }` when you need richer interaction. The CLI ships your client source, Coline builds it, and it runs in a sandbox with [`@colineapp/ui`](https://www.npmjs.com/package/@colineapp/ui), Coline's own component library: tabs, menus, dialogs, tables, filters, forms and more.
+
+- Import `@colineapp/ui/styles.css`, then your own CSS. Tailwind v4 utilities compile automatically; use complete class names.
+- Run the same tool Kairo runs with `coline.tools.invoke` or `actions.invokeTool`, so every action has one implementation.
+- Save with `expectedVersion` to detect concurrent edits.
+- `useLiveCollection` gives you multiplayer lists and boards: local edits appear instantly, writes are ordered, conflicts roll back, and views stay in sync.
+
+React surfaces run on web and desktop. Provide a tree fallback for mobile and Kairo chat.
+
+Home screens and editors can write within the app's grants. Previews and server render handlers are read-only.

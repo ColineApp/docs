@@ -1,25 +1,44 @@
 ---
 title: Tasks
-description: Flexible canvas for cards, workflows, and visual organization.
+description: Taskboards with board, list and timeline views.
 ---
+
+Tasks live on **taskboards**. A board has its own statuses, and every task gets an identifier like `COL-42` that you can mention anywhere.
+
+## Tasks home
+
+Tasks home shows your open tasks across every board, and a card for each board with a live preview of its columns and a progress ring. Search when a workspace has many boards. Boards open instantly and zoom back out to Tasks home, including with the browser's back and forward buttons.
+
+## Views
+
+| View | For |
+| --- | --- |
+| **Board** | Columns by status. Drag cards between columns; they keep the position you give them |
+| **List** | Full-width rows |
+| **Timeline** | Work laid out over time |
 
 ## Tasks
 
-Tasks are flexible visual workspaces for organizing anything. Use them for task tracking, planning, brainstorming, or any workflow that benefits from a spatial layout.
+A task has a title, a description, a status, a priority (none, low, medium, high or urgent), assignees, labels, a due date and an estimate. Tasks can also have:
 
-## Features
+- **Comments** and activity.
+- **Relations:** related, blocking, and duplicate links to other tasks.
+- **Code:** a linked [Code](/code) session and the Change Request or pull request it produced.
+- **Change Requests** from [Upstream](/upstream) that reference the task.
 
-- **Infinite canvas** — Zoom and pan across your board
-- **Cards** — Rich content cards with properties
-- **Layouts** — Kanban columns, freeform, or grid layouts
-- **Properties** — Custom fields with typed data
-- **Filters** — Dynamic filtering by any property
-- **Automation** — Trigger actions on card changes
+Every [Upstream](/upstream) issue is a task too, so issues show up on boards and timelines without extra setup.
 
-## Use Cases
+## Creating tasks
 
-- Sprint planning
-- Content calendars
-- Bug tracking
-- Roadmapping
-- Brainstorming sessions
+- Press `+` in any column, or use **New task**.
+- Create a task from a message, or accept Kairo's suggestion when a message asks you to do something. Kairo picks the board, status and priority, and marks what it chose until you change it.
+- Capture a task from [Home](/home) or the new tab palette.
+- Ask Kairo to create, update or triage tasks.
+
+## Board settings
+
+In a board's settings you can rename it and edit its statuses. Under **Integrations**, connect repositories so tasks move automatically when their Change Request or pull request merges.
+
+## API and MCP
+
+Tasks are available through the [REST API](/api/endpoints#tasks) and the [MCP server](/api/mcp).

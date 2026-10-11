@@ -1,0 +1,95 @@
+---
+title: Capability API
+description: The coline.* API, how calls are scoped, and tool effects.
+---
+
+The same `coline.*` API works in tools, render handlers, schedules, React surfaces, external backends and tests.
+
+## How calls are scoped
+
+Every call is checked against three things before it touches the workspace:
+
+1. **What the workspace granted.** Permissions declared in the manifest are shown on the install consent screen. Undeclared means unavailable.
+2. **What the acting person can access.** A tool run on someone's behalf never sees files they couldn't open themselves.
+3. **What the tool's effect allows.** A `read` tool can't write, even if the app has write permission.
+
+Access is the intersection of all three, checked in the sandbox and again on the server.
+
+## The API at a glance
+
+```ts
+// Files, scoped to what the person and the app can both reach
+const file = await ctx.coline.files.create({
+  typeKey: "todos.todo",
+  name: "Buy groceries",
+  document: { status: "open" },
+});
+await ctx.coline.files.updateDocument(
+  file.fileId,
+  { status: "done" },
+  { expectedVersion: file.version }, // rejects stale writes instead of overwriting
+);
+
+// App storage: key-value state and record collections
+await ctx.coline.storage.kv.set("last-sync", new Date().toISOString());
+const contacts = ctx.coline.storage.collection("contacts");
+await contacts.insert({ name: "Sarah", tier: "vip" });
+const { records } = await contacts.query({
+  where: { tier: "vip" },
+  orderBy: { field: "name" },
+  limit: 50,
+});
+
+// The workspace
+const { members } = await ctx.coline.members.list();
+await ctx.coline.notifications.create({
+  title: "Todo completed",
+  body: "Buy groceries is done.",
+  recipients: [{ userId: members[0].userId }],
+});
+
+// External services, through Coline, with secrets injected server-side
+const response = await ctx.coline.net.fetch({
+  url: "https://api.stripe.com/v1/charges",
+  headers: { authorization: "Bearer {{secret:STRIPE_KEY}}" },
+});
+```
+
+## What's available
+
+| Namespace | For |
+| --- | --- |
+| `files` | Files and documents in Drive, uploads, previews, moves and trash. Every install also gets its own app drive |
+| `storage` | Per-install key-value state, and record collections with queries, aggregates, batches and per-record access |
+| `tasks`, `calendar`, `messages` | Tasks and boards, calendar events, and conversations, under the acting person's permissions |
+| `members`, `workspace` | Who's in the workspace, and workspace details |
+| `search` | Add the app's content to workspace search, or search on a person's behalf |
+| `notifications` | Notify members |
+| `realtime` | Publish and subscribe to live updates for the app's own surfaces |
+| `events` | Emit events other apps can react to |
+| `ai` | Generate text and structured output, run tool loops over the app's own tools, embeddings, images and more, on Coline's models and billed to the workspace |
+| `net` | Call the external hosts declared in the manifest |
+| `connections` | Act on people's connected accounts, such as GitHub |
+| `jobs` | Durable background work with progress and retries |
+| `endpoints` | Private webhook URLs for each install |
+| `pickers`, `navigation` | Host-rendered file and member pickers, and opening files and screens |
+| `tools` | Invoke the app's declared tools from its own UI |
+
+The full list of operations, with the permission and mutation class of each, is in the [reference](/sdk/reference#capability-operations).
+
+## Effects are ceilings
+
+Every tool declares one effect:
+
+| Effect | Means | Approval in Kairo |
+| --- | --- | --- |
+| `read` | Reads workspace data | Never asks |
+| `write` | Creates or updates data | Depends on the person's [permission mode](/kairo/overview#permission-modes) |
+| `destructive` | Deletes or irreversibly changes data | Asks unless the person chose Full access |
+| `external` | Has effects outside Coline, such as email or external APIs | Asks unless the person chose Full access |
+
+The runtime rejects any call that exceeds the tool's effect with `effect_ceiling_exceeded`. Render handlers are always read-only; move writes into an action or a tool.
+
+## AI without keys
+
+`coline.ai` runs on Coline's models and the workspace's credits: text and structured output with streaming reasoning, tool loops over the app's own tools, embeddings, reranking, image generation and editing, speech, transcription and video. Jobs are durable and resumable, and generated media lands in Drive as ordinary files. It needs the `ai.generate` permission.

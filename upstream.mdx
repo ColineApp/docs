@@ -1,0 +1,79 @@
+---
+title: Upstream
+description: Coline's Git forge for repositories, Change Requests, issues and checks.
+---
+
+Upstream hosts your code next to the rest of your work. Repositories, Change Requests, issues, checks and releases share Coline's account and permissions, link to your tasks and messages, and work with Kairo. Upstream is in every workspace under **Upstream**, and on its own at [upstream.codes](https://upstream.codes) with the same accounts.
+
+Upstream has its own full documentation at [upstream.codes/docs](https://upstream.codes/docs). This page is an overview.
+
+## Repositories
+
+- Public, private, internal and unlisted repositories, in a personal or team workspace or an organization.
+- Browse code with a file tree, branches, blame, history, comparisons, tags, contributors and releases.
+- Code search within a repository or across all of yours, including semantic search.
+- Share links let people read a private repository without an account, with an expiry and a view count.
+- Clone and push over HTTPS or SSH at `git.coline.app`, with Git LFS for large files.
+
+## Change Requests
+
+Change Requests are Upstream's pull requests, with versions:
+
+- Every push is a new version. Reviews stay pinned to the version they reviewed, and stale approvals are marked.
+- Inline review threads, review requests, and review rules: minimum approvals, code owners, resolved threads, and blocking on requested changes.
+- Merge, squash or rebase. Required checks block merging, and a merge queue lands changes in order.
+- Stacked Change Requests: merge one layer and the stack updates itself.
+- Labels, assignees, reactions and locking.
+- Writing `fixes #123` closes the issue on merge.
+
+## Kairo on Upstream
+
+- **Kairo Review** reads the whole change and finds bugs, security issues and broken repository rules. It follows your `AGENTS.md` and `CONTRIBUTING.md`, and on paid plans your house rules in `.upstream/review.md`. Ask for a review with the Kairo button, by commenting `@Kairo review`, or with `upstream cr kairo-review`, or have it review every Change Request. Make its check required to block merges.
+- Mention `@Kairo` in a Change Request to ask about the change.
+- **Ask** (`⌘I` on upstream.codes) answers questions about the code with links to the exact lines.
+- **Spam triage**, free on every plan, moves low-effort outside contributions to a Triage page and sends one daily digest.
+- Your code is never used to train models.
+
+## Issues
+
+Issues have list, board and table views, labels, types, milestones, templates and saved views. Every issue is also a Coline [task](/tasks), and issues and Change Requests share one number sequence per repository. Discussions hold questions that aren't issues.
+
+## Checks and Actions
+
+External CI reports checks through the API. Actions runs workflows on Upstream, GitHub Actions or Depot, with logs, reruns and repository secrets.
+
+## GitHub
+
+Import a repository from GitHub, sync one to bring its pull requests, reviews, comments, checks and issues into Upstream, or move a repository to Upstream and keep GitHub as a read-only mirror.
+
+## CLI
+
+```bash
+curl -fsSL https://downloads.coline.dev/upstream/install.sh | sh
+upstream auth login
+upstream repo clone {namespace}/{repository}
+```
+
+The CLI signs in through your browser and sets up Git credentials. It covers repositories, Change Requests (`upstream cr create`, `list`, `view`, `edit`, `stack`), rulesets and workspaces. `upstream doctor` checks your setup. It runs on macOS and glibc-based Linux.
+
+## API
+
+Upstream has a public REST API at `https://api.upstream.codes`:
+
+- **Native:** `https://api.upstream.codes/v1`, with a `{ "data": ... }` envelope and cursor pagination. OpenAPI at `/v1/openapi.json`.
+- **GitHub-compatible:** `https://api.upstream.codes/api/v3`. Point Octokit's `baseUrl` here. OpenAPI at `/api/v3/openapi.json`.
+- Authenticate with a personal access token (`upt_...`) from upstream.codes settings. The same token works as a Git password.
+- 15,000 requests an hour with a token and 1,000 without. `X-RateLimit-*` headers are on every response, and `304` responses and `GET /v1/rate_limit` are free.
+- Webhooks, a replayable event feed, and apps with OAuth sign-in and installable bots.
+
+Docs: [upstream.codes/docs/api](https://upstream.codes/docs/api).
+
+## Agents
+
+- `upstream mcp` runs a local MCP server for coding agents, and `upstream agent tools` lists the same tools for other agents.
+- Agent index: [upstream.codes/llms.txt](https://upstream.codes/llms.txt).
+- Setup skill: [upstream.codes/.well-known/skills/upstream/SKILL.md](https://upstream.codes/.well-known/skills/upstream/SKILL.md).
+
+## Plans
+
+Upstream has Free, Pro, Team and Enterprise plans on upstream.codes. Team workspaces with an active Coline subscription include Upstream Team.

@@ -1,0 +1,45 @@
+---
+title: External hosting
+description: Route specific capabilities to your own backend.
+---
+
+Most apps never need this. With `hosting: { default: "coline" }` everything runs on Coline. Use external hosting, per capability, when:
+
+- a tool needs a private database or a service only your network can reach
+- work runs longer than a job attempt allows, or needs your own compute
+- you already run the logic and want Kairo to call it
+
+## The handler
+
+`createColineAppHandler` checks signatures, timestamps and replays, then dispatches tools, renders, schedules, events, webhooks and jobs to the same code you'd run on Coline. One endpoint serves all of them.
+
+```ts
+import { createColineAppHandler } from "@colineapp/sdk/v2";
+import app from "./app.config";
+
+// Set COLINE_DELIVERY_SECRET once as a developer secret in the developer
+// console, and use the same value here.
+const handler = createColineAppHandler({
+  app,
+  secret: process.env.COLINE_DELIVERY_SECRET!,
+});
+
+// Next.js: app/coline/app/route.ts
+export const POST = handler;
+```
+
+Then point the capabilities you want at it:
+
+```ts
+hosting: {
+  default: "coline",
+  overrides: { "todos.sync_crm": "external" },
+  external: { baseUrl: "https://your-app.example.com" },
+},
+```
+
+Everything not listed in `overrides` keeps running on Coline.
+
+## Testing deliveries
+
+The workspace API can send a signed test delivery to your backend and replay stored ones. See [apps in a workspace](/api/endpoints#apps-in-a-workspace).

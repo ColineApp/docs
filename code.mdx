@@ -1,186 +1,43 @@
 ---
-title: Coline Code
-description: Build, edit, and manage code projects directly inside Coline.
+title: Code
+description: A cloud IDE and coding agents, for cloud and local projects.
 ---
 
-## Coline Code
+Code is Coline's IDE and agent workspace. Open a repository, edit it yourself, or put coding agents to work on it, in the cloud or on your Mac.
 
-Coline Code is the integrated development workspace inside Coline. It combines project management, file editing, AI assistance, and git workflows in a shared collaborative environment.
+## Projects
 
-Use Coline Code to work on application code, scripts, infrastructure configuration, documentation, and automation projects without switching between separate tools.
+- **Cloud projects** run on a Code computer in the cloud. Create one from an [Upstream](/upstream) or GitHub repository, or create a new repository with the project. Existing GitHub repositories can be moved to Upstream.
+- **Local projects** open folders on your Mac in [Coline Desktop](/getting-started#desktop-app) and run agents against them locally. Recent folders are under **File → Open Recent**.
+- **Coline App** projects scaffold an [app](/sdk/publishing#build-in-coline-code) that an agent builds with you.
 
-## Workspace Overview
+Local and cloud projects appear together on the Code dashboard. Agent tabs and sessions are restored when you come back.
 
-Each Coline Code workspace combines:
+## The editor
 
-- A Monaco-based editor for multi-file development
-- Repository and project navigation
-- Built-in git workflows and diff review
-- AI-assisted editing and execution with Kairo
-- Shared collaboration tied to tasks, docs, and channels
-- Workspace-aware permissions and approvals
+- A file explorer, tabs, search, syntax highlighting and notebook support.
+- A terminal and source control with live progress for every Git operation.
+- Inline Kairo: select code and ask for an edit in place.
+- [Tab](/api/tab) code completions as you type.
+- Bring your own AI provider in the editor settings if you prefer.
 
-Coline Code is designed for full-project workflows rather than isolated file editing, keeping planning, implementation, and collaboration in the same workspace.
+## Agents
 
-## Projects & Repositories
+Start an agent from the project's agent composer and describe the work. Agents run on the project's Code computer, so they keep going when you close the tab.
 
-Code projects are organized around repositories and shared workspaces.
+- Check **worktree** to give an agent its own copy of the repository, so several agents can work in parallel.
+- Watch an agent's edits appear live in the review panel, with an inline diff.
+- Review any commit file by file.
+- When the work is ready, open a Change Request on Upstream or a pull request on GitHub. It links back to the task, the session and any evidence such as previews and screenshots.
+- Per-project agent settings set defaults for every agent in the project.
+- The team view shows recent coding activity across the workspace.
 
-Teams can:
+Kairo and [crew members](/kairo/crew) hand repository work to Code: they start a Code session with the task written as instructions, and report back with what it found.
 
-- Connect and manage repositories from supported git providers
-- Browse project files and folders in shared workspaces
-- Work across source code, infrastructure, documentation, and configuration together
-- Coordinate engineering work alongside tasks, notes, and discussions
-- Keep project context connected to the rest of the workspace
-- Review AI-generated changes before applying them
+## Code computers and credits
 
-Repository access and available workflows depend on workspace permissions, connected integrations, and organization policies.
+Code computers start almost instantly. They're paid for with Code credits, which come with paid plans; see [plans](/plans). Workspace admins can see usage in **Settings → Code credits**.
 
-## Editor Features
+## Sync
 
-### Monaco-Based Editor
-
-The editor includes:
-
-- Syntax highlighting for many common languages and frameworks
-- Multiple open files and tabs
-- Inline search and replace
-- Automatic indentation and formatting support
-- Keyboard shortcuts similar to VS Code
-- Split-pane editing for multi-file workflows
-- Diff-aware editing alongside git changes
-- Fast navigation between related files and symbols
-
-### Project Navigation
-
-Browse and manage repositories with the built-in file explorer:
-
-- Nested folders and file trees
-- Quick file switching
-- Drag-and-drop organization
-- Context actions for creating, renaming, and deleting files
-- Fast navigation between related source files
-
-### Multi-File Workflows
-
-Coline Code supports working across entire repositories:
-
-- Open and edit multiple files at once
-- Keep documentation, configuration, and source code together
-- Review changes across a project before committing
-- Coordinate code changes with tasks and discussions
-
-## AI-Powered Development
-
-Kairo is integrated directly into the coding experience.
-
-### Inline Assistance
-
-Ask Kairo to:
-
-- Explain code and repository structure
-- Generate boilerplate and scaffolding
-- Refactor functions and components
-- Fix errors and suggest implementation changes
-- Write tests and documentation
-- Review implementation approaches
-- Update multiple files from a single request
-- Summarize diffs and proposed changes
-
-### Workspace Context
-
-Kairo can use context from the rest of your Coline workspace while helping with development tasks:
-
-- Reference docs and notes
-- Review related tasks
-- Summarize technical discussions
-- Generate code from product requirements
-- Connect engineering work with project planning
-
-Kairo can assist directly inside Coline Code by reading repository context, proposing edits, and helping coordinate implementation work across your workspace.
-
-For sandboxed JavaScript execution and automation workflows outside the repository editor, see [Kairo Code Execution](/kairo/code-execution).
-
-## Git & Version Control
-
-Coline Code supports git-based development workflows directly inside the workspace:
-
-- View changed files and repository status
-- Review diffs before applying or committing changes
-- Stage and commit updates
-- Switch branches and review branch state
-- Pull and push repository updates
-- Work with connected remote repositories
-- Coordinate AI-assisted edits with manual review workflows
-
-Version control actions are designed to work alongside collaborative editing and Kairo-assisted development.
-
-## Supported Languages & Frameworks
-
-Coline Code works well for:
-
-- TypeScript and JavaScript applications
-- React and Next.js projects
-- Python services and scripts
-- Infrastructure and configuration repositories
-- Documentation sites and MDX content
-- Automation tools and internal utilities
-- Full-stack web applications
-
-Language tooling and framework support may vary by workspace configuration.
-
-## Collaboration
-
-Because Coline Code is part of the broader Coline workspace, development work stays connected to the rest of your team:
-
-- Link code changes to tasks and project discussions
-- Reference docs, specs, and decisions while editing
-- Collaborate in shared workspaces with aligned permissions
-- Use channels for engineering communication and reviews
-- Keep technical planning and implementation together
-- Share repository context directly with Kairo conversations
-
-## Environments & Runtime Workflows
-
-Coline Code focuses on collaborative editing and repository workflows inside Coline.
-
-Depending on workspace configuration, teams can:
-
-- Manage application repositories
-- Edit deployment configuration
-- Coordinate release workflows
-- Use Kairo to automate repetitive development tasks
-- Connect external CI/CD and deployment systems
-
-Runtime execution environments, deployment infrastructure, and build tooling may differ between organizations and integrations.
-
-## Permissions & Access
-
-Workspace admins can control:
-
-- Repository access
-- Editing permissions
-- Git provider integrations
-- Deployment and environment access
-- AI usage policies and approvals
-
-Kairo actions inside Coline Code follow the same workspace permission model used throughout Coline.
-
-## Limitations
-
-Current capabilities may vary based on workspace permissions and connected integrations.
-
-Examples include:
-
-- Repository access controlled by workspace roles
-- Git provider availability depending on configuration
-- Language-specific tooling varying by project type
-- Deployment workflows managed through external services
-- Some runtime and debugging workflows requiring external infrastructure
-
-## Related Docs
-
-- [Kairo Overview](/kairo/overview)
-- [Kairo Tools](/kairo/tools)
-- [Code Execution](/kairo/code-execution)
+Projects sync across devices, and sync handles diverged branches.

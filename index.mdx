@@ -1,144 +1,41 @@
 ---
 title: Introduction
-description: Learn how to build on Coline's workspace platform — authentication, APIs, SDK, and integration patterns.
+description: What Coline is, how these docs are organized, and where to start.
 ---
 
-## Welcome to Coline
+Coline is a workspace for teams. Messages, mail, calendar, files, docs, sheets, notes, tasks and code live in one app, under one account and one set of permissions. Kairo, Coline's agent, works across all of it: it answers questions about your work, drafts and edits, runs routines on a schedule, and can join your team as named crew members who take on work of their own.
 
-Coline is dark infrastructure for modern workspaces: docs, tasks, messages, calendar, and AI workflows unified into a single workspace-native system. Everything lives in a restrained Obsidian-style shell with one clear signal color — Meridian — instead of fragmented tools, noisy dashboards, and decorative AI gradients.
+Coline runs in the browser at [coline.app](https://coline.app) and as a desktop app for macOS. Upstream, Coline's Git forge, is part of every workspace and is also available on its own at [upstream.codes](https://upstream.codes).
 
-These docs cover everything you need to integrate with Coline: authenticating API requests, building full apps with the SDK, and understanding our platform architecture.
-
-The platform design language is intentionally minimal: Obsidian and graphite neutrals for structure, Meridian for interaction and focus, Ember reserved for launch and marketing moments, and Kairo surfaces using a separate opal gradient identity.
-
-## The Platform Model
-
-Coline is built on three foundational layers:
-
-### 1. Primitives
-
-The atomic data types that compose everything: `message`, `string`, `number`, `url`, `file`, `date`, `user`, and `boolean`. These primitives enable universal conversion: a spreadsheet's rows become board cards, a doc's blocks become slides, calendar events become messages.
-
-### 2. Files
-
-Every piece of content in Coline is a file with a type:
-
-- **`.doc`** — Block-based rich text documents
-- **`.sheet`** — Structured data with typed columns, formulas, and views
-- **`.board`** — Flexible canvas for cards, workflows, and visual organization
-- **`.note`** — Instant capture with backlinks, daily notes, and knowledge graphs
-- **`.slide`** — Presentation decks with block-based composition
-- **`.code`** — Code files with syntax highlighting (full IDE coming soon)
-- **`.taskboard`** — Project management with statuses, sprints, and assignees
-- **Integration-defined types** — Custom file types from third-party integrations
-
-Files live in virtual drives (VFS) within workspaces, with granular permissions at the workspace, drive, folder, or file level.
-
-### 3. Containers
-
-Where files live and people collaborate:
-
-- **Workspaces** — Top-level boundary for teams, billing, and permissions
-- **Virtual Drives** — File storage with shared or personal access
-- **Channels** — Public or private collaboration spaces with tabs (files, messages)
-- **DMs** — Private conversations between one or more people
-- **Calendar Events** — Containers with date, invitees, message threads, and voice calls
-
-## Kairo AI
-
-Kairo is infrastructure woven throughout the platform, with its own opal violet, indigo, blue, and cyan identity distinct from the core Coline Meridian brand. The primary interface is the **Kairo page** — a dedicated AI chat workspace — with additional access points everywhere you work:
-
-- **Kairo page** (`Cmd/Ctrl+Shift+K`) — Persistent AI chat for deep work
-- **Command bar** (`Cmd/Ctrl+K`) — Quick search + AI assistance
-- **@kairo in channels** — Contextual help with conversation history
-- **Editor assistance** — Inline help in docs, sheets, and notes
-- **Calendar intelligence** — "Find a time when everyone is free"
-- **Automations** — Event-driven triggers without prompting
-- **Code execution** — Run sandboxed JavaScript for custom logic
-
-## Developer Experience
-
-### API-First Design
-
-The public API is a first-class citizen from day one:
-
-- **OpenAPI spec** as the source of truth: every endpoint documented before it ships
-- **TypeScript SDK** — Dogfooded by our own frontend, so it actually works
-- **Unified middleware chain** — Auth, rate limit, usage meter, handler, response format
-- **Consistent responses** — `{ data: T }` or `{ error: { code, message } }` on every route
-
-### Authentication
-
-Two paths to access the API:
-
-- **API Keys** — Server-to-server authentication with workspace-scoped keys
-- **OAuth 2.0** — Client app flow for third-party integrations
-
-Both use the same middleware and rate limiting infrastructure.
-
-### Integration Framework
-
-Integrations are headless apps, not one-off adapters. Every integration implements a shared contract:
-
-- OAuth flow and token refresh
-- Sync orchestration into Coline primitives
-- Webhook handling with signature verification
-- Health and status reporting
-
-Add a new integration by implementing one interface: OAuth, webhooks, sync, and UI are handled by the framework.
-
-## Core Concepts
-
-- **Workspaces** — Every resource is scoped to a workspace. API keys, OAuth clients, and data are all workspace-bound.
-- **Files** — Notes, docs, sheets, boards, and more are all "files" with different editors. The API treats them uniformly.
-- **Primitives** — Messages, strings, numbers, dates, URLs, files, users, and booleans are the atomic data types that compose everything.
-- **Workspace-scoped permissions** — RBAC with granularity from workspace down to individual file access.
-
-## Quick links
+## Start here
 
 <Cards>
-  <Card title="API Reference" description="Authentication, endpoints, and response formats." href="/api" />
-  <Card title="SDK" description="Type-safe client for JavaScript and TypeScript." href="/sdk" />
+  <Card title="Getting started" description="Create a workspace, invite your team, and find your way around." href="/getting-started" />
+  <Card title="Kairo" description="Chat, crew, memory, routines and permission modes." href="/kairo/overview" />
+  <Card title="Developers" description="REST API, MCP server, Tab, and the app SDK." href="/developers" />
+  <Card title="Plans and credits" description="What each plan includes and how credits work." href="/plans" />
 </Cards>
 
-## Getting Started
+## What's in a workspace
 
-The fastest way to start building:
+| Area | What it's for |
+| --- | --- |
+| [Home](/home) | Your day: what's next, what's in motion, and what's waiting on you |
+| [Inbox](/inbox) | Notifications, messages and mail in one list |
+| [Messages](/messages) | Channels, DMs and threads, with calls, clips and agents |
+| [Mail](/mail) | Every connected inbox, with fast triage and shared inboxes |
+| [Calendar](/calendar) | Native calendars, Google Calendar sync, scheduling links and meetings |
+| [Drive](/drive) | Every file in the workspace, with sharing and previews |
+| [Docs](/docs), [Sheets](/sheets), [Notes](/notes) | Writing, structured data and knowledge |
+| [Tasks](/tasks) | Boards, lists and timelines |
+| [Code](/code) | Cloud and local projects with coding agents |
+| [Upstream](/upstream) | Repositories, Change Requests, issues and checks |
+| [Apps](/apps) | Reviewed apps from the Coline App Store, or your own |
 
-1. **Create an API key** — Head to your workspace settings and generate a key
-2. **Install the SDK** — `npm install @colineapp/sdk`
-3. **Make your first request**:
+## For agents and developers
 
-```typescript
-import { Coline } from '@colineapp/sdk'
+Every page of these docs is available as Markdown: add `.md` to its URL, or request it with `Accept: text/markdown`. [`/llms.txt`](https://docs.coline.app/llms.txt) lists every page, and [`/llms-full.txt`](https://docs.coline.app/llms-full.txt) has the full text.
 
-const coline = new Coline({ apiKey: 'col_ws_...' })
-
-// List files in a drive
-const files = await coline.files.list({ driveId: '...' })
-
-// Create a doc
-const doc = await coline.files.create({
-  type: 'doc',
-  name: 'Project Brief',
-  parentId: 'folder_id'
-})
-
-// Send a message to a channel
-await coline.messages.create({
-  channelId: '...',
-  content: 'Hello from the SDK!'
-})
-```
-
-## Architecture Highlights
-
-- **Cloudflare Dynamic Workers** — Sandboxed code execution with ~2ms cold start, used for Kairo's `execute_code` tool
-- **Durable Objects** — Real-time WebSockets and stateful collaboration
-- **Cloudflare R2** — File storage with CDN delivery
-- **PostgreSQL** — Primary database with workspace-scoped row-level security patterns
-- **Hyperdrive** — Connection pooling for serverless database access
-
----
-
-Ready to dive in? Start with the [API Reference](/api) or [SDK documentation](/sdk).
+- **Connect an agent:** the hosted [MCP server](/api/mcp) at `https://mcp.coline.app/mcp` signs in with OAuth and works with your existing permissions.
+- **Call the API:** the [REST API](/api) uses workspace API keys or OAuth tokens. The OpenAPI description is at `https://coline.app/api/v1/openapi/app-platform`.
+- **Build an app:** the [app SDK](/sdk) adds tools, file types and screens to a workspace. Kairo can use an app's tools as soon as it's installed.

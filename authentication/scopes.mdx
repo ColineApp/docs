@@ -1,285 +1,58 @@
 ---
 title: Scopes
-description: Permission scopes define what your app can access.
+description: The permissions an API key or OAuth token can carry.
 ---
 
-## Scopes
-
-Scopes control what resources your app can access and what actions it can perform. Request only the scopes your app actually needs — users are more likely to approve apps with limited, well-defined permissions.
-
-## File Scopes
-
-### `files:read`
-
-Read files, folders, and drives.
-
-**Includes:**
-- List and browse drives
-- Read file content
-- View file metadata
-- Download attachments
-- See version history
-
-**Example use case:** Sync files to external storage, backup tools, read-only viewers
-
-### `files:write`
-
-Create, modify, and delete files.
-
-**Includes:**
-- Create new files
-- Edit existing files
-- Move and rename files
-- Delete files
-- Upload attachments
-
-**Example use case:** Content creation tools, importers, editors
-
-### `files:admin`
-
-Manage drive permissions and sharing.
-
-**Includes:**
-- Share drives with users
-- Modify permissions
-- Archive and restore drives
-- Manage drive settings
-
-**Example use case:** Enterprise admin tools, workspace management
-
-## Message Scopes
-
-### `messages:read`
-
-Read channel messages and threads.
-
-**Includes:**
-- List channels
-- Read message history
-- View threads
-- See reactions and attachments
-
-**Example use case:** Archiving tools, analytics, notification bridges
-
-### `messages:write`
-
-Send messages and create threads.
-
-**Includes:**
-- Post to channels
-- Reply in threads
-- Add reactions
-- Upload message attachments
-
-**Example use case:** Chat bots, notification services, integrations
-
-## Task Scopes
-
-### `tasks:read`
-
-Read tasks and taskboards.
-
-**Includes:**
-- List taskboards
-- Read task details
-- View status columns
-- See assignees and due dates
-
-**Example use case:** Reporting tools, external project management sync
-
-### `tasks:write`
-
-Create and modify tasks.
-
-**Includes:**
-- Create tasks
-- Update status and fields
-- Assign users
-- Set due dates
-- Move tasks between boards
-
-**Example use case:** Issue trackers, project management integrations, automation tools
-
-## Calendar Scopes
-
-### `calendar:read`
-
-Read calendar events.
-
-**Includes:**
-- List events
-- Read event details
-- See attendee lists
-- View availability
-
-**Example use case:** Scheduling assistants, calendar sync tools
-
-### `calendar:write`
-
-Create and modify events.
-
-**Includes:**
-- Create events
-- Update event details
-- Invite attendees
-- Delete events
-
-**Example use case:** Meeting schedulers, booking systems, event management
-
-## Workspace Scopes
-
-### `workspace:read`
-
-Read workspace information.
-
-**Includes:**
-- Workspace name and settings
-- Member list
-- Channel list
-- Drive list
-
-**Example use case:** Directory sync, org chart tools
-
-### `workspace:write`
-
-Manage workspace settings.
-
-**Includes:**
-- Modify workspace settings
-- Manage integrations
-- Configure webhooks
-
-**Example use case:** Enterprise admin tools, workspace provisioning
-
-## Kairo Scopes
-
-### `kairo:read`
-
-Read Kairo conversations and memory.
-
-**Includes:**
-- Access conversation history
-- Read saved memories
-
-**Example use case:** Analytics, conversation export
-
-### `kairo:execute`
-
-Execute code in Kairo sandboxes.
-
-**Includes:**
-- Run JavaScript code
-- Access execution results
-
-**Example use case:** Automation tools, custom calculations
-
-## Webhook Scopes
-
-### `webhooks:read`
-
-Read webhook configurations.
-
-**Includes:**
-- List webhooks
-- View webhook settings
-
-### `webhooks:write`
-
-Create and manage webhooks.
-
-**Includes:**
-- Create webhooks
-- Update webhook settings
-- Delete webhooks
-
-## Scope Best Practices
-
-### Request Minimum Permissions
-
-**Good:**
-```
-files:read messages:read
-```
-
-**Bad:**
-```
-files:read files:write files:admin messages:read messages:write
-```
-
-Only request what you need. Users trust apps with limited scopes.
-
-### Progressive Permission Requests
-
-Start with read-only scopes. Request write access only when needed:
-
-1. Initial auth: `files:read`
-2. When user clicks "Edit": Request `files:write`
-
-### Document Your Scopes
-
-In your app description, explain why each scope is needed:
-
-> "This app needs `files:read` to sync your documents and `messages:read` to archive important conversations."
-
-### Handle Scope Errors
-
-If a user denies a scope, handle gracefully:
-
-```typescript
-try {
-  await coline.files.create({ name: 'New Doc' })
-} catch (error) {
-  if (error.code === 'INSUFFICIENT_SCOPE') {
-    // Prompt user to re-authorize with files:write scope
-    showPermissionPrompt()
-  }
-}
-```
-
-## Scope Combinations
-
-**Read-Only Backup Tool:**
-```
-files:read messages:read
-```
-
-**Project Management Integration:**
-```
-tasks:read tasks:write files:read calendar:read
-```
-
-**Chat Bot:**
-```
-messages:read messages:write workspace:read
-```
-
-**Full Admin Tool:**
-```
-workspace:read workspace:write files:admin webhooks:write
-```
-
-## Checking Granted Scopes
-
-After authorization, verify what scopes were granted:
-
-```typescript
-// From token exchange response
-const { scope } = await exchangeCodeForToken(code)
-const grantedScopes = scope.split(' ')
-
-if (!grantedScopes.includes('files:write')) {
-  // Show limited functionality warning
-}
-```
-
-Users can approve partial scopes — your app should handle this.
-
-## Revoking Scopes
-
-Users can revoke specific scopes from their settings. Handle `403 Forbidden` errors by checking if required scopes are still valid.
-
-## Next Steps
-
-- [API Keys](/authentication/api-keys) — Simple server-to-server auth
-- [OAuth 2.0](/authentication/oauth) — User authorization flow
-- [Security](/authentication/security) — Best practices
+Scopes limit what a credential can do. They never widen access: an OAuth token still can't reach anything its person can't open, and an API key can't reach another workspace. Ask for the fewest scopes you need.
+
+A request that lacks a scope fails with `403` and `API_KEY_SCOPE_FORBIDDEN` (API keys) or `OAUTH_SCOPE_FORBIDDEN` (OAuth tokens).
+
+## API key scopes
+
+Chosen when the key is created.
+
+| Scope | Allows |
+| --- | --- |
+| `workspace.read` | View workspace metadata and settings |
+| `taskboards.read` | Read taskboards and tasks |
+| `taskboards.write` | Create, update and delete tasks |
+| `calendar.read` | Read calendars and events (OAuth tokens only in practice; see below) |
+| `calendar.write` | Create and update events |
+| `files.read` | Read files and sheets, and download uploads |
+| `files.write` | Create, upload, modify and delete files and sheets |
+| `apps.read` | List installed apps and their manifests |
+| `apps.write` | Install, configure and uninstall apps; push app versions with the CLI |
+| `apps.publish` | Publish versions of the one app a Code project builds |
+| `notifications.write` | Send in-app and push notifications from an app |
+| `index.write` | Add or update an app's documents in workspace search |
+| `ambient.events.write` | Publish an app's events to the workspace |
+| `ai.invoke` | Call [Tab](/api/tab) and other AI endpoints, billed to the workspace's API credits |
+| `upstream.checks.write` | Report check results on Upstream Change Requests |
+| `upstream.search.read` | Search code in Upstream repositories |
+| `admin.read` | View administrative data and audit logs |
+| `admin.write` | Manage workspace settings and members |
+
+Calendar routes act on a person's calendars, so they refuse API keys with `USER_IDENTITY_REQUIRED` even when the key has a calendar scope. Use OAuth for calendar.
+
+## OAuth scopes
+
+Requested in the `scope` parameter of the [authorization request](/authentication/oauth) and shown on the consent screen.
+
+| Scope | Allows |
+| --- | --- |
+| `openid`, `profile`, `email` | Sign-in and the [user info](/authentication/oauth#user-info) endpoint. The default when no scope is given |
+| `workspace.read` | List the person's workspaces and read workspace metadata |
+| `taskboards.read`, `taskboards.write` | Read or change tasks the person can access |
+| `calendar.read`, `calendar.write` | Read or change the person's calendars and events |
+| `files.read`, `files.write` | Read or change files the person can access |
+| `tools.read` | Discover and run read-only tools across Coline and installed apps |
+| `tools.write` | Run tools that change things, subject to the person's permissions and app approvals |
+| `ai.invoke` | Call AI endpoints |
+
+## MCP scopes
+
+The [MCP server](/api/mcp) uses `workspace.read`, `taskboards.read`, `taskboards.write`, `calendar.read`, `calendar.write`, `tools.read` and `tools.write`. A client that asks for nothing gets the read scopes: `workspace.read`, `taskboards.read`, `calendar.read` and `tools.read`.
+
+## App permissions
+
+Apps built with the [SDK](/sdk) don't use these scopes. They declare permissions in their manifest, such as `files.read` or `network.external`, which a workspace admin approves at install. See the [SDK reference](/sdk/reference#permissions).

@@ -1,0 +1,123 @@
+---
+title: Full stack
+description: Schedules, events, webhook endpoints, background jobs and connected accounts.
+---
+
+Each building block is declared in the manifest, shown on the install consent screen, and enforced at runtime.
+
+## Schedules
+
+Declare cron schedules and Coline runs your handler on time. Schedules run as the app itself, so they can't borrow a person's access.
+
+```ts
+export default defineApp({
+  // ...
+  permissions: ["storage.app", "network.external"],
+  network: { allowedHosts: ["api.example.com"] },
+  triggers: {
+    schedules: [{ id: "daily-sync", cron: "0 9 * * 1-5" }],
+  },
+  handlers: {
+    onSchedule: async (ctx) => {
+      await ctx.coline.net.fetch({ url: "https://api.example.com/sync" });
+      await ctx.coline.storage.kv.set("last-sync", ctx.firedAt);
+    },
+  },
+});
+```
+
+## Events
+
+Subscribe to task, message, note, calendar and app events, or emit your own. Delivery is durable and retried. Payloads carry identifiers only, so read what you need with the capability API.
+
+```ts
+export default defineApp({
+  // ...
+  permissions: ["tasks.read", "webhooks.subscribe", "events.emit"],
+  triggers: { webhooks: [{ event: "task.created" }, { event: "crm.*" }] },
+  handlers: {
+    onEvent: async ({ coline, event }) => {
+      const task = await coline.tasks.get(String(event.data.taskId));
+      await coline.events.emit("triage.task_seen", { taskId: event.data.taskId });
+    },
+  },
+});
+```
+
+## Webhook endpoints
+
+Each install gets a private URL for incoming webhooks. Coline verifies Stripe, GitHub, Slack, Shopify and Linear signatures for you, as well as generic HMAC and shared tokens. The signing secret stays with Coline.
+
+```ts
+import { defineEndpoint } from "@colineapp/sdk/v2";
+
+// The install's URL: coline.endpoints.url("stripe")
+export const stripe = defineEndpoint({
+  id: "stripe",
+  methods: ["POST"],
+  verify: { kind: "stripe", secret: "STRIPE_WEBHOOK_SECRET" },
+  mode: "async", // respond 202 now, run a durable, retried handler
+  handle: async ({ coline, json }) => {
+    const event = json<{ type: string; data: { object: { id: string } } }>();
+    await coline.storage.collection("payments").insert({ stripeId: event.data.object.id });
+    return { status: 200 };
+  },
+});
+```
+
+## Background jobs
+
+Durable work with retries, progress, checkpoints and continuation, so a large import runs in bounded steps instead of one long timeout.
+
+```ts
+import { defineJob } from "@colineapp/sdk/v2";
+import { useJob } from "@colineapp/ui";
+
+export const importAll = defineJob({
+  name: "import",
+  timeoutSeconds: 300, // per attempt, up to 15 minutes
+  payload: z.object({ page: z.number().default(1) }),
+  run: async ({ page }, { coline, job }) => {
+    const { items, more } = await fetchPage(coline, page);
+    await job.progress(more ? 0.5 : 1, `Page ${page}`);
+    return more ? { continueWith: { page: page + 1 } } : { result: { done: true } };
+  },
+});
+
+// In the UI
+const run = await coline.jobs.enqueue("import", { page: 1 });
+const { progress, isRunning } = useJob(run.id);
+```
+
+## Connected accounts
+
+Coline handles OAuth with other services: the sign-in window, encrypted tokens, refresh, and adding the token only to requests for the hosts you declare. Your code never sees the token.
+
+```ts
+export default defineApp({
+  // ...
+  permissions: ["connections.use", "network.external"],
+  network: { allowedHosts: ["api.github.com"] },
+  connections: [{
+    key: "github",
+    name: "GitHub",
+    scope: "user", // each member connects their own account
+    hosts: ["api.github.com"],
+    oauth2: {
+      authorizeUrl: "https://github.com/login/oauth/authorize",
+      tokenUrl: "https://github.com/login/oauth/access_token",
+      clientId: "Iv1.…",
+      clientSecret: "GITHUB_CLIENT_SECRET", // a developer secret
+      scopes: ["repo"],
+    },
+  }],
+});
+
+await coline.net.fetch({
+  url: "https://api.github.com/user/issues",
+  headers: { authorization: "Bearer {{connection:github}}" },
+});
+// React: <ConnectButton connectionKey="github" />
+```
+
+Register `https://coline.app/api/apps/connections/callback` as the redirect URL with each provider. Your app's overview in the developer portal shows the exact URL.

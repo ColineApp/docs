@@ -1,0 +1,35 @@
+---
+title: How apps run
+description: The three UI tiers, and where an app's logic runs.
+---
+
+## UI tiers
+
+| Tier | You write | Coline provides | Runs on |
+| --- | --- | --- | --- |
+| `tree` | Handlers that return `ui.*` trees | Native rendering, theming and actions | Web, desktop, mobile and inside Kairo chat |
+| `react` | React components (`main.tsx`) | A sandboxed runtime, `@colineapp/ui`, and the build pipeline | Web and desktop |
+| `web` | Pages on your own origin | Signed embeds | Web and desktop |
+
+Start with tree surfaces. They render everywhere, match Coline's themes without extra work, and are the only tier that shows up in Kairo chat and on mobile. Use React where you need richer interaction, and `web` only to embed an existing web app.
+
+React surfaces run in a sandboxed frame with no network access and no credentials. Every action crosses a permission-checked bridge to the host. Themes, including dark mode and custom themes, follow Coline live, and Tailwind v4 and your own CSS compile automatically.
+
+## Surfaces
+
+An app can declare:
+
+- **Home:** the app's own screen in the workspace.
+- **File types:** with `preview`, `inline` and editor surfaces. App files appear wherever files do, including Drive, Messages and Kairo.
+- **Tool result cards:** what Kairo shows in chat after running a tool. These use a subset of tree nodes; see [chat cards](/sdk/reference#chat-cards).
+- **Commands:** entries in Coline's search and command palette.
+
+## Where logic runs
+
+With `hosting: { default: "coline" }`, Coline runs your tools, handlers, schedules and jobs in isolated workers. There's nothing to deploy.
+
+You can route individual capabilities to your own backend when they need your infrastructure, and mix the two in one app. Moving a capability between them is a manifest change, not a code change. See [external hosting](/sdk/hosting).
+
+## References
+
+Any app can point at any workspace object, such as a file, person, task, event or another app's record, with `ui.reference(...)`. Coline renders each reference with its own component wherever it appears, so a task looks like a task in every app.

@@ -12,14 +12,14 @@ because every change describes the specific cells it touches.
 
 ## Collaboration
 
-- **Simultaneous editing** — every change is an operation naming the exact cells
+- **Simultaneous editing**: every change is an operation naming the exact cells
   it touches. Concurrent edits to different cells both apply; concurrent edits to
   the same cell resolve by server order.
-- **Presence** — see who is in the sheet, where their cursor is, and which cell
+- **Presence**: see who is in the sheet, where their cursor is, and which cell
   they are typing into.
-- **Comments** — comment on a row or a cell, reply in a thread, resolve when
+- **Comments**: comment on a row or a cell, reply in a thread, resolve when
   done. `@`-mentions arrive as normal Coline notifications.
-- **Offline safety** — edits queue while you are disconnected and flush on
+- **Offline safety**: edits queue while you are disconnected and flush on
   reconnect. Nothing is dropped silently.
 
 ## Columns
@@ -37,7 +37,7 @@ created time, updated time, formula, relation, lookup, and rollup.
 
 Grid, board, calendar, gallery, timeline, chart, pivot, and form. Each view has
 its own filters, sorts, grouping, hidden columns, row height and conditional
-formatting — the underlying data is shared.
+formatting. The underlying data is shared.
 
 Charts support bar, line, area, scatter and pie with real axes and legends.
 
@@ -51,10 +51,10 @@ only recomputes the formulas that actually depend on it.
 
 Create rules that run server-side when data changes:
 
-- **Triggers** — a row is created, a cell changes, or a field becomes a specific
+- **Triggers**: a row is created, a cell changes, or a field becomes a specific
   value.
-- **Conditions** — the same filter operators used by views.
-- **Actions** — set a field, clear a field, stamp the current time, copy one
+- **Conditions**: the same filter operators used by views.
+- **Actions**: set a field, clear a field, stamp the current time, copy one
   field to another, or create a row.
 
 Automations write through the ordinary edit path, so their changes are
@@ -64,22 +64,22 @@ including skips and failures.
 ## Version history
 
 Every change is recorded with who made it and when. Save a named version before
-a large edit, compare it against the current state cell by cell, and restore it —
-restoring saves the current state first, so it is itself reversible.
+a large edit, compare it against the current state cell by cell, and restore it.
+Restoring saves the current state first, so it is itself reversible.
 
 ## Permissions
 
 Drive controls who can reach a sheet. Within a sheet you can additionally set
-per-person roles — owner, editor, commenter, viewer — and protect specific
+per-person roles (owner, editor, commenter, viewer) and protect specific
 columns or rows so only owners can change them. Protections are enforced on the
 server.
 
 ## Import and export
 
-- **Import** — CSV, TSV, Excel (`.xlsx`) and JSON. Column types are inferred from
+- **Import**: CSV, TSV, Excel (`.xlsx`) and JSON. Column types are inferred from
   the data, so numbers, dates, currency and select lists arrive ready to sort and
   summarise. Import into a new table or append onto an existing one.
-- **Export** — CSV, Excel and JSON. Exports honour the active view: filters,
+- **Export**: CSV, Excel and JSON. Exports honour the active view: filters,
   sorts, column order and hidden columns all carry through.
 
 ## Kairo integration
@@ -93,15 +93,10 @@ server.
 Kairo edits sheets through the same operation path people do, so its changes
 appear live for collaborators and can be undone.
 
+## Clean data
+
+The **Clean data** panel fixes common problems in a table: remove duplicate rows, trim whitespace and collapse repeated spaces, change case, fill blanks from the row above, and find and replace. It also shows a column's blank cells and duplicate values.
+
 ## API
 
-The public API is versioned under `/api/v1`:
-
-- `GET /workspaces/{slug}/sheets` — list sheets
-- `POST /workspaces/{slug}/sheets` — create a sheet
-- `GET /workspaces/{slug}/sheets/{sheetId}` — workbook structure
-- `GET /workspaces/{slug}/sheets/{sheetId}/rows?tableId=…` — paginated rows
-- `POST /workspaces/{slug}/sheets/{sheetId}/rows` — add, update or delete rows
-- `POST /workspaces/{slug}/sheets/{sheetId}/ops` — apply operations directly
-- `POST /workspaces/{slug}/sheets/{sheetId}/import` — import a file
-- `GET /workspaces/{slug}/sheets/{sheetId}/export?format=csv|xlsx|json`
+Sheets are available through the REST API under `/api/v1/workspaces/{workspaceSlug}/sheets`: list, create, read the workbook structure, read and write rows (`/rows?tableId=…`), apply operations (`/ops`), import, and export (`/export?format=csv|xlsx|json`). See the [endpoint reference](/api/endpoints#sheets).

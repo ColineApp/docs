@@ -1,4 +1,4 @@
 {
-  "title": "SDK",
-  "pages": ["index", "typescript", "python", "examples"]
+  "title": "App SDK",
+  "pages": ["index", "runtime", "capabilities", "ui", "full-stack", "hosting", "publishing", "reference"]
 }

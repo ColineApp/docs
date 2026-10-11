@@ -1,117 +1,66 @@
 ---
-title: OAuth 2.0
-description: Authenticate on behalf of users with OAuth 2.0.
+title: OAuth
+description: Sign people in with Coline and call the API on their behalf.
 ---
 
-## OAuth 2.0
+Use OAuth when your app acts for a person: it signs them in with their Coline account, they approve the scopes you ask for, and your app gets a token that can reach what that person can reach, limited to those scopes. Coline uses the OAuth 2.0 authorization code flow with PKCE.
 
-OAuth 2.0 enables your app to access Coline on behalf of users. It's the right choice when:
+If you're connecting an agent to the [MCP server](/api/mcp), you don't need any of this. MCP clients register and sign in on their own.
 
-- Building apps for the Coline marketplace
-- Integrating with external services
-- Acting on behalf of multiple users
-- Needing limited, user-granted permissions
+## Endpoints
 
-## How It Works
+| | URL |
+| --- | --- |
+| Authorization | `https://coline.app/api/v1/oauth/authorize` |
+| Token | `https://coline.app/api/v1/oauth/token` |
+| User info | `https://coline.app/api/v1/oauth/userinfo` |
+| Metadata | `https://coline.app/.well-known/oauth-authorization-server` |
 
-1. **User Authorization** — User grants your app permission
-2. **Authorization Code** — Coline redirects to your app with a code
-3. **Token Exchange** — Your app exchanges code for access token
-4. **API Access** — Use token to make API requests
+## Register a client
 
-## Registering Your App
+1. Open the [developer console](https://coline.app/developers/console), choose a workspace, and go to **OAuth clients**.
+2. Name the client and add every redirect URL it will use. Redirects must match exactly.
+3. Copy the client ID and client secret. The secret is shown once.
 
-Before using OAuth, register your application:
+## 1. Send the person to authorize
 
-1. Go to [Coline Developers](https://coline.app/developers)
-2. Click **New Application**
-3. Enter app details:
-   - Name
-   - Description
-   - Redirect URIs (must be HTTPS)
-   - Required scopes
-4. Save your **Client ID** and **Client Secret**
+Create a random `code_verifier`, derive `code_challenge = BASE64URL(SHA256(code_verifier))`, and redirect to:
 
-**Important:** Never expose the Client Secret in client-side code.
-
-## Authorization Flow
-
-### Step 1: Redirect User to Authorization URL
-
-```typescript
-import { buildLoginWithColineAuthorizeUrl, createOauthState, createPkceCodeChallenge } from '@colineapp/sdk'
-
-// Generate state and PKCE for security
-const state = createOauthState()
-const { codeVerifier, codeChallenge } = createPkceCodeChallenge()
-
-// Store for later verification
-session.oauthState = state
-session.codeVerifier = codeVerifier
-
-const authUrl = buildLoginWithColineAuthorizeUrl({
-  clientId: CLIENT_ID,
-  redirectUri: 'https://your-app.com/auth/callback',
-  scope: 'files:read messages:read',
-  state,
-  codeChallenge,
-  codeChallengeMethod: 'S256'
-})
-
-// Redirect user
-res.redirect(authUrl)
+```text
+https://coline.app/api/v1/oauth/authorize
+  ?response_type=code
+  &client_id=YOUR_CLIENT_ID
+  &redirect_uri=https://example.com/callback
+  &scope=openid%20profile%20email%20workspace.read%20calendar.read
+  &state=RANDOM_STATE
+  &code_challenge=CODE_CHALLENGE
+  &code_challenge_method=S256
 ```
 
-**Parameters:**
+| Parameter | |
+| --- | --- |
+| `response_type` | Always `code` |
+| `client_id` | Your client ID |
+| `redirect_uri` | One of the client's registered redirect URLs |
+| `scope` | Space-separated [scopes](/authentication/scopes#oauth-scopes). Defaults to `openid profile email` |
+| `state` | Returned unchanged; check it to prevent CSRF |
+| `code_challenge` | 43 to 128 characters |
+| `code_challenge_method` | Must be `S256` |
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `client_id` | Yes | Your app's Client ID |
-| `redirect_uri` | Yes | Must match registered URI |
-| `response_type` | Yes | Always `code` |
-| `scope` | Yes | Space-separated scopes |
-| `state` | Recommended | Random string for CSRF protection |
-| `code_challenge` | Recommended | PKCE code challenge |
-| `code_challenge_method` | Recommended | `S256` or `plain` |
+The person signs in if needed and sees a consent screen listing the scopes. When they approve, Coline redirects to `redirect_uri` with `code` and `state`. Codes expire after 10 minutes and work once.
 
-### Step 2: Handle the Callback
+## 2. Exchange the code
 
-After authorization, Coline redirects to your `redirect_uri`:
-
-```
-https://your-app.com/auth/callback?code=abc123&state=xyz789
-```
-
-Verify the `state` parameter matches what you sent:
-
-```typescript
-if (req.query.state !== session.oauthState) {
-  throw new Error('Invalid state parameter')
-}
+```bash
+curl https://coline.app/api/v1/oauth/token \
+  -u "YOUR_CLIENT_ID:YOUR_CLIENT_SECRET" \
+  -d grant_type=authorization_code \
+  -d code=col_code_... \
+  -d redirect_uri=https://example.com/callback \
+  -d code_verifier=YOUR_CODE_VERIFIER
 ```
 
-### Step 3: Exchange Code for Token
-
-```typescript
-const response = await fetch('https://api.coline.app/v1/oauth/token', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    grant_type: 'authorization_code',
-    code: req.query.code,
-    redirect_uri: 'https://your-app.com/auth/callback',
-    client_id: CLIENT_ID,
-    client_secret: CLIENT_SECRET,
-    code_verifier: session.codeVerifier // Required if using PKCE
-  })
-})
-
-const { access_token, refresh_token, expires_in, scope } = await response.json()
-```
-
-**Response:**
+The token endpoint accepts form or JSON bodies. Send the client secret with HTTP Basic auth, or as `client_secret` in the body.
 
 ```json
 {
@@ -119,98 +68,55 @@ const { access_token, refresh_token, expires_in, scope } = await response.json()
   "token_type": "Bearer",
   "expires_in": 3600,
   "refresh_token": "col_rt_...",
-  "scope": "files:read messages:read"
+  "scope": "openid profile email workspace.read calendar.read"
 }
 ```
 
-### Step 4: Use the Access Token
+Access tokens last one hour.
 
-OAuth tokens work as API keys:
+## 3. Call the API
 
-```typescript
-import { ColineApiClient } from '@colineapp/sdk'
-
-const client = new ColineApiClient({
-  baseUrl: 'https://api.coline.app',
-  apiKey: access_token // OAuth tokens work as API keys
-})
-
-const ws = client.workspace('ws_abc123')
-const files = await ws.listDriveFiles('drive_xyz')
+```bash
+curl "https://coline.app/api/v1/workspaces/acme/calendar/events?start=2026-10-12T00:00:00Z&end=2026-10-19T00:00:00Z" \
+  -H "Authorization: Bearer col_at_..."
 ```
 
-## Refresh Tokens
+A token isn't tied to one workspace. Pass the workspace slug or ID in the path; the person must be a member of it. `GET /api/v1/me/workspaces` (scope `workspace.read`) lists their workspaces.
 
-Access tokens expire after 1 hour. Use refresh tokens to get new access tokens without re-authorizing the user:
+## Refresh
 
-```typescript
-const response = await fetch('https://api.coline.app/v1/oauth/token', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    grant_type: 'refresh_token',
-    refresh_token: storedRefreshToken,
-    client_id: CLIENT_ID,
-    client_secret: CLIENT_SECRET
-  })
-})
-
-const { access_token, refresh_token } = await response.json()
-// Store new tokens (refresh_token may be new)
+```bash
+curl https://coline.app/api/v1/oauth/token \
+  -u "YOUR_CLIENT_ID:YOUR_CLIENT_SECRET" \
+  -d grant_type=refresh_token \
+  -d refresh_token=col_rt_...
 ```
 
-**Important:** Refresh tokens are single-use. The response includes a new refresh token — store it and discard the old one.
+Each refresh returns a new access token and a new refresh token. The old refresh token stops working, so store the new one.
 
-## Scopes
+## User info
 
-Scopes define what your app can access. Request only the scopes you need.
+`GET /api/v1/oauth/userinfo` with the access token returns the signed-in person:
 
-**Common Scopes:**
-
-- `files:read` — Read files and folders
-- `files:write` — Create and modify files
-- `messages:read` — Read channel messages
-- `messages:write` — Send messages
-- `tasks:read` — Read tasks and taskboards
-- `tasks:write` — Create and update tasks
-- `calendar:read` — Read calendar events
-- `calendar:write` — Create and modify events
-- `workspace:read` — Read workspace info and members
-
-See [Scopes](/authentication/scopes) for complete list.
-
-## Error Handling
-
-**Authorization Errors:**
-
-```
-https://your-app.com/auth/callback?error=access_denied&error_description=user+denied+access
+```json
+{
+  "sub": "user id",
+  "email": "dana@example.com",
+  "email_verified": true,
+  "name": "Dana Kim",
+  "given_name": "Dana",
+  "family_name": "Kim",
+  "picture": "https://...",
+  "preferred_username": "dana"
+}
 ```
 
-**Common Errors:**
+## Errors
 
-| Error | Description |
-|-------|-------------|
-| `invalid_request` | Missing or invalid parameters |
-| `invalid_client` | Client ID or secret is wrong |
-| `invalid_grant` | Authorization code is expired or invalid |
-| `unauthorized_client` | App is not authorized for this grant type |
-| `access_denied` | User denied authorization |
-| `unsupported_response_type` | Response type not supported |
-| `invalid_scope` | Requested scope is invalid |
-
-## Revoking Access
-
-Users can revoke your app's access from their Coline settings. Handle `401` responses gracefully and prompt for re-authorization.
-
-## Testing OAuth
-
-Use the [OAuth Playground](https://coline.app/developers/oauth-playground) to test your implementation without writing code.
-
-## Next Steps
-
-- [Scopes](/authentication/scopes) — Available permission scopes
-- [Security Best Practices](/authentication/security) — Keep your OAuth implementation secure
-- [Building Integrations](/integrations/building) — Create full integrations
+| Code | Meaning |
+| --- | --- |
+| `INVALID_CLIENT` | Unknown client, or the secret doesn't match |
+| `INVALID_REDIRECT_URI` | The redirect URL isn't registered for the client |
+| `INVALID_GRANT` | The code or refresh token is expired, used, or for another client or redirect |
+| `INVALID_TOKEN` | The access token is unknown or expired; refresh it |
+| `OAUTH_SCOPE_FORBIDDEN` | The token lacks a scope the route needs |
