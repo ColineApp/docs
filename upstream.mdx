@@ -15,6 +15,17 @@ Upstream has its own full documentation at [upstream.codes/docs](https://upstrea
 - Share links let people read a private repository without an account, with an expiry and a view count.
 - Clone and push over HTTPS or SSH at `git.coline.app`, with Git LFS for large files.
 
+## Push without an account
+
+Anyone can put code on Upstream before signing up, including a coding agent. Run `upstream push` in any folder while signed out, or make one HTTP call:
+
+```bash
+curl -sX POST https://api.upstream.codes/v1/unclaimed-repos -d '{"name":"my-app"}'
+git -c credential.helper= push "<pushUrl from the response>" HEAD:main
+```
+
+This creates an unclaimed repository and returns a push URL and a claim link. Open the claim link, sign in or create an account, and choose your namespace or an organization. The repository moves there with its history. Unclaimed repositories are unlisted, stop accepting pushes after 100 MiB and are deleted 7 days after creation unless claimed. Details: [upstream.codes/docs/unclaimed-repositories](https://upstream.codes/docs/unclaimed-repositories).
+
 ## Change Requests
 
 Change Requests are Upstream's pull requests, with versions:
@@ -54,7 +65,7 @@ upstream auth login
 upstream repo clone {namespace}/{repository}
 ```
 
-The CLI signs in through your browser and sets up Git credentials. It covers repositories, Change Requests (`upstream cr create`, `list`, `view`, `edit`, `stack`), rulesets and workspaces. `upstream doctor` checks your setup. It runs on macOS and glibc-based Linux.
+`upstream push` pushes the current folder and creates the repository on first use: a private one in your namespace when signed in, an unclaimed one when signed out. The CLI signs in through your browser and sets up Git credentials. It covers repositories, Change Requests (`upstream cr create`, `list`, `view`, `edit`, `stack`), rulesets and workspaces. `upstream doctor` checks your setup. It runs on macOS and glibc-based Linux.
 
 ## API
 
@@ -70,6 +81,7 @@ Docs: [upstream.codes/docs/api](https://upstream.codes/docs/api).
 
 ## Agents
 
+- Agents without an account create an unclaimed repository with `POST https://api.upstream.codes/v1/unclaimed-repos` or `upstream push --json`, and hand the claim link to their person.
 - `upstream mcp` runs a local MCP server for coding agents, and `upstream agent tools` lists the same tools for other agents.
 - Agent index: [upstream.codes/llms.txt](https://upstream.codes/llms.txt).
 - Setup skill: [upstream.codes/.well-known/skills/upstream/SKILL.md](https://upstream.codes/.well-known/skills/upstream/SKILL.md).
