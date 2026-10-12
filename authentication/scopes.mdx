@@ -32,7 +32,7 @@ Chosen when the key is created.
 | `admin.read` | View administrative data and audit logs |
 | `admin.write` | Manage workspace settings and members |
 
-Calendar routes act on a person's calendars, so they refuse API keys with `USER_IDENTITY_REQUIRED` even when the key has a calendar scope. Use OAuth for calendar.
+Calendar and message routes act for a person, so they refuse API keys with `USER_IDENTITY_REQUIRED` even when the key has the scope. Use OAuth for calendar and messages.
 
 ## OAuth scopes
 
@@ -45,6 +45,7 @@ Requested in the `scope` parameter of the [authorization request](/authenticatio
 | `taskboards.read`, `taskboards.write` | Read or change tasks the person can access |
 | `calendar.read`, `calendar.write` | Read or change the person's calendars and events |
 | `files.read`, `files.write` | Read or change files the person can access |
+| `messages.write` | Send, edit, pin and react to messages as the person, in conversations they're in. Reading messages uses `workspace.read` |
 | `tools.read` | Discover and run read-only tools across Coline and installed apps |
 | `tools.write` | Run tools that change things, subject to the person's permissions and app approvals |
 | `ai.invoke` | Call AI endpoints |

@@ -32,6 +32,7 @@ A key can call any route whose required scopes it holds. See the [endpoint refer
 A key has no person behind it, so some routes refuse it with `403 USER_IDENTITY_REQUIRED`:
 
 - calendar routes, which act on a person's calendars and invitations
+- message, DM and thread routes, which only show conversations a person is in (keys can list public channels)
 - `GET /api/v1/me/workspaces` and `GET /api/v1/oauth/userinfo`
 
 Use an [OAuth token](/authentication/oauth) for those.

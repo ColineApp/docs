@@ -89,16 +89,21 @@ Calendar writes that email people outside Coline wait for the person's approval 
 
 ## Messages
 
-Read-only for API clients.
+Messages act for a person: you can read and post only in conversations that person is in, exactly as in the app. With an API key, only the public channel list is available.
 
 | Method | Path | Does | Scope |
 | --- | --- | --- | --- |
-| `GET` | `/workspaces/{workspaceSlug}/channels` † | List channels | `workspace.read` |
-| `GET` | `/workspaces/{workspaceSlug}/channels/{channelId}/messages` † | Read channel messages | `workspace.read` |
-| `GET` | `/workspaces/{workspaceSlug}/dms` † | List DMs | `workspace.read` |
-| `GET` | `/workspaces/{workspaceSlug}/dms/{dmId}/messages` † | Read DM messages | `workspace.read` |
-| `GET` | `/workspaces/{workspaceSlug}/messages/{messageId}` † | Get a message | `workspace.read` |
-| `GET` | `/workspaces/{workspaceSlug}/messages/{messageId}/thread` † | Read a thread | `workspace.read` |
+| `GET` | `/workspaces/{workspaceSlug}/channels` † | List public channels, plus private channels the person is in | `workspace.read` |
+| `GET` `POST` | `/workspaces/{workspaceSlug}/channels/{channelId}/messages` † | Read or post channel messages | `workspace.read` / `messages.write` (OAuth) |
+| `GET` | `/workspaces/{workspaceSlug}/dms` † | List the person's DMs | `workspace.read` (OAuth) |
+| `GET` `POST` | `/workspaces/{workspaceSlug}/dms/{dmId}/messages` † | Read or post DM messages | `workspace.read` / `messages.write` (OAuth) |
+| `GET` | `/workspaces/{workspaceSlug}/messages/{messageId}` † | Get a message | `workspace.read` (OAuth) |
+| `PATCH` `DELETE` | `/workspaces/{workspaceSlug}/messages/{messageId}` † | Edit or delete your own message | `messages.write` (OAuth) |
+| `GET` `POST` | `/workspaces/{workspaceSlug}/messages/{messageId}/thread` † | Read a thread, or reply in it | `workspace.read` / `messages.write` (OAuth) |
+| `PUT` `DELETE` | `/workspaces/{workspaceSlug}/messages/{messageId}/pin` † | Pin or unpin a message | `messages.write` (OAuth) |
+| `PUT` `DELETE` | `/workspaces/{workspaceSlug}/messages/{messageId}/reactions/{emoji}` † | Add or remove your reaction | `messages.write` (OAuth) |
+
+Messages you post appear under the person's name. Posting into a conversation the person isn't in fails with `403`.
 
 ## Search
 

@@ -37,7 +37,7 @@ curl "https://coline.app/api/v1/workspaces/acme/sheets?limit=5" \
 
 3. Read the result from the `data` field. Errors come back as `{ "error": { "code", "message" } }` with a matching HTTP status. See [errors](/api/errors).
 
-An API key belongs to one workspace and acts as the workspace, not as a person. Routes that act for a person, such as calendar and `GET /api/v1/me/workspaces`, need an [OAuth token](/authentication/oauth) instead.
+An API key belongs to one workspace and acts as the workspace, not as a person. Routes that act for a person, such as calendar, messages and `GET /api/v1/me/workspaces`, need an [OAuth token](/authentication/oauth) instead.
 
 The full list of routes is in the [endpoint reference](/api/endpoints). The machine-readable description is at `https://coline.app/api/v1/openapi/app-platform`, and `https://coline.app/.well-known/api-catalog` links it with the OAuth metadata and status endpoint.
 
