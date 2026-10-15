@@ -5,7 +5,7 @@ description: Put a Coline app on the web at its own address, with visitors, data
 
 A site is a Coline app with a public website. It gets its own address, `name.coline.space` or your own domain, and anyone can open it without an account. Its data lives in a Coline workspace: the team sees every record, gets notified about new ones, and can ask Kairo about them.
 
-Sites are part of SDK 2.1 (`@colineapp/sdk` 2.1.2 and `create-coline-app` 2.9.1).
+Sites are part of SDK 2.1 (`@colineapp/sdk` 2.1.2, `@colineapp/ui` 2.1.1 and `create-coline-app` 2.9.2).
 
 ## Quickstart
 
@@ -79,10 +79,11 @@ export default defineApp({
 });
 ```
 
-The page talks only to its own site. The React hooks are typed from the app itself, so collection names, record shapes and tool inputs are checked at compile time:
+The page is built from Coline's own components and talks only to its own site. The React hooks are typed from the app itself, so collection names, record shapes and tool inputs are checked at compile time:
 
 ```tsx
-import { createSiteHooks, SignInButton, useSession } from "@colineapp/sdk/site/react";
+import { createSiteHooks } from "@colineapp/sdk/site/react";
+import { Button, Card, CardContent, ColineSiteProvider, Input } from "@colineapp/ui";
 import type app from "../app.config";
 
 const { useCollection, useTool } = createSiteHooks<typeof app>();
@@ -90,7 +91,7 @@ const { useCollection, useTool } = createSiteHooks<typeof app>();
 function Guestbook() {
   const entries = useCollection("entries", { orderBy: "createdAt", order: "desc" }); // live
   const sign = useTool("guestbook.sign");
-  // sign.run({ name: "Ada", message: "Hello" })
+  // <Button onClick={() => sign.run({ name: "Ada", message: "Hello" })}>Sign</Button>
 }
 ```
 
@@ -104,12 +105,14 @@ function Guestbook() {
 - **Visitors can upload files** when the site accepts them. See [files](/sites/files).
 - **Pages update live.** Collections refresh when records change, for every visitor.
 - **Coline serves the page.** Each route gets server-rendered `<title>`, description and link preview tags, a sitemap and `robots.txt`. The page itself is client-rendered React.
+- **It looks like Coline.** Pages use `@colineapp/ui`, Coline's components, in light and dark. See [design](/sites/design).
 - **Browser agents can use the site.** With `agentTools: true`, the site's tools are offered to AI agents in the visitor's browser.
 
 ## Next
 
 <Cards>
   <Card title="Data and rules" description="Collections, schemas, visitor rules, the browser client, React hooks and site tools." href="/sites/data" />
+  <Card title="Design" description="Coline's components and tokens on a site, in light and dark." href="/sites/design" />
   <Card title="Visitors and sign-in" description="Guests, Google and Coline sign-in, access modes and approvals." href="/sites/visitors" />
   <Card title="Files" description="Visitor uploads, public and private files, and storage limits." href="/sites/files" />
   <Card title="Endpoints and agents" description="HTTP endpoints on the site's paths, and tools for browser agents." href="/sites/endpoints" />

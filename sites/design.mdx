@@ -1,0 +1,81 @@
+---
+title: Design
+description: Build a site from Coline's components, in light and dark, with the same tokens as Coline.
+---
+
+A site's page is built from `@colineapp/ui`, the components Coline itself uses. They're accessible and keyboard-friendly, and they switch between light and dark with the visitor's device. The `site` template starts with them.
+
+## Setup
+
+```bash
+npm install @colineapp/ui
+```
+
+```tsx
+// site/main.tsx
+import { createRoot } from "react-dom/client";
+import { Button, Card, CardContent, CardHeader, CardTitle, ColineSiteProvider } from "@colineapp/ui";
+import "@colineapp/ui/styles.css";
+import "./app.css";
+
+createRoot(document.getElementById("root")!).render(
+  <ColineSiteProvider>
+    <App />
+  </ColineSiteProvider>,
+);
+```
+
+```css
+/* site/app.css */
+@import "tailwindcss";
+@import "@colineapp/ui/theme.css";
+```
+
+`ColineSiteProvider` follows the visitor's light or dark preference and changes with it. Pass `theme="light"` or `theme="dark"` to fix one. `useSiteColorScheme()` returns the one showing.
+
+`theme.css` gives the site's own Tailwind classes Coline's token names, so layout you write matches the components in both themes:
+
+| Use | Instead of |
+| --- | --- |
+| `bg-background`, `bg-card`, `bg-muted` | `bg-white`, `bg-gray-50` |
+| `text-foreground`, `text-muted-foreground` | `text-black`, `text-gray-500` |
+| `border-border`, `border-input` | `border-gray-200` |
+| `text-destructive`, `bg-positive`, `bg-attention`, `bg-risk` | `text-red-600`, `bg-green-100` |
+| `rounded-lg`, `rounded-xl` | fixed pixel radii |
+
+## Components
+
+| Need | Components |
+| --- | --- |
+| Actions | `Button` (`default`, `outline`, `secondary`, `ghost`, `destructive`, `link`; sizes `xs` to `lg`, `icon`), `ConfirmButton`, `Toggle` |
+| Forms | `Field`, `FieldLabel`, `FieldDescription`, `FieldError`, `Input`, `Textarea`, `Select`, `Combobox`, `Checkbox`, `RadioGroup`, `Switch`, `Slider`, `DatePicker`, `Calendar`, `SearchInput` |
+| Layout | `Card` and its parts, `Separator`, `Tabs`, `SegmentedControl`, `Accordion`, `SplitView`, `Steps`, `Timeline` |
+| Overlays | `Dialog`, `Sheet`, `Popover`, `DropdownMenu`, `Tooltip` |
+| Data | `Table`, `DataGrid`, `RecordTable`, `PropertyList`, `Stat`, `StatGrid`, `Badge`, `StatusBadge`, `Avatar`, `AvatarGroup`, `Progress`, `AreaChart`, `BarChart`, `LineChart`, `DonutChart`, `Sparkline`, `KanbanBoard` |
+| States | `EmptyState`, `Skeleton`, `Spinner`, `Banner` |
+| Motion | `motion`, `AnimatePresence`, `transitions`, `fadeUp` |
+
+Props are in the package's type declarations. The [UI reference](/sdk/ui) covers them for apps; they're the same on a site.
+
+```tsx
+import { Button, EmptyState, Field, FieldLabel, Input, Skeleton } from "@colineapp/ui";
+import { createSiteHooks } from "@colineapp/sdk/site/react";
+import type app from "../app.config";
+
+const { useCollection, useTool } = createSiteHooks<typeof app>();
+
+function Notes() {
+  const notes = useCollection("notes", { orderBy: "createdAt", order: "desc" });
+  if (notes.status === "loading") return <Skeleton className="h-24 rounded-xl" />;
+  if (notes.records.length === 0) return <EmptyState title="No notes yet" description="Write the first one." />;
+  return notes.records.map((note) => (
+    <article key={note.id} className="rounded-xl border border-border bg-card px-5 py-4">
+      {note.data.text}
+    </article>
+  ));
+}
+```
+
+## Workspace-only parts
+
+A few exports need a Coline workspace around them and don't work on a site: `ColineAppProvider`, `useColine`, `useColineContext`, `useColineQuery`, `useColorScheme`, `useToast`, `FilePreview`, `FileDropzone`, `SaveAsButton`, `useFilePicker` and `ConnectButton`. On a site, read data with the [site hooks](/sites/data#react-hooks) and accept files with [`useUpload`](/sites/files).
