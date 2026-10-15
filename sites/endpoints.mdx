@@ -1,0 +1,66 @@
+---
+title: Endpoints and agents
+description: HTTP endpoints on a site's own paths, and the site's tools for AI agents in the browser.
+---
+
+## Endpoints
+
+An app [endpoint](/sdk/capabilities) can answer at a path on the site, such as `https://my-site.coline.space/api/stats`. Use it for webhooks from other services, a JSON API, an RSS feed or anything else that isn't a page.
+
+```ts
+import { defineApp, defineEndpoint } from "@colineapp/sdk/v2";
+
+const stats = defineEndpoint({
+  id: "stats",
+  methods: ["GET"],
+  mode: "sync",
+  verify: { kind: "none" },
+  handle: async ({ coline, actor, request }) => {
+    const { count } = await coline.storage.collection("entries").count({});
+    return { status: 200, headers: { "cache-control": "max-age=60" }, body: { entries: count } };
+  },
+});
+
+export default defineApp({
+  // ...
+  permissions: ["site.serve", "storage.app", "endpoints.receive"],
+  surfaces: {
+    site: {
+      entry: "site/main.tsx",
+      endpoints: [{ path: "/api/stats", endpoint: "stats" }],
+    },
+  },
+  endpoints: [stats],
+});
+```
+
+- Paths use the same patterns as routes: `/api/items/:id`, `/hooks/*`. Endpoint paths are matched before page routes.
+- `verify` checks webhooks before your code runs: `token`, `hmac`, or presets for `stripe`, `github`, `slack`, `shopify` and `linear`, with the secret set in the workspace. `none` is for public reads.
+- `mode: "sync"` waits for the handler (up to 25 seconds) and sends its response. `async` answers `202` at once and runs the handler as a retried job, which suits webhooks.
+- Strings are sent as they are; other bodies are sent as JSON.
+
+### Who is calling
+
+When the site's own page calls the endpoint, `actor` is the visitor, the same as in a tool. Anyone else, another server or another website, is the app: the gateway drops the visitor cookie on cross-site requests, so a third-party page can't act as your visitor.
+
+The site's [access mode](/sites/visitors#who-can-use-the-site) applies: on a `signedIn` or `approved` site, an endpoint answers only admitted visitors.
+
+Endpoints answer once the site is claimed. Before that they fail with `endpoint_not_enabled`. Calls count toward the site's daily limits, not the app's workspace budget.
+
+Test an endpoint in memory with `workspace.request("stats", { method: "GET", visitor })` from `@colineapp/sdk/testing`, or locally at its path under `npm run dev`.
+
+## Tools for browser agents
+
+AI agents that run in the visitor's browser can use a site's tools through WebMCP (`navigator.modelContext`). Turn it on in the site surface:
+
+```ts
+site: {
+  entry: "site/main.tsx",
+  tools: ["shop.search", "shop.add_to_cart"],
+  agentTools: true,
+},
+```
+
+The browser client registers each listed tool with its description and input schema when the page loads. An agent's call runs exactly like the page's own `site.tools.invoke`: as the current visitor, under the same rules and limits. Tools declared with the `read` effect are marked read-only.
+
+Nothing changes in browsers without WebMCP. `session.site.agentTools` lists what the site offers.

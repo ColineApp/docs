@@ -19,13 +19,14 @@ The CLI builds the site and the app's logic, uploads them, and prints the addres
 
 ## Claim a site
 
-Open the claim link (also in `.coline/site.json`, or run `npx coline-app claim`), sign in, and pick a workspace. Claiming moves the app, its records, visitors and logs into that workspace, and:
+Open the claim link (also in `.coline/site.json`, or run `npx coline-app claim`), sign in, and pick a workspace. The claim page lists what the site will be able to do in that workspace. Claiming moves the app, its records, visitors and logs into that workspace, and:
 
+- the site gets the rest of the permissions it declares, such as seeing members, sending notifications, endpoints or Coline AI;
 - the site stops expiring and the badge goes away;
 - search engines may index it;
 - the deploy token stops working: deploy with a workspace API key from then on.
 
-A workspace admin then turns on what the unclaimed site couldn't use, such as seeing members or sending notifications, under **Apps → Your apps → Manage**.
+An admin can turn any of those permissions off later under **Apps → Your apps → Manage**.
 
 ## Deploy into a workspace
 
@@ -50,8 +51,12 @@ A claimed site is an installed app in its workspace:
 
 - **Apps → Your apps** lists it with the site's favicon. **Open** shows the app's home, or the site's address if it has none.
 - **Manage** rolls back to any earlier version, turns automatic updates on or off, and turns permissions on or off. Turning off **Public website** takes the site offline until it's turned back on.
-- **Uninstall** takes the site offline and keeps its data for 30 days. Reinstalling brings it back. **Uninstall and delete data** deletes the site, its visitors and its custom domains.
-- The developer console's **Site** settings rename the address, list and manage visitors, and connect [custom domains](/sites/domains).
+- **Uninstall** takes the site offline and keeps its data for 30 days. Reinstalling brings it back. **Uninstall and delete data** deletes the site, its visitors, files and custom domains.
+- The developer console's **Site** settings rename the address, list, approve and manage visitors, manage [files](/sites/files), and connect [custom domains](/sites/domains).
+
+## Local development
+
+`npm run dev` runs the site at `http://127.0.0.1:3000` with in-memory data and the same rules as Coline: collection rules, schemas, access modes, uploads and endpoints. Sign-in is simulated. Add `?as=alice` to any URL to be a signed-in visitor named alice, `?as=guest` for a new guest; two browser profiles are two visitors. Data resets when a file changes.
 
 ## CLI
 
@@ -61,14 +66,21 @@ A claimed site is an installed app in its workspace:
 | `coline-app check` | Type-checks and builds without uploading |
 | `coline-app deploy` | Builds and deploys |
 | `coline-app claim` | Opens the claim link |
-| `coline-app inspect` | Address, state, version, limits and routes |
+| `coline-app inspect` | Address, state, version, limits, usage, access, uploads, endpoints and routes |
 | `coline-app logs` | Recent tool runs and errors, with the app's own error text |
 | `coline-app db dump [collection]` | Records in the site's collections |
+| `coline-app db export [collection]` | Writes them to a JSON file (`--out <file>`) |
+| `coline-app storage list` | Files on the site |
+| `coline-app storage put <file>` | Stores a file as the team (`--public` to share it) |
+| `coline-app storage get <id>` | Downloads a file (`--out <file>`) |
+| `coline-app storage delete <id>` | Deletes a file |
 | `coline-app domains add <host>` | Connects a custom domain |
 | `coline-app domains status` | DNS records to add and each domain's state |
 | `coline-app domains remove <host>` | Disconnects a domain |
+| `coline-app sites list` | Sites in the API key's workspace |
+| `coline-app sites delete` | Takes this folder's site down (`--yes` to skip the question) |
 
-`logs` and `db dump` read a running `dev` server with `--port`. Every command takes `--json` and prints `{ ok: true, data }` or `{ ok: false, error: { code, message, fix } }`.
+`logs`, `db dump` and `db export` read a running `dev` server with `--port`. `sites delete` with a deploy token deletes an unclaimed site and its app; with a workspace key it deletes the site, its visitors and files, and keeps the app and its records. Every command takes `--json` and prints `{ ok: true, data }` or `{ ok: false, error: { code, message, fix } }`.
 
 Exit codes: `0` ok, `1` error, `2` needs sign-in or a claim, `3` over a limit.
 

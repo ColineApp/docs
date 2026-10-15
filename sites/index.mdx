@@ -5,7 +5,7 @@ description: Put a Coline app on the web at its own address, with visitors, data
 
 A site is a Coline app with a public website. It gets its own address, `name.coline.space` or your own domain, and anyone can open it without an account. Its data lives in a Coline workspace: the team sees every record, gets notified about new ones, and can ask Kairo about them.
 
-Sites are part of SDK 2.1 (`@colineapp/sdk` 2.1.0 and `create-coline-app` 2.8.0).
+Sites are part of SDK 2.1 (`@colineapp/sdk` 2.1.1 and `create-coline-app` 2.9.0).
 
 ## Quickstart
 
@@ -40,7 +40,8 @@ The site surface declares the page, its routes and what visitors can do:
 import { z } from "zod/v4";
 import { defineApp, defineTool } from "@colineapp/sdk/v2";
 
-type Entry = { name: string; message: string; signedAt: string };
+const entry = z.object({ name: z.string().max(60), message: z.string().max(500), signedAt: z.iso.datetime() });
+type Entry = z.infer<typeof entry>;
 
 const sign = defineTool({
   name: "guestbook.sign",
@@ -67,39 +68,51 @@ export default defineApp({
       title: "Guestbook",
       description: "Leave a note.",
       routes: [{ path: "/" }, { path: "/entries/:id", head: { title: "An entry" } }],
+      visitors: { signIn: true, providers: ["google", "coline"] },
       tools: ["guestbook.sign"],
     },
   },
   collections: {
-    entries: { access: { read: "public", update: "owner", delete: "owner" } },
+    entries: { access: { read: "public", update: "owner", delete: "owner" }, schema: entry },
   },
   tools: [sign],
 });
 ```
 
-The page talks only to its own site through `@colineapp/sdk/site`:
+The page talks only to its own site. The React hooks are typed from the app itself, so collection names, record shapes and tool inputs are checked at compile time:
 
 ```tsx
-import { liveCollection, site } from "@colineapp/sdk/site";
+import { createSiteHooks, SignInButton, useSession } from "@colineapp/sdk/site/react";
+import type app from "../app.config";
 
-const entries = liveCollection<Entry>("entries", { orderBy: "createdAt", order: "desc" });
-await site.tools.invoke("guestbook.sign", { name: "Ada", message: "Hello" });
+const { useCollection, useTool } = createSiteHooks<typeof app>();
+
+function Guestbook() {
+  const entries = useCollection("entries", { orderBy: "createdAt", order: "desc" }); // live
+  const sign = useTool("guestbook.sign");
+  // sign.run({ name: "Ada", message: "Hello" })
+}
 ```
 
 ## How it works
 
 - **Every site is a Coline app.** The same app can also have a home screen inside Coline, file types and Kairo tools. Its records are workspace records.
-- **Visitors are their own kind of user.** They are guests by default. A site can offer [sign-in](/sites/visitors). Visitors never act as a workspace member or as the app.
-- **Collections say who can do what.** Each collection declares which visitors may read, create, update and delete. A collection without rules is invisible to visitors. See [data and rules](/sites/data).
+- **Visitors are their own kind of user.** They are guests by default. A site can offer [sign-in with Google or Coline](/sites/visitors), require it, or admit only visitors the team approves. Visitors never act as a workspace member or as the app.
+- **Collections say who can do what.** Each collection declares which visitors may read, create, update and delete, and a `schema` that every visitor write must match. A collection without rules is invisible to visitors. See [data and rules](/sites/data).
 - **Tools are the site's server code.** Visitors can run the tools a site lists. They run on Coline as the app, with the app's permissions, and never at more than the `write` effect.
+- **Endpoints answer HTTP on the site's own paths**, for webhooks, JSON APIs and feeds. See [endpoints](/sites/endpoints).
+- **Visitors can upload files** when the site accepts them. See [files](/sites/files).
 - **Pages update live.** Collections refresh when records change, for every visitor.
 - **Coline serves the page.** Each route gets server-rendered `<title>`, description and link preview tags, a sitemap and `robots.txt`. The page itself is client-rendered React.
+- **Browser agents can use the site.** With `agentTools: true`, the site's tools are offered to AI agents in the visitor's browser.
 
 ## Next
 
 <Cards>
-  <Card title="Data and rules" description="Collections, visitor rules, the browser client and site tools." href="/sites/data" />
-  <Card title="Visitors and sign-in" description="Guests, Sign in with Coline, sessions and ownership." href="/sites/visitors" />
+  <Card title="Data and rules" description="Collections, schemas, visitor rules, the browser client, React hooks and site tools." href="/sites/data" />
+  <Card title="Visitors and sign-in" description="Guests, Google and Coline sign-in, access modes and approvals." href="/sites/visitors" />
+  <Card title="Files" description="Visitor uploads, public and private files, and storage limits." href="/sites/files" />
+  <Card title="Endpoints and agents" description="HTTP endpoints on the site's paths, and tools for browser agents." href="/sites/endpoints" />
   <Card title="Deploy and claim" description="Deploying with and without an account, claiming, and the CLI." href="/sites/deploy" />
-  <Card title="Limits and plans" description="Requests, data, domains and what an unclaimed site can use." href="/sites/limits" />
+  <Card title="Limits and plans" description="Requests, data, storage, domains and what an unclaimed site can use." href="/sites/limits" />
 </Cards>

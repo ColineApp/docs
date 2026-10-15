@@ -12,6 +12,8 @@ description: Requests, data, domains, what an unclaimed site can use, and the ru
 | Tool calls per day | 1,000 | 1,000 | 100,000 |
 | Record data | 25 MB | 25 MB | 1 GB |
 | Assets | 50 MB | 100 MB | 2 GB |
+| [Uploads](/sites/files) | No | 1 GB per workspace, 10 MB a file | 100 GB per site, 25 MB a file |
+| [Endpoints](/sites/endpoints) | No | Yes | Yes |
 | Secrets and outside websites | No | Yes | Yes |
 | Coline AI in tools | No | Yes | Yes |
 | Custom domains | No | No | Yes |
@@ -22,9 +24,13 @@ Requests are counted per site per UTC day, and reset at midnight UTC. A site ove
 
 Every deploy can carry up to 30 MB, which allows about 20 MB of assets, a site bundle of up to 8 MB, and up to 1,000 asset files.
 
+A site whose records reach its data limit refuses new writes with `site_data_full` until records are deleted or the workspace upgrades. `npx coline-app inspect` shows what a site uses.
+
+Storage, data and requests are included in the plan. Sites have no separate usage charges.
+
 ## Unclaimed sites
 
-Every unclaimed site shares one system workspace, so it gets only permissions scoped to itself: `site.serve`, `storage.app`, `ai.tools`, `realtime.subscribe` and `jobs.run`. Anything workspace-wide, such as seeing members, sending notifications, secrets, outside websites or Coline AI, stays off until the site is claimed and an admin turns it on.
+Every unclaimed site shares one system workspace, so it gets only permissions scoped to itself: `site.serve`, `storage.app`, `ai.tools`, `realtime.subscribe` and `jobs.run`. Anything workspace-wide, such as seeing members, sending notifications, endpoints, uploads, secrets, outside websites or Coline AI, stays off until the site is claimed. Claiming turns on what the site declares.
 
 Unclaimed sites also can't contain password fields. Use [sign-in](/sites/visitors) instead.
 

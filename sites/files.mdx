@@ -1,0 +1,99 @@
+---
+title: Files
+description: Visitor uploads, public and private files, the team's view, and storage limits.
+---
+
+A site can accept files from visitors: avatars, photos, attachments. Files are stored with the site and served from the site's own address.
+
+## Accept uploads
+
+```ts
+permissions: ["site.serve", "storage.app", /* ... */],
+surfaces: {
+  site: {
+    entry: "site/main.tsx",
+    uploads: { who: "signedIn", types: ["image/*", "application/pdf"], maxFileBytes: 5_000_000 },
+  },
+},
+```
+
+| Field | Means |
+| --- | --- |
+| `who` | `signedIn` (the default) or `visitor`, which includes guests |
+| `types` | Content types the site accepts. `image/*` matches every image type |
+| `maxFileBytes` | Largest file, up to the plan's limit |
+
+Uploads need the `storage.app` permission and a claimed site. Sites deployed without an account refuse them with `SITE_UPLOADS_REQUIRE_CLAIM`.
+
+## In the page
+
+```tsx
+import { useUpload } from "@colineapp/sdk/site/react";
+
+const { upload, uploading, error } = useUpload();
+
+<input
+  type="file"
+  accept="image/*"
+  onChange={async (event) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const stored = await upload(file, { public: true });
+      // stored: { id, name, size, contentType, public, url, createdAt }
+    }
+  }}
+/>
+```
+
+Without React, `site.files` has the same calls:
+
+```ts
+import { site } from "@colineapp/sdk/site";
+
+const stored = await site.files.upload(file, { name: "avatar.png", public: true });
+const mine = await site.files.list();   // this visitor's files, newest first
+await site.files.delete(stored.id);
+site.files.url(stored.id);              // "/_coline/files/<id>"
+```
+
+Keep the `id` or `url` in a record to show the file later, for example `<img src={profile.data.avatarUrl} />`.
+
+## Public and private
+
+- A **public** file can be read by anyone with its URL. Use it for images other visitors see.
+- A **private** file (the default) can be read only by the visitor who uploaded it, and by the team.
+
+Files are always served from the site's address with a sandboxed content policy and `nosniff`, so a file can't run script there. HTML, JavaScript, executables and anything whose bytes look like them are refused, whatever type the upload claims.
+
+When a guest signs in, their files move with them. Deleting a visitor deletes their files.
+
+## The team
+
+- The developer console's **Site** settings list recent files, download them, and delete them.
+- `npx coline-app storage list|put|get|delete` does the same from a terminal. `put` stores a file as the team; `--public` makes it shareable.
+
+```bash
+npx coline-app storage put ./hero.jpg --public
+npx coline-app storage get sf_... --out ./download.pdf
+```
+
+## Limits and billing
+
+Uploads are included in the plan; there's no separate storage charge.
+
+|  | Unclaimed | Free | [Workspace Pro](/plans) |
+| --- | --- | --- | --- |
+| Uploads | No | 1 GB across the workspace's sites | 100 GB per site |
+| Largest file | | 10 MB | 25 MB |
+
+A full site refuses new uploads with `SITE_STORAGE_FULL` until files are deleted or the workspace upgrades.
+
+| Code | Means |
+| --- | --- |
+| `SITE_UPLOADS_DISABLED` | The site doesn't declare `uploads` |
+| `SITE_UPLOADS_REQUIRE_CLAIM` | The site isn't claimed yet |
+| `sign_in_required` | `who: "signedIn"` and the visitor is a guest |
+| `SITE_FILE_TOO_LARGE` | Over `maxFileBytes` or the plan's limit |
+| `SITE_FILE_TYPE_NOT_ACCEPTED` | Not one of the site's `types` |
+| `SITE_FILE_TYPE_BLOCKED` | HTML, script or an executable |
+| `SITE_STORAGE_FULL` | The plan's storage is used up |

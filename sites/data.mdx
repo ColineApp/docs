@@ -34,9 +34,71 @@ collections: {
 
 Members and the app's logic don't use these rules. They keep the per-record access model described in [capabilities](/sdk/capabilities).
 
+## Record schemas
+
+Give a collection a zod `schema` and Coline checks every visitor write against it. A record that doesn't match fails with `record_invalid` and changes nothing.
+
+```ts
+const note = z.object({ text: z.string().min(1).max(200), done: z.boolean().default(false) });
+
+collections: {
+  notes: { access: { read: "owner", create: "visitor", update: "owner", delete: "owner" }, schema: note },
+},
+```
+
+The schema becomes JSON Schema in the manifest, up to 20 kB per collection. Updates are checked on the merged record. Writes from site tools and the app's own logic aren't checked: validate those with the tool's input schema. The testing harness enforces schemas the same way.
+
+The schema also types the collection in the page. See [typed client](#typed-client).
+
+## React hooks
+
+`@colineapp/sdk/site/react` has hooks for the common cases. Each runs as the current visitor.
+
+```tsx
+import { useCollection, usePaginatedCollection, useTool, useUpload, useSession, SignInButton } from "@colineapp/sdk/site/react";
+
+const notes = useCollection<Note>("notes", { orderBy: "createdAt", order: "desc", limit: 50 });
+// notes.records, notes.status, notes.insert(), notes.update(), notes.delete(), notes.refresh()
+
+const feed = usePaginatedCollection<Post>("posts", { orderBy: "createdAt", order: "desc" }, 20);
+// feed.records, feed.hasMore, feed.loadMore()
+
+const add = useTool<{ text: string }, { id: string }>("notes.add");
+// await add.run({ text }), add.running, add.error, add.output
+```
+
+`useCollection` is live: it refreshes when the site's records change, and its writes show at once. `SiteErrorBoundary` catches render errors with a `fallback(error, retry)`.
+
+For pages with more than one screen, `Router`, `Routes`, `Route`, `Link`, `useParams` and `navigate` route on the client without reloading. Every client path must also be listed in `surfaces.site.routes` so Coline serves it with its head.
+
+```tsx
+<Router>
+  <Routes>
+    <Route path="/"><Home /></Route>
+    <Route path="/notes/:id"><NoteView /></Route>
+    <Route path="*"><NotFound /></Route>
+  </Routes>
+</Router>
+```
+
+## Typed client
+
+`createSiteHooks<typeof app>()` returns the same hooks typed from the app: collection names, record shapes from each `schema`, tool names, inputs and outputs from `defineTool`. Without React, `createSiteClient<typeof app>()` from `@colineapp/sdk/site` does the same for `collection(name)` and `tools.invoke(name, input)`.
+
+```tsx
+import { createSiteHooks } from "@colineapp/sdk/site/react";
+import type app from "../app.config";
+
+const { useCollection, useTool } = createSiteHooks<typeof app>();
+const notes = useCollection("notes");          // records typed from the schema
+const add = useTool("notes.add");              // add.run({ text }) is type-checked
+```
+
+Always use `import type` for the app config. It keeps the app's server code out of the page bundle.
+
 ## The browser client
 
-`@colineapp/sdk/site` is the only way a page talks to Coline. Every call goes to the site's own `/_coline` API and runs as the current visitor.
+`@colineapp/sdk/site` is what the hooks are built on. Every call goes to the site's own `/_coline` API and runs as the current visitor.
 
 ```ts
 import { site, liveCollection, getSession, SiteError } from "@colineapp/sdk/site";
@@ -56,23 +118,17 @@ Visitors can't use key-value storage, bulk writes (`insertMany`, `updateMany`, `
 
 ### Live data
 
-`liveCollection` keeps a view current. It refreshes when the site's records change and every 5 seconds as a fallback, and applies your own writes immediately.
+`liveCollection` keeps a view current, and is what `useCollection` uses. It refreshes when the site's records change and every 5 seconds as a fallback, and applies your own writes immediately.
 
-```tsx
-import { useEffect, useMemo, useSyncExternalStore } from "react";
+```ts
 import { liveCollection } from "@colineapp/sdk/site";
 
-function useNotes() {
-  const view = useMemo(() => liveCollection<Note>("notes", { orderBy: "createdAt", order: "desc", limit: 50 }), []);
-  useEffect(() => {
-    void view.start();
-    return () => view.stop();
-  }, [view]);
-  return [useSyncExternalStore(view.subscribe, view.getSnapshot), view] as const;
-}
+const view = liveCollection<Note>("notes", { orderBy: "createdAt", order: "desc", limit: 50 });
+await view.start();
+const unsubscribe = view.subscribe(() => render(view.getSnapshot()));
 ```
 
-The snapshot has `records`, `status` (`loading`, `ready` or `error`), `pending` and `error`. `view.insert`, `view.update` and `view.delete` show the change at once and confirm it with the server. Use `stop()`, not `dispose()`, in React effect cleanup, so Strict Mode can start the view again.
+The snapshot has `records`, `status` (`loading`, `ready` or `error`), `pending` and `error`. `view.insert`, `view.update` and `view.delete` show the change at once and confirm it with the server. Call `stop()` when the view is no longer shown.
 
 ### Errors
 
@@ -81,9 +137,13 @@ Failed calls throw `SiteError` with a stable `code`, an HTTP `status` and a `mes
 | Code | Means |
 | --- | --- |
 | `record_forbidden` | The collection's rule doesn't allow this visitor |
+| `record_invalid` | The record doesn't match the collection's `schema` |
 | `record_not_found` | No such record, or the visitor can't see it |
 | `unavailable_to_visitors` | Visitors can't call this operation |
 | `site_tool_not_allowed` | The tool isn't listed in `surfaces.site.tools` |
+| `sign_in_required` | The site's [access mode](/sites/visitors#who-can-use-the-site) needs a signed-in visitor |
+| `approval_required` | The site admits approved visitors only, and this one isn't yet |
+| `site_data_full` | The site's records reached the plan's data limit |
 | `SITE_OVER_LIMIT` | The site hit its daily limit |
 | `network_error` | The request didn't reach the site |
 
@@ -113,4 +173,4 @@ const bob = workspace.asVisitor({ visitorId: "vis_bob" }).collection("entries");
 await expect(bob.delete(id)).rejects.toMatchObject({ code: "record_forbidden" });
 ```
 
-Pass `{ signedIn: true }` in the visitor to test `signedIn` rules, and `grantedPermissions` to `createTestWorkspace` to test what a site can do before it's claimed.
+Pass `{ signedIn: true }` in the visitor to test `signedIn` rules, and `grantedPermissions` to `createTestWorkspace` to test what a site can do before it's claimed. Visitor writes are checked against each collection's `schema`, and `workspace.request(endpointId, { visitor })` calls an endpoint as a visitor.

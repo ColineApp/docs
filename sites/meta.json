@@ -1,4 +1,4 @@
 {
   "title": "Sites",
-  "pages": ["index", "data", "visitors", "deploy", "domains", "limits"]
+  "pages": ["index", "data", "visitors", "files", "endpoints", "deploy", "domains", "limits"]
 }

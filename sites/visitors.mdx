@@ -1,9 +1,9 @@
 ---
 title: Visitors and sign-in
-description: Guests, Sign in with Coline, sessions, ownership and managing visitors.
+description: Guests, Google and Coline sign-in, access modes, approvals and managing visitors.
 ---
 
-Nobody has to sign in to use a site. The first request from a browser creates a guest, and everything that guest writes belongs to them.
+Nobody has to sign in to use a site unless the site says so. The first request from a browser creates a guest, and everything that guest writes belongs to them.
 
 ## Sessions
 
@@ -13,42 +13,84 @@ A visitor is identified by a cookie that belongs to one site and one host. It's 
 import { getSession } from "@colineapp/sdk/site";
 
 const { visitor, site } = await getSession();
-// visitor: { visitorId, signedIn, name, email, avatarUrl }
-// site:    { name, url, signInEnabled }
+// visitor: { visitorId, signedIn, provider, name, email, avatarUrl, admitted }
+// site:    { name, url, signInEnabled, signInProviders, access, uploads, agentTools }
 ```
+
+In React, `useSession()` returns `{ session, loading, error, signIn, signOut }`.
 
 The browser client waits for one session before its first call, so a page that fires several requests at load still gets one visitor.
 
-## Sign in with Coline
+## Sign-in
 
-Turn sign-in on in the site surface:
+Turn sign-in on in the site surface and pick the providers, in the order the page should show them:
 
 ```ts
 site: {
   entry: "site/main.tsx",
-  visitors: { signIn: true },
+  visitors: { signIn: true, providers: ["google", "coline"] },
 }
 ```
 
-Then send the visitor to it from the page:
+| Provider | Visitor needs |
+| --- | --- |
+| `google` | A Google account. No Coline account is created. |
+| `coline` | A Coline account. People without one create it on the way. |
+
+`providers` defaults to both. Show a button for each of `session.site.signInProviders`, which lists what the site offers right now:
+
+```tsx
+import { SignInButton, useSession } from "@colineapp/sdk/site/react";
+
+const { session, signOut } = useSession();
+session?.site.signInProviders.map((provider) => <SignInButton key={provider} provider={provider} />);
+// "Sign in with Google", "Sign in with Coline"; pass children to change the label
+```
+
+Without React:
 
 ```ts
 import { signIn, signOut } from "@colineapp/sdk/site";
 
-signIn();                           // returns to the current page
-signIn({ returnTo: "/account" });
-await signOut();                    // a fresh guest; the page reloads
+signIn({ provider: "google" });       // returns to the current page
+signIn({ provider: "coline", returnTo: "/account" });
+await signOut();                      // a fresh guest; the page reloads
 ```
 
-Sign-in happens on coline.app. The visitor confirms which site gets their name and email, and the site receives a one-time handoff that works for 60 seconds, for that site only. The site never sees a Coline session. Visitors without a Coline account create one on the way, with Google, Microsoft or email.
+Sign-in happens on coline.app. The site receives a one-time handoff that works for 60 seconds, for that site only, and never sees a Google token or a Coline session. With Coline, the visitor confirms which site gets their name and email.
 
 When a guest signs in:
 
-- Everything the guest created moves to the signed-in visitor, so `owner` rules keep working.
+- Everything the guest created, records and files, moves to the signed-in visitor, so `owner` rules keep working.
 - The visitor gets a new id and cookie. The guest cookie stops carrying their identity.
-- If the person already signed in on another device, the guest's records join that visitor.
+- If the person already signed in on another device with the same account, the guest's records join that visitor.
+- If the site names an `onSignIn` tool, it runs as the signed-in visitor with `{ visitorId, previousVisitorId }`, for welcome records or merging carts.
+
+```ts
+visitors: { signIn: true, onSignIn: "shop.merge_cart" },
+```
 
 `signOut()` reloads the page so no view keeps records only the signed-in person could see. Pass `{ reload: false }` only if you clear every view yourself.
+
+In `coline-app dev`, sign-in is simulated: the visitor becomes signed in at once. Add `?as=alice` to any URL to become a signed-in visitor named alice, and `?as=guest` to start over as a new guest.
+
+## Who can use the site
+
+`visitors.access` decides who may use the site's data, tools, files and endpoints:
+
+| Access | Who |
+| --- | --- |
+| `open` | Everyone, guests included (the default) |
+| `signedIn` | Visitors who signed in |
+| `approved` | Signed-in visitors the team approved |
+
+```ts
+visitors: { signIn: true, access: "approved" },
+```
+
+Pages, assets and the session load for everyone, so the page can show a sign-in screen or "waiting for approval". `session.visitor.admitted` says whether the visitor may use the rest. Calls before that fail with `sign_in_required` or `approval_required`.
+
+`signedIn` and `approved` need `signIn: true`.
 
 ## What tools see
 
@@ -67,8 +109,9 @@ execute: async (input, { coline, actor }) => {
 
 The team manages a site's visitors in the developer console, under the app's **Site** settings:
 
-- See every visitor, when they first and last came, and who signed in.
-- **Ban** a visitor. They can still load public pages, but every data call and tool fails.
-- **Delete** a visitor and everything they created.
+- See every visitor, how they signed in, and when they first and last came.
+- **Approve** a visitor on a site that admits approved visitors only, or **Revoke** the approval.
+- **Block** a visitor. They can still load public pages, but every data call and tool fails.
+- **Delete** a visitor and everything they created, including their files.
 
 A site that offers sign-in also shows signed-in visitors' names and emails to the team.
