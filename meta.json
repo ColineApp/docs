@@ -29,6 +29,7 @@
     "developers",
     "authentication",
     "api",
-    "sdk"
+    "sdk",
+    "sites"
   ]
 }

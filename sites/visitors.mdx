@@ -1,0 +1,74 @@
+---
+title: Visitors and sign-in
+description: Guests, Sign in with Coline, sessions, ownership and managing visitors.
+---
+
+Nobody has to sign in to use a site. The first request from a browser creates a guest, and everything that guest writes belongs to them.
+
+## Sessions
+
+A visitor is identified by a cookie that belongs to one site and one host. It's `HttpOnly`, `Secure` and set by Coline, so the page can't read it and other sites can't send it. A guest session lasts 180 days.
+
+```ts
+import { getSession } from "@colineapp/sdk/site";
+
+const { visitor, site } = await getSession();
+// visitor: { visitorId, signedIn, name, email, avatarUrl }
+// site:    { name, url, signInEnabled }
+```
+
+The browser client waits for one session before its first call, so a page that fires several requests at load still gets one visitor.
+
+## Sign in with Coline
+
+Turn sign-in on in the site surface:
+
+```ts
+site: {
+  entry: "site/main.tsx",
+  visitors: { signIn: true },
+}
+```
+
+Then send the visitor to it from the page:
+
+```ts
+import { signIn, signOut } from "@colineapp/sdk/site";
+
+signIn();                           // returns to the current page
+signIn({ returnTo: "/account" });
+await signOut();                    // a fresh guest; the page reloads
+```
+
+Sign-in happens on coline.app. The visitor confirms which site gets their name and email, and the site receives a one-time handoff that works for 60 seconds, for that site only. The site never sees a Coline session. Visitors without a Coline account create one on the way, with Google, Microsoft or email.
+
+When a guest signs in:
+
+- Everything the guest created moves to the signed-in visitor, so `owner` rules keep working.
+- The visitor gets a new id and cookie. The guest cookie stops carrying their identity.
+- If the person already signed in on another device, the guest's records join that visitor.
+
+`signOut()` reloads the page so no view keeps records only the signed-in person could see. Pass `{ reload: false }` only if you clear every view yourself.
+
+## What tools see
+
+Inside a site tool, `ctx.actor` is the visitor:
+
+```ts
+execute: async (input, { coline, actor }) => {
+  if (actor.kind !== "visitor" || !actor.signedIn) {
+    throw new Error("Sign in to do that.");
+  }
+  // actor.visitorId, actor.name, actor.email
+},
+```
+
+## Managing visitors
+
+The team manages a site's visitors in the developer console, under the app's **Site** settings:
+
+- See every visitor, when they first and last came, and who signed in.
+- **Ban** a visitor. They can still load public pages, but every data call and tool fails.
+- **Delete** a visitor and everything they created.
+
+A site that offers sign-in also shows signed-in visitors' names and emails to the team.

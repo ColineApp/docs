@@ -7,6 +7,8 @@ A Coline app installs into a workspace as a set of capabilities: tools that Kair
 
 The packages are open source under MIT: [`@colineapp/sdk`](https://www.npmjs.com/package/@colineapp/sdk), [`@colineapp/ui`](https://www.npmjs.com/package/@colineapp/ui) and [`create-coline-app`](https://www.npmjs.com/package/create-coline-app).
 
+The current release is SDK 2.1: `@colineapp/sdk`, `@colineapp/ui` and `@colineapp/app-runtime` 2.1.0, with `create-coline-app` 2.8.0. SDK 2 brought the app model on this page: one `defineApp` for permissions, surfaces, tools, file types, schedules, jobs, endpoints and connected accounts, with every call checked against what the workspace granted. SDK 2.1 adds [Coline Sites](/sites): any app can also be a public website.
+
 ## Before you start
 
 You need Node.js and npm. To push, you need a workspace [API key](/authentication/api-keys) with the `apps.write` scope, which a workspace admin can create in the [developer console](https://coline.app/developers/console).
@@ -26,6 +28,7 @@ Pick a template with `--template`:
 | `editor` | A file type with a React block editor: autosave, conflict handling, previews and search |
 | `integration` | A GitHub OAuth connection, a webhook endpoint, a resumable sync job, an hourly schedule and a dashboard |
 | `external-backend` | Tools and screens served by your own Node server, signed by Coline |
+| `site` | A public website with visitor rules, a site tool and a home screen for the team. Deploys without an account; see [Sites](/sites) |
 
 Every project includes an `AGENTS.md` and an agent skill with the full app contract, so coding agents can build with it.
 
@@ -130,4 +133,5 @@ The CLI builds the logic bundle, ships client source for React surfaces, and upl
   <Card title="Capability API" description="Files, storage, members, notifications and the network." href="/sdk/capabilities" />
   <Card title="UI" description="Tree surfaces and React surfaces." href="/sdk/ui" />
   <Card title="Full stack" description="Schedules, events, webhooks, jobs and connected accounts." href="/sdk/full-stack" />
+  <Card title="Sites" description="Put the app on the web at its own address, with visitors." href="/sites" />
 </Cards>

@@ -1,0 +1,41 @@
+---
+title: Custom domains
+description: Serve a site on your own domain, with HTTPS issued and renewed for you.
+---
+
+Sites in a Workspace Pro workspace can use their own domains, up to five per site. The site keeps its `coline.space` address too.
+
+```bash
+npx coline-app domains add www.example.com
+```
+
+The command prints the DNS records to add at your DNS provider:
+
+| Type | Name | Value |
+| --- | --- | --- |
+| `CNAME` | `www.example.com` | `customers.coline.space` |
+| `TXT` | the name it prints | the value it prints, which proves you own the domain |
+
+Then check on it:
+
+```bash
+npx coline-app domains status
+```
+
+A domain goes from `pending` to `active` once its DNS checks out and its certificate is issued, usually within minutes. Coline issues and renews the certificate. The console's **Site** settings show the same records and states and refresh pending domains on their own.
+
+On an active domain:
+
+- pages, links, the canonical URL and the sitemap use the custom domain;
+- Sign in with Coline returns visitors to the custom domain;
+- visitors who signed in on the `coline.space` address sign in again, since sessions belong to one host.
+
+Remove a domain with `npx coline-app domains remove www.example.com` or in the console. Deleting a site removes its domains.
+
+| Error | Means |
+| --- | --- |
+| `SITE_DOMAINS_REQUIRE_PRO` | The workspace isn't on Workspace Pro |
+| `SITE_DOMAINS_REQUIRE_CLAIM` | Claim the site first |
+| `SITE_DOMAIN_TAKEN` | Another site already uses the domain |
+| `SITE_DOMAIN_LIMIT` | The site already has five domains |
+| `SITE_DOMAIN_INVALID` | Not a domain you can connect, such as a `coline.space` address |

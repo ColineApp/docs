@@ -1,0 +1,83 @@
+---
+title: Deploy and claim
+description: Deploy with or without an account, claim a site, redeploy, and every site CLI command.
+---
+
+## Deploy without an account
+
+```bash
+npx coline-app deploy
+```
+
+The CLI builds the site and the app's logic, uploads them, and prints the address and a claim link. Nothing else is needed: no account, key or login.
+
+- The address is the app key plus a random suffix, such as `guestbook-k96h-c24658.coline.space`.
+- The site stays up for 72 hours after its last deploy, then it's deleted.
+- `.coline/site.json` keeps the site's deploy token, so later deploys from the same folder update the same site. The folder is ignored by git.
+- The page shows a small "Deployed on Coline" badge, and search engines are asked not to index it.
+- It can use only what's scoped to the site itself. See [limits](/sites/limits#unclaimed-sites).
+
+## Claim a site
+
+Open the claim link (also in `.coline/site.json`, or run `npx coline-app claim`), sign in, and pick a workspace. Claiming moves the app, its records, visitors and logs into that workspace, and:
+
+- the site stops expiring and the badge goes away;
+- search engines may index it;
+- the deploy token stops working: deploy with a workspace API key from then on.
+
+A workspace admin then turns on what the unclaimed site couldn't use, such as seeing members or sending notifications, under **Apps → Your apps → Manage**.
+
+## Deploy into a workspace
+
+With a workspace [API key](/authentication/api-keys) that has `apps.write`, the site goes straight into that workspace and never expires:
+
+```bash
+export COLINE_API_KEY=col_ws_...
+npx coline-app deploy --name my-site     # my-site.coline.space
+```
+
+`--name` picks the address on the first deploy. Reserved and taken names fail with `SITE_SLUG_TAKEN` or `SITE_SLUG_INVALID`.
+
+Coline Code projects deploy the same way: create a project from the **Site** template and press **Deploy**. Kairo can build and deploy a site for you from chat.
+
+## Redeploy
+
+Run `deploy` again from the same folder. The version comes from `package.json`; with `0.0.0` or none, each deploy gets its own. Redeploying the same version with different files fails with `SITE_VERSION_EXISTS`; bump the version. A redeploy is live within seconds, and pages that were already open keep working.
+
+## In Coline
+
+A claimed site is an installed app in its workspace:
+
+- **Apps → Your apps** lists it with the site's favicon. **Open** shows the app's home, or the site's address if it has none.
+- **Manage** rolls back to any earlier version, turns automatic updates on or off, and turns permissions on or off. Turning off **Public website** takes the site offline until it's turned back on.
+- **Uninstall** takes the site offline and keeps its data for 30 days. Reinstalling brings it back. **Uninstall and delete data** deletes the site, its visitors and its custom domains.
+- The developer console's **Site** settings rename the address, list and manage visitors, and connect [custom domains](/sites/domains).
+
+## CLI
+
+| Command | Does |
+| --- | --- |
+| `coline-app dev` | Runs the site locally with in-memory data, no account |
+| `coline-app check` | Type-checks and builds without uploading |
+| `coline-app deploy` | Builds and deploys |
+| `coline-app claim` | Opens the claim link |
+| `coline-app inspect` | Address, state, version, limits and routes |
+| `coline-app logs` | Recent tool runs and errors, with the app's own error text |
+| `coline-app db dump [collection]` | Records in the site's collections |
+| `coline-app domains add <host>` | Connects a custom domain |
+| `coline-app domains status` | DNS records to add and each domain's state |
+| `coline-app domains remove <host>` | Disconnects a domain |
+
+`logs` and `db dump` read a running `dev` server with `--port`. Every command takes `--json` and prints `{ ok: true, data }` or `{ ok: false, error: { code, message, fix } }`.
+
+Exit codes: `0` ok, `1` error, `2` needs sign-in or a claim, `3` over a limit.
+
+| Error | Fix |
+| --- | --- |
+| `SITE_DEPLOY_TOKEN_INVALID` | The site expired or was claimed. Delete `.coline/site.json`, or deploy with an API key |
+| `SITE_CLAIMED` | Deploy with an API key from the workspace that claimed it |
+| `APP_KEY_TAKEN` | Change `key` in `app.config.ts` and rename the tools to match |
+| `SITE_VERSION_EXISTS` | Bump the version in `package.json` |
+| `SITE_CONTENT_BLOCKED` | A site without an account can't ask for passwords; use sign-in |
+| `SITE_DEPLOY_TOO_LARGE` | Over 30 MB per deploy; host large media elsewhere |
+| `SITE_DEPLOY_RATE_LIMITED` | Too many deploys without an account from your network; wait an hour or use an API key |

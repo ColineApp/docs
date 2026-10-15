@@ -1,0 +1,116 @@
+---
+title: Data and rules
+description: Collections, visitor rules, the site browser client, live data and site tools.
+---
+
+A site's data is the app's records. Visitors reach it two ways: directly, through collections whose rules let them, and through the tools the site lists.
+
+## Collection rules
+
+Declare a collection under `collections` to open it to visitors. Each action has a rule:
+
+```ts
+collections: {
+  // Anyone reads; any visitor posts; only the author edits or deletes.
+  notes: { access: { read: "public", create: "visitor", update: "owner", delete: "owner" } },
+  // Only people who signed in.
+  members: { access: { read: "signedIn", create: "signedIn" } },
+  // Each visitor sees only their own entries.
+  diary: { access: { read: "owner", create: "visitor", update: "owner", delete: "owner" } },
+  // Not declared, or declared without access: visitors see nothing.
+  signups: {},
+},
+```
+
+| Rule | Who |
+| --- | --- |
+| `public` | Anyone who opens the site |
+| `visitor` | Any guest or signed-in visitor |
+| `signedIn` | Visitors who signed in |
+| `owner` | The visitor who created the record |
+| `team` | Nobody on the site. Workspace members and the app's own logic only (the default) |
+
+`create` can't be `owner`. Opening a collection to visitors needs the `storage.app` permission and a site. Widening a rule later, such as `owner` to `public`, asks workspace admins to approve the new version, like any new permission.
+
+Members and the app's logic don't use these rules. They keep the per-record access model described in [capabilities](/sdk/capabilities).
+
+## The browser client
+
+`@colineapp/sdk/site` is the only way a page talks to Coline. Every call goes to the site's own `/_coline` API and runs as the current visitor.
+
+```ts
+import { site, liveCollection, getSession, SiteError } from "@colineapp/sdk/site";
+
+const notes = site.collection<Note>("notes");
+await notes.insert({ text: "Hello" });
+await notes.query({ where: { text: { contains: "hello" } }, orderBy: "createdAt", order: "desc", limit: 20 });
+await notes.get(id);
+await notes.count({ done: false });
+await notes.update(id, { text: "Edited" });
+await notes.delete(id);
+```
+
+`where` takes a value for equality, or `eq`, `ne`, `gt`, `gte`, `lt`, `lte`, `contains`, `startsWith`, `in`, `notIn` and `exists`, combined with `and` and `or`. `query` returns `{ records, nextCursor }`; pass `cursor` for the next page. Records carry `id`, `data`, `createdBy`, `createdAt`, `updatedAt` and `version`.
+
+Visitors can't use key-value storage, bulk writes (`insertMany`, `updateMany`, `deleteMany`, `batch`), set record access, or call any other capability. Those calls fail with `unavailable_to_visitors`; do that work in a site tool.
+
+### Live data
+
+`liveCollection` keeps a view current. It refreshes when the site's records change and every 5 seconds as a fallback, and applies your own writes immediately.
+
+```tsx
+import { useEffect, useMemo, useSyncExternalStore } from "react";
+import { liveCollection } from "@colineapp/sdk/site";
+
+function useNotes() {
+  const view = useMemo(() => liveCollection<Note>("notes", { orderBy: "createdAt", order: "desc", limit: 50 }), []);
+  useEffect(() => {
+    void view.start();
+    return () => view.stop();
+  }, [view]);
+  return [useSyncExternalStore(view.subscribe, view.getSnapshot), view] as const;
+}
+```
+
+The snapshot has `records`, `status` (`loading`, `ready` or `error`), `pending` and `error`. `view.insert`, `view.update` and `view.delete` show the change at once and confirm it with the server. Use `stop()`, not `dispose()`, in React effect cleanup, so Strict Mode can start the view again.
+
+### Errors
+
+Failed calls throw `SiteError` with a stable `code`, an HTTP `status` and a `message` that's safe to show:
+
+| Code | Means |
+| --- | --- |
+| `record_forbidden` | The collection's rule doesn't allow this visitor |
+| `record_not_found` | No such record, or the visitor can't see it |
+| `unavailable_to_visitors` | Visitors can't call this operation |
+| `site_tool_not_allowed` | The tool isn't listed in `surfaces.site.tools` |
+| `SITE_OVER_LIMIT` | The site hit its daily limit |
+| `network_error` | The request didn't reach the site |
+
+## Site tools
+
+A tool listed in `surfaces.site.tools` is the site's server code. Visitors call it with `site.tools.invoke(name, input)` and get back `{ output, card }`.
+
+- It runs on Coline as the app, with the app's granted permissions, so it can write to `team` collections, notify members or call other capabilities.
+- A visitor can never cause more than a `write`: a tool declared `destructive` runs at `write`, and destructive calls inside it fail.
+- `ctx.actor` is the visitor: `{ kind: "visitor", visitorId, signedIn, name, email }`. Records the tool creates belong to that visitor, so `owner` rules work for them.
+- Visitors see a generic message when a tool fails. The real error is in `npx coline-app logs`.
+
+Validate input with the tool's schema and check ownership in the tool. Hiding a button is not an access check.
+
+## Test the rules
+
+`@colineapp/sdk/testing` enforces the same rules in memory:
+
+```ts
+import { createTestWorkspace } from "@colineapp/sdk/testing";
+import app from "./app.config";
+
+const workspace = createTestWorkspace(app);
+await workspace.invokeSiteTool("guestbook.sign", { name: "Ada", message: "Hi" }, { visitorId: "vis_ada" });
+
+const bob = workspace.asVisitor({ visitorId: "vis_bob" }).collection("entries");
+await expect(bob.delete(id)).rejects.toMatchObject({ code: "record_forbidden" });
+```
+
+Pass `{ signedIn: true }` in the visitor to test `signedIn` rules, and `grantedPermissions` to `createTestWorkspace` to test what a site can do before it's claimed.

@@ -1,0 +1,4 @@
+{
+  "title": "Sites",
+  "pages": ["index", "data", "visitors", "deploy", "domains", "limits"]
+}

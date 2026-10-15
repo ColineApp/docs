@@ -1,0 +1,40 @@
+---
+title: Limits and plans
+description: Requests, data, domains, what an unclaimed site can use, and the rules every page follows.
+---
+
+## Limits
+
+|  | Unclaimed | Free | [Workspace Pro](/plans) |
+| --- | --- | --- | --- |
+| Sites per workspace | | 3 | 25 |
+| Requests per day | 10,000 | 10,000 | 1,000,000 |
+| Tool calls per day | 1,000 | 1,000 | 100,000 |
+| Record data | 25 MB | 25 MB | 1 GB |
+| Assets | 50 MB | 100 MB | 2 GB |
+| Secrets and outside websites | No | Yes | Yes |
+| Coline AI in tools | No | Yes | Yes |
+| Custom domains | No | No | Yes |
+| "Deployed on Coline" badge | Yes | No | No |
+| Expires | 72 hours after the last deploy | Never | Never |
+
+Requests are counted per site per UTC day, and reset at midnight UTC. A site over its limit shows a short "resting" page to visitors, and its data calls fail with `SITE_OVER_LIMIT`, until the next day. Site traffic never counts against the app's own daily execution budget inside the workspace.
+
+Every deploy can carry up to 30 MB, which allows about 20 MB of assets, a site bundle of up to 8 MB, and up to 1,000 asset files.
+
+## Unclaimed sites
+
+Every unclaimed site shares one system workspace, so it gets only permissions scoped to itself: `site.serve`, `storage.app`, `ai.tools`, `realtime.subscribe` and `jobs.run`. Anything workspace-wide, such as seeing members, sending notifications, secrets, outside websites or Coline AI, stays off until the site is claimed and an admin turns it on.
+
+Unclaimed sites also can't contain password fields. Use [sign-in](/sites/visitors) instead.
+
+## What every page follows
+
+Coline serves each page with a strict content policy, so a site can't be turned against its visitors:
+
+- Scripts, `fetch` and WebSocket calls go only to the site itself. Reach other services from a [site tool](/sites/data#site-tools) instead, with the `network.external` permission.
+- Images and media can come from any HTTPS address.
+- Sites can't be embedded in other pages, and can't embed other pages.
+- Forms post only to the site itself.
+
+Pages that ask for a password next to another company's name are held for review. Report a site that's abusing visitors with the **Report** link on its badge, or at abuse@coline.app.
