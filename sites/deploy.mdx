@@ -56,7 +56,7 @@ A claimed site is an installed app in its workspace:
 
 ## Local development
 
-`npm run dev` runs the site at `http://127.0.0.1:3000` with in-memory data and the same rules as Coline: collection rules, schemas, access modes, uploads and endpoints. Sign-in is simulated. Add `?as=alice` to any URL to be a signed-in visitor named alice, `?as=guest` for a new guest; two browser profiles are two visitors. Data resets when a file changes.
+`npm run dev` runs the site at `http://127.0.0.1:3000` with in-memory data and the same rules as Coline: collection rules, schemas, access modes, uploads and endpoints. Sign-in is simulated. Add `?as=alice` to any URL to be a signed-in visitor named alice, `?as=guest` for a new guest; two browser profiles are two visitors. Editing the page keeps local data; editing `app.config.ts` or the server code it imports resets it. Files that aren't source, such as screenshots, don't trigger a rebuild.
 
 ## CLI
 
