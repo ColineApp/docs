@@ -42,8 +42,33 @@ createRoot(document.getElementById("root")!).render(
 | `border-border`, `border-input` | `border-gray-200` |
 | `text-destructive`, `bg-positive`, `bg-attention`, `bg-risk` | `text-red-600`, `bg-green-100` |
 | `rounded-lg`, `rounded-xl` | fixed pixel radii |
+| `bg-action`, `text-action`, `border-action` | a brand color of your own |
 
 In plain CSS, use the variables behind them: `var(--background)`, `var(--card)`, `var(--foreground)`, `var(--muted-foreground)`, `var(--border)`, `var(--primary)`, `var(--destructive)`, `var(--action)`, and for status `var(--status-positive)`, `var(--status-attention)` and `var(--status-risk)` with their `-fg` text colors. The Tailwind names map to these in `@colineapp/ui/theme.css`.
+
+## The rules
+
+A site looks like Coline. Its one design choice is an accent color.
+
+- Use the components as they ship. Pick a `variant` and `size`; use `className` on a component only for layout (margin, width, flex, grid).
+- Don't change the components' colors, borders, radius, padding or fonts, in classes or in CSS.
+- No custom fonts. Geist ships with `@colineapp/ui`.
+- No palette of your own and no fixed colors. Use the token classes above.
+- Use `Tabs` or `SegmentedControl` for views and navigation, not tabs you build yourself.
+
+`coline-app check` warns when a site breaks one of these, with the file and line.
+
+## Accent color
+
+```tsx
+<ColineSiteProvider accent="#0f766e">
+  <App />
+</ColineSiteProvider>
+```
+
+The accent replaces Coline's blue: text selection, the chosen option in a `RadioGroup`, the selected date in `Calendar`, `Steps`, `info` badges and banners, selected `DataGrid` rows, and a chart's first series. Checkboxes, switches and buttons stay Coline's neutral. Pick a mid or deep tone; white text sits on it in light mode. For dark mode the provider lifts the same hue the way Coline lifts its blue. To choose both yourself, pass `accent={{ light: "#0f766e", dark: "#5eead4" }}`.
+
+In your own layout, use the accent with `bg-action`, `text-action` and `border-action` (for example `bg-action/10` for a tinted panel). Buttons stay Coline's: `default` is near-black in light mode and near-white in dark.
 
 ## Components
 
