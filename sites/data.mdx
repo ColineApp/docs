@@ -69,7 +69,7 @@ const add = useTool<{ text: string }, { id: string }>("notes.add");
 
 `useCollection` is live: it refreshes when the site's records change, and its writes show at once. `SiteErrorBoundary` catches render errors with a `fallback(error, retry)`.
 
-For pages with more than one screen, `Router`, `Routes`, `Route`, `Link`, `useParams` and `navigate` route on the client without reloading. Every client path must also be listed in `surfaces.site.routes` so Coline serves it with its head.
+For pages with more than one screen, `Router`, `Routes`, `Route`, `Link`, `useParams`, `useLocation` and `navigate` route on the client without reloading. `useLocation()` returns `{ pathname, search, hash }` and updates on every navigation, for active nav links. Every client path must also be listed in `surfaces.site.routes` so Coline serves it with its head.
 
 ```tsx
 <Router>

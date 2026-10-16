@@ -22,7 +22,7 @@ description: Requests, data, domains, what an unclaimed site can use, and the ru
 
 Requests are counted per site per UTC day, and reset at midnight UTC. A site over its limit shows a short "resting" page to visitors, and its data calls fail with `SITE_OVER_LIMIT`, until the next day. Site traffic never counts against the app's own daily execution budget inside the workspace.
 
-Every deploy can carry up to 30 MB, which allows about 20 MB of assets, a site bundle of up to 8 MB, and up to 1,000 asset files.
+Every deploy can carry up to 30 MB, which allows about 20 MB of assets, a site bundle of up to 8 MB, and up to 1,000 asset files. The assets row above is what a site stores across deploys.
 
 A site whose records reach its data limit refuses new writes with `site_data_full` until records are deleted or the workspace upgrades. `npx coline-app inspect` shows what a site uses.
 
