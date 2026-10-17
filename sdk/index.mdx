@@ -7,11 +7,11 @@ A Coline app installs into a workspace as a set of capabilities: tools that Kair
 
 The packages are open source under MIT: [`@colineapp/sdk`](https://www.npmjs.com/package/@colineapp/sdk), [`@colineapp/ui`](https://www.npmjs.com/package/@colineapp/ui) and [`create-coline-app`](https://www.npmjs.com/package/create-coline-app).
 
-The current release is SDK 2.1: `@colineapp/sdk` 2.1.3, `@colineapp/ui` 2.1.3, `@colineapp/app-runtime` 2.1.0 and `create-coline-app` 2.9.3. SDK 2 brought the app model on this page: one `defineApp` for permissions, surfaces, tools, file types, schedules, jobs, endpoints and connected accounts, with every call checked against what the workspace granted. SDK 2.1 adds [Coline Sites](/sites): any app can also be a public website, with visitor sign-in (Google or Coline), typed collections, uploads, endpoints on the site's own paths, React hooks and Coline's components in light and dark.
+The current release is SDK 2.1: `@colineapp/sdk` 2.1.3, `@colineapp/ui` 2.1.3, `@colineapp/app-runtime` 2.1.0 and `create-coline-app` 2.9.4. SDK 2 brought the app model on this page: one `defineApp` for permissions, surfaces, tools, file types, schedules, jobs, endpoints and connected accounts, with every call checked against what the workspace granted. SDK 2.1 adds [Coline Sites](/sites): any app can also be a public website, with visitor sign-in (Google or Coline), typed collections, uploads, endpoints on the site's own paths, React hooks and Coline's components in light and dark.
 
 ## Before you start
 
-You need Node.js and npm. To push, you need a workspace [API key](/authentication/api-keys) with the `apps.write` scope, which a workspace admin can create in the [developer console](https://coline.app/developers/console).
+You need Node.js and npm. To push, sign in with `npx coline-app login` as an admin of the workspace. In CI, use a workspace [API key](/authentication/api-keys) with the `apps.write` scope instead.
 
 ## 1. Scaffold
 
@@ -120,7 +120,7 @@ it("creates a todo through the Kairo tool", async () => {
 ## 4. Push
 
 ```bash
-export COLINE_API_KEY=col_ws_...
+npx coline-app login      # once: opens a browser, pick the workspace
 npx coline-app push
 ```
 

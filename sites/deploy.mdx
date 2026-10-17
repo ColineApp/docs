@@ -19,25 +19,31 @@ The CLI builds the site and the app's logic, uploads them, and prints the addres
 
 ## Claim a site
 
-Open the claim link (also in `.coline/site.json`, or run `npx coline-app claim`), sign in, and pick a workspace. The claim page lists what the site will be able to do in that workspace. Claiming moves the app, its records, visitors and logs into that workspace, and:
+Open the claim link (also in `.coline/site.json`, or run `npx coline-app claim`), sign in, and pick a workspace. The claim page lists what the site will be able to do in that workspace. Signed in with `npx coline-app login`, `npx coline-app claim` claims the site into your workspace from the terminal, and so does your next `deploy`.
+
+Claiming moves the app, its records, visitors and logs into that workspace, and:
 
 - the site gets the rest of the permissions it declares, such as seeing members, sending notifications, endpoints or Coline AI;
 - the site stops expiring and the badge goes away;
 - search engines may index it;
-- the deploy token stops working: deploy with a workspace API key from then on.
+- the deploy token stops working: run `npx coline-app login` and pick that workspace to keep deploying.
 
 An admin can turn any of those permissions off later under **Apps → Your apps → Manage**.
 
 ## Deploy into a workspace
 
-With a workspace [API key](/authentication/api-keys) that has `apps.write`, the site goes straight into that workspace and never expires:
+Sign in once, then deploys go straight into your workspace and never expire:
 
 ```bash
-export COLINE_API_KEY=col_ws_...
+npx coline-app login                     # opens a browser; pick the workspace
 npx coline-app deploy --name my-site     # my-site.coline.space
 ```
 
+`login` opens Coline in your browser, where you pick a workspace you administer and allow access. On a machine without a browser, such as over SSH, it prints a code instead: open `coline.app/device` on any device, enter the code and approve. Pass `--device` to choose that yourself, and `--workspace <slug>` to preselect the workspace. The sign-in is saved in your user config directory (`~/.config/coline/credentials.json`, readable only by you) and renews itself. `npx coline-app whoami` shows who and which workspace commands act as; `npx coline-app logout` signs out and revokes it.
+
 `--name` picks the address on the first deploy. Reserved and taken names fail with `SITE_SLUG_TAKEN` or `SITE_SLUG_INVALID`.
+
+In CI, use a workspace [API key](/authentication/api-keys) with `apps.write` instead: set `COLINE_API_KEY` and every command uses it in place of a sign-in.
 
 Coline Code projects deploy the same way: create a project from the **Site** template and press **Deploy**. Kairo can build and deploy a site for you from chat.
 
@@ -65,7 +71,10 @@ A claimed site is an installed app in its workspace:
 | `coline-app dev` | Runs the site locally with in-memory data, no account |
 | `coline-app check` | Type-checks and builds without uploading |
 | `coline-app deploy` | Builds and deploys |
-| `coline-app claim` | Opens the claim link |
+| `coline-app login` | Signs in to Coline and picks a workspace (`--device`, `--workspace <slug>`) |
+| `coline-app whoami` | Who and which workspace commands act as |
+| `coline-app logout` | Signs out and revokes the sign-in |
+| `coline-app claim` | Claims into your workspace when signed in; otherwise opens the claim link |
 | `coline-app inspect` | Address, state, version, limits, usage, access, uploads, endpoints and routes |
 | `coline-app logs` | Recent tool runs and errors, with the app's own error text |
 | `coline-app db dump [collection]` | Records in the site's collections |
@@ -77,19 +86,20 @@ A claimed site is an installed app in its workspace:
 | `coline-app domains add <host>` | Connects a custom domain |
 | `coline-app domains status` | DNS records to add and each domain's state |
 | `coline-app domains remove <host>` | Disconnects a domain |
-| `coline-app sites list` | Sites in the API key's workspace |
+| `coline-app sites list` | Sites in your workspace |
 | `coline-app sites delete` | Takes this folder's site down (`--yes` to skip the question) |
 
-`logs`, `db dump` and `db export` read a running `dev` server with `--port`. `sites delete` with a deploy token deletes an unclaimed site and its app; with a workspace key it deletes the site, its visitors and files, and keeps the app and its records. Every command takes `--json` and prints `{ ok: true, data }` or `{ ok: false, error: { code, message, fix } }`.
+`logs`, `db dump` and `db export` read a running `dev` server with `--port`. `sites delete` with a deploy token deletes an unclaimed site and its app; signed in or with a workspace key it deletes the site, its visitors and files, and keeps the app and its records. Every command takes `--json` and prints `{ ok: true, data }` or `{ ok: false, error: { code, message, fix } }`.
 
 Exit codes: `0` ok, `1` error, `2` needs sign-in or a claim, `3` over a limit.
 
 | Error | Fix |
 | --- | --- |
-| `SITE_DEPLOY_TOKEN_INVALID` | The site expired or was claimed. Delete `.coline/site.json`, or deploy with an API key |
-| `SITE_CLAIMED` | Deploy with an API key from the workspace that claimed it |
+| `SITE_DEPLOY_TOKEN_INVALID` | The site expired or was claimed. Delete `.coline/site.json`, or run `npx coline-app login` |
+| `SITE_CLAIMED` | Run `npx coline-app login` and pick the workspace that claimed it |
+| `OAUTH_WORKSPACE_MISMATCH` | The site is in another workspace; run `npx coline-app login` and pick it |
 | `APP_KEY_TAKEN` | Change `key` in `app.config.ts` and rename the tools to match |
 | `SITE_VERSION_EXISTS` | Bump the version in `package.json` |
 | `SITE_CONTENT_BLOCKED` | A site without an account can't ask for passwords; use sign-in |
 | `SITE_DEPLOY_TOO_LARGE` | Over 30 MB per deploy; host large media elsewhere |
-| `SITE_DEPLOY_RATE_LIMITED` | Too many deploys without an account from your network; wait an hour or use an API key |
+| `SITE_DEPLOY_RATE_LIMITED` | Too many deploys without an account from your network; wait an hour or run `npx coline-app login` |

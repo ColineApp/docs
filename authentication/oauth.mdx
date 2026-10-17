@@ -14,6 +14,8 @@ If you're connecting an agent to the [MCP server](/api/mcp), you don't need any 
 | Authorization | `https://coline.app/api/v1/oauth/authorize` |
 | Token | `https://coline.app/api/v1/oauth/token` |
 | User info | `https://coline.app/api/v1/oauth/userinfo` |
+| Device authorization | `https://coline.app/api/v1/oauth/device/code` |
+| Revocation | `https://coline.app/api/v1/oauth/revoke` |
 | Metadata | `https://coline.app/.well-known/oauth-authorization-server` |
 
 ## Register a client
@@ -83,6 +85,8 @@ curl "https://coline.app/api/v1/workspaces/acme/calendar/events?start=2026-10-12
 
 A token isn't tied to one workspace. Pass the workspace slug or ID in the path; the person must be a member of it. `GET /api/v1/me/workspaces` (scope `workspace.read`) lists their workspaces.
 
+The exception is `apps.read` and `apps.write`: the consent screen asks the person to pick a workspace they administer, and the token works only there. Routes without a workspace in the path, such as the Sites API, use that workspace; a path naming another one fails with `OAUTH_WORKSPACE_MISMATCH`. If the person stops administering the workspace, the token loses those scopes.
+
 ## Refresh
 
 ```bash
@@ -93,6 +97,20 @@ curl https://coline.app/api/v1/oauth/token \
 ```
 
 Each refresh returns a new access token and a new refresh token. The old refresh token stops working, so store the new one.
+
+## Revoke
+
+```bash
+curl https://coline.app/api/v1/oauth/revoke \
+  -u "YOUR_CLIENT_ID:YOUR_CLIENT_SECRET" \
+  -d token=col_rt_...
+```
+
+Revoking either token of a pair ends both ([RFC 7009](https://www.rfc-editor.org/rfc/rfc7009)). The endpoint answers `200` for unknown tokens too.
+
+## Devices without a browser
+
+`coline-app login` uses the device authorization grant ([RFC 8628](https://www.rfc-editor.org/rfc/rfc8628)) when no browser can open: it posts to the device authorization endpoint, shows the person a code, and polls the token endpoint with `grant_type=urn:ietf:params:oauth:grant-type:device_code` while they approve it at `https://coline.app/device`. Polls before approval answer `authorization_pending`, too-frequent polls `slow_down`, and a denial `access_denied`. Codes expire after 15 minutes. Device sign-in is open to Coline's own clients only for now.
 
 ## User info
 
@@ -107,9 +125,12 @@ Each refresh returns a new access token and a new refresh token. The old refresh
   "given_name": "Dana",
   "family_name": "Kim",
   "picture": "https://...",
-  "preferred_username": "dana"
+  "preferred_username": "dana",
+  "coline_workspace": { "id": "...", "slug": "acme", "name": "Acme" }
 }
 ```
+
+`coline_workspace` is present only for a token bound to one workspace (`apps.*` scopes).
 
 ## Errors
 
@@ -120,3 +141,5 @@ Each refresh returns a new access token and a new refresh token. The old refresh
 | `INVALID_GRANT` | The code or refresh token is expired, used, or for another client or redirect |
 | `INVALID_TOKEN` | The access token is unknown or expired; refresh it |
 | `OAUTH_SCOPE_FORBIDDEN` | The token lacks a scope the route needs |
+| `OAUTH_WORKSPACE_MISMATCH` | The token is bound to another workspace (`apps.*` scopes) |
+| `WORKSPACE_REQUIRED` | `apps.*` scopes need a workspace picked on the consent screen |

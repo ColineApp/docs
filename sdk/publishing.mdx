@@ -17,7 +17,9 @@ Local preview uses simulated data, so it doesn't prove production permissions or
 
 ### Credentials
 
-Create a workspace API key with `apps.write` in the [developer console](https://coline.app/developers/console) and set it as `COLINE_API_KEY`. Set `COLINE_BASE_URL` only if you target a different Coline instance. Keep keys out of app source and version control.
+Run `npx coline-app login` once. It opens Coline in your browser (or prints a code to approve at `coline.app/device` when there is no browser), and you pick a workspace you administer. The sign-in is saved for your user and renews itself; `npx coline-app whoami` shows which workspace commands act in, and `npx coline-app logout` ends it.
+
+In CI, create a workspace API key with `apps.write` in the [developer console](https://coline.app/developers/console) and set it as `COLINE_API_KEY`; it takes the place of the sign-in. Set `COLINE_BASE_URL` only if you target a different Coline instance. Keep keys out of app source and version control.
 
 ## Push a version
 
