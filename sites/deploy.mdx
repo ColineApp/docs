@@ -98,7 +98,7 @@ Exit codes: `0` ok, `1` error, `2` needs sign-in or a claim, `3` over a limit.
 | `SITE_DEPLOY_TOKEN_INVALID` | The site expired or was claimed. Delete `.coline/site.json`, or run `npx coline-app login` |
 | `SITE_CLAIMED` | Run `npx coline-app login` and pick the workspace that claimed it |
 | `OAUTH_WORKSPACE_MISMATCH` | The site is in another workspace; run `npx coline-app login` and pick it |
-| `APP_KEY_TAKEN` | Change `key` in `app.config.ts` and rename the tools to match |
+| `APP_KEY_TAKEN` | If your own unclaimed site holds the key, sign in and run `npx coline-app claim` from its folder. Otherwise change `key` in `app.config.ts` and rename the tools to match |
 | `SITE_VERSION_EXISTS` | Bump the version in `package.json` |
 | `SITE_CONTENT_BLOCKED` | A site without an account can't ask for passwords; use sign-in |
 | `SITE_DEPLOY_TOO_LARGE` | Over 30 MB per deploy; host large media elsewhere |
