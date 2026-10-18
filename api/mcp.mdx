@@ -37,8 +37,7 @@ You can see and disconnect every connected app under **Settings → Account → 
 - Every authorization response, errors included, carries `iss` ([RFC 9207](https://www.rfc-editor.org/rfc/rfc9207)).
 - `openid`, `profile` and `email` are supported. `https://mcp.coline.app/userinfo` returns the person's `email` and `email_verified`.
 - `login_hint` pre-fills Coline's sign-in.
-- A client that asks for no Coline scopes, or only for `openid profile email`, gets every scope below. The consent screen lists what the client will be able to do.
-- The tools the server lists depend on the token's scopes. If a tool you expect is missing, reconnect and approve the scope it needs.
+- Every connection gets every scope below, whatever the client asks for, so tools are never missing because a client guessed too narrow a scope list. The consent screen lists what the client will be able to do. Ask for `tools.read` and `tools.write` to use the full catalog at `/agent` too.
 
 | Scope | Gives |
 | --- | --- |

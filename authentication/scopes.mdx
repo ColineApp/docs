@@ -36,7 +36,7 @@ Calendar and message routes act for a person, so they refuse API keys with `USER
 
 ## OAuth scopes
 
-Requested in the `scope` parameter of the [authorization request](/authentication/oauth) and shown on the consent screen.
+Requested in the `scope` parameter of the [authorization request](/authentication/oauth) and shown on the consent screen. Clients created in the developer console get the scopes they ask for. Clients that register themselves (assistants) get every scope below except `ai.invoke` and `apps.*`, whatever they ask for.
 
 | Scope | Allows |
 | --- | --- |
@@ -55,7 +55,7 @@ Requested in the `scope` parameter of the [authorization request](/authenticatio
 
 ## MCP scopes
 
-The [MCP server](/api/mcp) at `/mcp` uses `workspace.read`, `mail.read`, `mail.write`, `messages.read`, `messages.write`, `taskboards.read`, `taskboards.write`, `calendar.read`, `calendar.write`, `files.read` and `files.write`, plus `openid`, `profile` and `email`. A client that asks for no Coline scopes gets all of them, and the consent screen lists what it will be able to do. The full catalog at `/agent` uses `tools.read` and `tools.write`.
+The [MCP server](/api/mcp) at `/mcp` uses `workspace.read`, `mail.read`, `mail.write`, `messages.read`, `messages.write`, `taskboards.read`, `taskboards.write`, `calendar.read`, `calendar.write`, `files.read` and `files.write`, plus `openid`, `profile` and `email`. Every connection gets all of them, whatever the client asks for, and the consent screen lists what it will be able to do. The full catalog at `/agent` uses `tools.read` and `tools.write`.
 
 ## App permissions
 

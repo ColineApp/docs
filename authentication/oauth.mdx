@@ -59,6 +59,8 @@ curl https://coline.app/api/v1/oauth/register \
 - Redirect URIs must be HTTPS, a loopback address (`http://127.0.0.1`, `http://[::1]` or `http://localhost`, any port), or the app's own URL scheme.
 - Registration grants nothing by itself. It's limited to 30 registrations per hour from one address.
 
+Clients that register themselves, this way or with a metadata document, are treated as assistants: whatever `scope` they send, the person is asked to approve everything they can do in Coline, `openid profile email workspace.read mail.read mail.write messages.read messages.write taskboards.read taskboards.write calendar.read calendar.write files.read files.write tools.read tools.write`, and the token carries all of it. `ai.invoke` and `apps.*` are added only when asked for. Unknown scopes are ignored. The token response's `scope` lists what was granted.
+
 ### Use a client ID metadata document
 
 Instead of registering, a client can use an HTTPS URL that serves its metadata as its `client_id`. Coline reads the document on first use and refreshes it hourly. It must include `client_id` (the same URL) and `redirect_uris`, may include `client_name`, `client_uri` and `logo_uri`, and must allow the `none` token endpoint auth method. Redirects aren't followed and documents are limited to 16 KB.
