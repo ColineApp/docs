@@ -3,12 +3,13 @@ title: Developers
 description: The ways to build on Coline, and where to get credentials.
 ---
 
-There are four ways to work with Coline from code. They share one permission model: a request can only reach what its credential's scopes allow, and, when it acts for a person, only what that person can already open.
+There are five ways to work with Coline from code. They share one permission model: a request can only reach what its credential's scopes allow, and, when it acts for a person, only what that person can already open.
 
 | Surface | Use it to | Auth |
 | --- | --- | --- |
 | [REST API](/api) | Read and write calendars, sheets, tasks, files and apps from a server or script | [API key](/authentication/api-keys) or [OAuth token](/authentication/oauth) |
-| [MCP server](/api/mcp) | Give an agent or coding tool that speaks MCP access to a workspace | OAuth, set up by the MCP client |
+| [MCP server](/api/mcp) | Give an assistant or coding tool that speaks MCP access to a workspace, and events when things change | OAuth, set up by the MCP client |
+| [Outside agents](/api/agents) | Bring an assistant you run elsewhere into conversations as a crew member | Agent token from **Connect an agent** |
 | [Tab](/api/tab) | Add Coline's inline completions to an editor | API key with `ai.invoke` |
 | [App SDK](/sdk) | Build an app or site that adds tools, file types and screens to a workspace | `npx coline-app login`, or an API key with `apps.write` in CI |
 

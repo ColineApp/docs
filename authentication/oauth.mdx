@@ -3,9 +3,9 @@ title: OAuth
 description: Sign people in with Coline and call the API on their behalf.
 ---
 
-Use OAuth when your app acts for a person: it signs them in with their Coline account, they approve the scopes you ask for, and your app gets a token that can reach what that person can reach, limited to those scopes. Coline uses the OAuth 2.0 authorization code flow with PKCE.
+Use OAuth when your app acts for a person: it signs them in with their Coline account, they approve what your app can do, and your app gets a token that can reach what that person can reach, limited to the scopes they approved. Coline is an OAuth 2.1 and OpenID Connect provider: authorization code flow with PKCE, dynamic client registration, client ID metadata documents, ID tokens and UserInfo.
 
-If you're connecting an agent to the [MCP server](/api/mcp), you don't need any of this. MCP clients register and sign in on their own.
+If you're connecting an assistant to the [MCP server](/api/mcp), you don't need any of this. MCP clients register and sign in on their own.
 
 ## Endpoints
 
@@ -13,12 +13,57 @@ If you're connecting an agent to the [MCP server](/api/mcp), you don't need any 
 | --- | --- |
 | Authorization | `https://coline.app/api/v1/oauth/authorize` |
 | Token | `https://coline.app/api/v1/oauth/token` |
+| Registration | `https://coline.app/api/v1/oauth/register` |
 | User info | `https://coline.app/api/v1/oauth/userinfo` |
 | Device authorization | `https://coline.app/api/v1/oauth/device/code` |
 | Revocation | `https://coline.app/api/v1/oauth/revoke` |
+| JSON Web Keys | `https://coline.app/.well-known/jwks.json` |
 | Metadata | `https://coline.app/.well-known/oauth-authorization-server` |
+| OpenID Connect discovery | `https://coline.app/.well-known/openid-configuration` |
 
-## Register a client
+Both metadata documents are the same. A `401` from the API carries `WWW-Authenticate: Bearer resource_metadata="https://coline.app/.well-known/oauth-protected-resource"`, so a client that starts from an API call can find everything else.
+
+## Get a client ID
+
+There are three ways, and the person approves your app on the same consent screen with each.
+
+### Register dynamically
+
+Apps that connect to many workspaces, such as assistants, register themselves ([RFC 7591](https://www.rfc-editor.org/rfc/rfc7591)):
+
+```bash
+curl https://coline.app/api/v1/oauth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "client_name": "Example Assistant",
+    "redirect_uris": ["https://example.com/oauth/callback"],
+    "token_endpoint_auth_method": "none",
+    "client_uri": "https://example.com",
+    "logo_uri": "https://example.com/logo.png"
+  }'
+```
+
+```json
+{
+  "client_id": "col_dyn_...",
+  "client_id_issued_at": 1792364651,
+  "client_name": "Example Assistant",
+  "redirect_uris": ["https://example.com/oauth/callback"],
+  "token_endpoint_auth_method": "none",
+  "grant_types": ["authorization_code", "refresh_token"],
+  "response_types": ["code"]
+}
+```
+
+- `token_endpoint_auth_method` is `none` (a public client using PKCE), `client_secret_basic` (the default) or `client_secret_post`. Confidential clients also get a `client_secret`, shown once.
+- Redirect URIs must be HTTPS, a loopback address (`http://127.0.0.1`, `http://[::1]` or `http://localhost`, any port), or the app's own URL scheme.
+- Registration grants nothing by itself. It's limited to 30 registrations per hour from one address.
+
+### Use a client ID metadata document
+
+Instead of registering, a client can use an HTTPS URL that serves its metadata as its `client_id`. Coline reads the document on first use and refreshes it hourly. It must include `client_id` (the same URL) and `redirect_uris`, may include `client_name`, `client_uri` and `logo_uri`, and must allow the `none` token endpoint auth method. Redirects aren't followed and documents are limited to 16 KB.
+
+### Create one in the developer console
 
 1. Open the [developer console](https://coline.app/developers/console), choose a workspace, and go to **OAuth clients**.
 2. Name the client and add every redirect URL it will use. Redirects must match exactly.
@@ -35,6 +80,7 @@ https://coline.app/api/v1/oauth/authorize
   &redirect_uri=https://example.com/callback
   &scope=openid%20profile%20email%20workspace.read%20calendar.read
   &state=RANDOM_STATE
+  &nonce=RANDOM_NONCE
   &code_challenge=CODE_CHALLENGE
   &code_challenge_method=S256
 ```
@@ -48,8 +94,14 @@ https://coline.app/api/v1/oauth/authorize
 | `state` | Returned unchanged; check it to prevent CSRF |
 | `code_challenge` | 43 to 128 characters |
 | `code_challenge_method` | Must be `S256` |
+| `nonce` | Optional. Echoed in the ID token |
+| `login_hint` | Optional. An email address to pre-fill sign-in |
+| `prompt` | Optional. `none` returns `login_required` or `consent_required`, because Coline always asks before an app connects |
+| `resource` | Optional ([RFC 8707](https://www.rfc-editor.org/rfc/rfc8707)). Must be a Coline URL |
 
-The person signs in if needed and sees a consent screen listing the scopes. When they approve, Coline redirects to `redirect_uri` with `code` and `state`. Codes expire after 10 minutes and work once.
+The person signs in if needed and sees a consent screen with your app's name, logo and site, the account they're signing in with, and what your app will be able to do. When they approve, Coline redirects to `redirect_uri` with `code`, `state` and `iss`. Codes expire after 10 minutes and work once.
+
+Once the client and redirect check out, every outcome goes back to your redirect, errors included, with `error`, `error_description`, `state` and `iss` ([RFC 9207](https://www.rfc-editor.org/rfc/rfc9207)): `access_denied` when the person cancels, `invalid_scope`, `invalid_request`, `invalid_target` or `unsupported_response_type`. Compare `iss` with `https://coline.app`. An unknown client or unregistered redirect never redirects; the consent screen explains the problem instead.
 
 ## 2. Exchange the code
 
@@ -62,7 +114,7 @@ curl https://coline.app/api/v1/oauth/token \
   -d code_verifier=YOUR_CODE_VERIFIER
 ```
 
-The token endpoint accepts form or JSON bodies. Send the client secret with HTTP Basic auth, or as `client_secret` in the body.
+The token endpoint accepts form or JSON bodies. Confidential clients send the secret with HTTP Basic auth or as `client_secret` in the body; public clients send `client_id` alone.
 
 ```json
 {
@@ -70,11 +122,12 @@ The token endpoint accepts form or JSON bodies. Send the client secret with HTTP
   "token_type": "Bearer",
   "expires_in": 3600,
   "refresh_token": "col_rt_...",
-  "scope": "openid profile email workspace.read calendar.read"
+  "scope": "openid profile email workspace.read calendar.read",
+  "id_token": "eyJhbGciOiJSUzI1NiIs..."
 }
 ```
 
-Access tokens last one hour.
+Access tokens last one hour. `id_token` is present when the scopes include `openid`.
 
 ## 3. Call the API
 
@@ -96,25 +149,26 @@ curl https://coline.app/api/v1/oauth/token \
   -d refresh_token=col_rt_...
 ```
 
-Each refresh returns a new access token and a new refresh token. The old refresh token stops working, so store the new one.
+Each refresh returns a new access token, a new refresh token, and a new ID token for `openid` grants. The old refresh token stops working, so store the new one. A refresh token unused for 90 days expires; the person then connects your app again.
 
-## Revoke
+## ID tokens
 
-```bash
-curl https://coline.app/api/v1/oauth/revoke \
-  -u "YOUR_CLIENT_ID:YOUR_CLIENT_SECRET" \
-  -d token=col_rt_...
-```
+ID tokens are JWTs signed with RS256. Verify them with the keys at `https://coline.app/.well-known/jwks.json` (match the `kid` header) and check:
 
-Revoking either token of a pair ends both ([RFC 7009](https://www.rfc-editor.org/rfc/rfc7009)). The endpoint answers `200` for unknown tokens too.
-
-## Devices without a browser
-
-`coline-app login` uses the device authorization grant ([RFC 8628](https://www.rfc-editor.org/rfc/rfc8628)) when no browser can open: it posts to the device authorization endpoint, shows the person a code, and polls the token endpoint with `grant_type=urn:ietf:params:oauth:grant-type:device_code` while they approve it at `https://coline.app/device`. Polls before approval answer `authorization_pending`, too-frequent polls `slow_down`, and a denial `access_denied`. Codes expire after 15 minutes. Device sign-in is open to Coline's own clients only for now.
+| Claim | |
+| --- | --- |
+| `iss` | `https://coline.app` |
+| `aud` | Your client ID |
+| `sub` | The person's stable user id |
+| `exp`, `iat` | Valid for one hour |
+| `auth_time` | When the person last signed in, when known |
+| `nonce` | The `nonce` from your authorization request |
+| `email`, `email_verified` | With the `email` scope |
+| `name`, `given_name`, `family_name`, `picture`, `preferred_username` | With the `profile` scope |
 
 ## User info
 
-`GET /api/v1/oauth/userinfo` with the access token returns the signed-in person:
+`GET` or `POST /api/v1/oauth/userinfo` with the access token returns the signed-in person, limited to the identity scopes the token carries:
 
 ```json
 {
@@ -126,19 +180,46 @@ Revoking either token of a pair ends both ([RFC 7009](https://www.rfc-editor.org
   "family_name": "Kim",
   "picture": "https://...",
   "preferred_username": "dana",
+  "scope": "openid profile email workspace.read",
   "coline_workspace": { "id": "...", "slug": "acme", "name": "Acme" }
 }
 ```
 
-`coline_workspace` is present only for a token bound to one workspace (`apps.*` scopes).
+`email` and `email_verified` need the `email` scope; the name fields need `profile`. `coline_workspace` is present only for a token bound to one workspace (`apps.*` scopes). An invalid token gets `401` with `WWW-Authenticate: Bearer error="invalid_token"`.
+
+## Revoke
+
+```bash
+curl https://coline.app/api/v1/oauth/revoke \
+  -u "YOUR_CLIENT_ID:YOUR_CLIENT_SECRET" \
+  -d token=col_rt_...
+```
+
+Revoking either token of a pair ends both ([RFC 7009](https://www.rfc-editor.org/rfc/rfc7009)). The endpoint answers `200` for unknown tokens too. Public clients send `client_id` in the body.
+
+People can also disconnect your app themselves under **Settings → Account → Connections → Apps with access**. That ends every token your app holds for them.
+
+## Devices without a browser
+
+`coline-app login` uses the device authorization grant ([RFC 8628](https://www.rfc-editor.org/rfc/rfc8628)) when no browser can open: it posts to the device authorization endpoint, shows the person a code, and polls the token endpoint with `grant_type=urn:ietf:params:oauth:grant-type:device_code` while they approve it at `https://coline.app/device`. Polls before approval answer `authorization_pending`, too-frequent polls `slow_down`, and a denial `access_denied`. Codes expire after 15 minutes. Device sign-in is open to Coline's own clients only for now.
 
 ## Errors
 
+The token, revocation and registration endpoints answer with standard OAuth errors, `{ "error": "...", "error_description": "..." }`, and `Cache-Control: no-store`:
+
+| Error | Meaning |
+| --- | --- |
+| `invalid_request` | A parameter is missing or invalid |
+| `invalid_client` | Unknown client, or the secret doesn't match (`401`) |
+| `invalid_grant` | The code, verifier or refresh token is wrong, expired, used, or for another client or redirect |
+| `invalid_scope` | A scope isn't supported or allowed for this client |
+| `unsupported_grant_type` | Use `authorization_code`, `refresh_token` or the device code grant |
+| `invalid_redirect_uri`, `invalid_client_metadata` | Registration was refused |
+
+API routes use Coline's [error shape](/api/errors):
+
 | Code | Meaning |
 | --- | --- |
-| `INVALID_CLIENT` | Unknown client, or the secret doesn't match |
-| `INVALID_REDIRECT_URI` | The redirect URL isn't registered for the client |
-| `INVALID_GRANT` | The code or refresh token is expired, used, or for another client or redirect |
 | `INVALID_TOKEN` | The access token is unknown or expired; refresh it |
 | `OAUTH_SCOPE_FORBIDDEN` | The token lacks a scope the route needs |
 | `OAUTH_WORKSPACE_MISMATCH` | The token is bound to another workspace (`apps.*` scopes) |

@@ -45,7 +45,9 @@ Requested in the `scope` parameter of the [authorization request](/authenticatio
 | `taskboards.read`, `taskboards.write` | Read or change tasks the person can access |
 | `calendar.read`, `calendar.write` | Read or change the person's calendars and events |
 | `files.read`, `files.write` | Read or change files the person can access |
-| `messages.write` | Send, edit, pin and react to messages as the person, in conversations they're in. Reading messages uses `workspace.read` |
+| `mail.read`, `mail.write` | Read the person's mail; organize threads and send mail that waits for their approval. Used by the [MCP server](/api/mcp) |
+| `messages.read` | Read conversations the person is in, through the [MCP server](/api/mcp). The REST API reads messages with `workspace.read` |
+| `messages.write` | Send, edit, pin and react to messages as the person, in conversations they're in |
 | `tools.read` | Discover and run read-only tools across Coline and installed apps |
 | `tools.write` | Run tools that change things, subject to the person's permissions and app approvals |
 | `ai.invoke` | Call AI endpoints |
@@ -53,7 +55,7 @@ Requested in the `scope` parameter of the [authorization request](/authenticatio
 
 ## MCP scopes
 
-The [MCP server](/api/mcp) uses `workspace.read`, `taskboards.read`, `taskboards.write`, `calendar.read`, `calendar.write`, `tools.read` and `tools.write`. A client that asks for nothing gets the read scopes: `workspace.read`, `taskboards.read`, `calendar.read` and `tools.read`.
+The [MCP server](/api/mcp) at `/mcp` uses `workspace.read`, `mail.read`, `mail.write`, `messages.read`, `messages.write`, `taskboards.read`, `taskboards.write`, `calendar.read`, `calendar.write`, `files.read` and `files.write`, plus `openid`, `profile` and `email`. A client that asks for no Coline scopes gets all of them, and the consent screen lists what it will be able to do. The full catalog at `/agent` uses `tools.read` and `tools.write`.
 
 ## App permissions
 

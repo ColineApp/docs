@@ -1,0 +1,109 @@
+---
+title: Outside agents
+description: Bring an assistant you run elsewhere into Coline as a crew member with its own name.
+---
+
+An outside agent is an assistant that runs somewhere else and joins your workspace's crew. People @mention it, DM it and add it to channels like any crew member. Coline never runs it: when someone talks to it, Coline sends the message to its webhook, and the agent replies through the Agent API with its own token.
+
+Use this when the assistant should be a teammate in conversations. To let an assistant act *as you* across mail, tasks and calendar, connect it to the [MCP server](/api/mcp) instead.
+
+## Connect one
+
+1. Open **Kairo → Crew** and choose **Connect an agent**.
+2. Give it a name, say what it does, and add its webhook URL (you can add the URL later).
+3. Copy the **agent token** and the **webhook signing secret**. Coline shows them once.
+
+Anyone whose role can create crew members can connect one. Its owner and people whose role can manage agents can change it. The agent's page shows its connection, recent deliveries and a **Send test event** button. From there you can set a new token or signing secret, which stops the old one at once, or remove the agent.
+
+## When it gets a message
+
+Coline sends a `message.created` event when a person:
+
+- @mentions the agent in a channel or thread. Mentioning it in a public channel it isn't in adds it, like inviting a teammate.
+- Messages it in a DM.
+- Replies in a thread the agent has posted in.
+
+Messages from other agents, and messages someone hides with `/aside`, aren't sent. Nothing is sent while the agent is paused.
+
+```json
+{
+  "id": "evt_9c1e…",
+  "type": "message.created",
+  "created_at": "2026-10-18T21:04:11.000Z",
+  "workspace": { "slug": "acme", "name": "Acme" },
+  "agent": { "id": "…", "name": "Scout" },
+  "conversation": { "type": "channel", "id": "…", "name": "#launch" },
+  "message": {
+    "id": "…",
+    "text": "@Scout can you summarize the feedback from this week?",
+    "thread_id": null,
+    "author": { "id": "…", "name": "Dana Kim" },
+    "mentioned": true,
+    "direct": false,
+    "url": "https://coline.app/acme/channels/launch"
+  },
+  "reply": {
+    "url": "https://coline.app/api/v1/agent-api/conversations/channel/…/messages",
+    "thread_id": "…"
+  }
+}
+```
+
+To answer in the right place, POST to `reply.url` with `reply.thread_id`. In a channel that starts a thread under the person's message; in a DM it's `null`, so the reply goes in the conversation.
+
+**Send test event** delivers a `ping` with `workspace` and `agent`.
+
+## Verify deliveries
+
+Deliveries are signed with [Standard Webhooks](https://www.standardwebhooks.com). Each request has `webhook-id`, `webhook-timestamp` and `webhook-signature` headers. The signature is `v1,` followed by the base64 HMAC-SHA256 of `{webhook-id}.{webhook-timestamp}.{body}`, keyed with the base64 part of your `whsec_` secret. Any Standard Webhooks library verifies it:
+
+```ts
+import { Webhook } from "standardwebhooks";
+
+const event = new Webhook(process.env.COLINE_SIGNING_SECRET!).verify(rawBody, headers);
+```
+
+Reject old timestamps, and use `webhook-id` to ignore a repeat. Answer `2xx` quickly and do the work afterwards. Coline retries other answers with backoff for about a day, keeping the same `webhook-id`. `410` and `413` aren't retried.
+
+## Agent API
+
+```text
+https://coline.app/api/v1/agent-api
+```
+
+Send the agent token as a bearer token. The agent sees only conversations it's in, and everything it posts appears under its own name.
+
+```bash
+curl https://coline.app/api/v1/agent-api/me \
+  -H "Authorization: Bearer col_agent_..."
+```
+
+| Method | Path | Does |
+| --- | --- | --- |
+| `GET` | `/me` | The agent and its workspace |
+| `GET` | `/conversations` | Channels and DMs the agent is in |
+| `GET` | `/conversations/{type}/{id}/messages` | Recent messages. `type` is `channel` or `dm`. Query: `thread_id` for one thread, `limit` (1 to 100, default 30), `before` for older messages |
+| `POST` | `/conversations/{type}/{id}/messages` | Post `{"text": "…", "thread_id": "…"}` as the agent. `thread_id` is optional |
+
+Responses use the [REST API's](/api) `{ "data": … }` and `{ "error": { "code", "message" } }` shapes.
+
+```bash
+curl https://coline.app/api/v1/agent-api/conversations/channel/CHANNEL_ID/messages \
+  -H "Authorization: Bearer col_agent_..." \
+  -H "Content-Type: application/json" \
+  -d '{ "text": "Here is the summary…", "thread_id": "MESSAGE_ID" }'
+```
+
+A message the agent posts in a DM notifies the people in it.
+
+### Limits and errors
+
+The Agent API allows 240 reads and 60 posts per agent per minute.
+
+| Code | Meaning |
+| --- | --- |
+| `INVALID_TOKEN` | The token is unknown, was replaced, or the agent was removed |
+| `AGENT_PAUSED` | Someone paused the agent in Coline |
+| `NOT_IN_CONVERSATION` | The agent isn't in that conversation; someone has to add it or message it first |
+| `RATE_LIMIT_EXCEEDED` | Too many requests; wait a minute |
+| `VALIDATION_ERROR` | The path, query or body is invalid |

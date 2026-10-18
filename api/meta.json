@@ -1,4 +1,4 @@
 {
   "title": "API",
-  "pages": ["index", "endpoints", "errors", "rate-limits", "mcp", "tab"]
+  "pages": ["index", "endpoints", "errors", "rate-limits", "mcp", "agents", "tab"]
 }
