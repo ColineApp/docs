@@ -15,6 +15,13 @@ Upstream has its own full documentation at [upstream.codes/docs](https://upstrea
 - Share links let people read a private repository without an account, with an expiry and a view count.
 - Clone and push over HTTPS or SSH at `git.coline.app`, with Git LFS for large files.
 
+## Limits
+
+- A push can be up to 5 GB and update up to 10,000 branches and tags. Push a bigger history in parts, older commits first.
+- A file can be up to 1 GB. Track larger files with Git LFS, up to 5 GiB each.
+- Repositories have no size limit.
+- A shallow clone of Linux (`git clone --depth 1`) takes 14 to 18 seconds.
+
 ## Push without an account
 
 Anyone can put code on Upstream before signing up, including a coding agent. Run `upstream push` in any folder while signed out, or make one HTTP call:
