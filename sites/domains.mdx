@@ -3,7 +3,7 @@ title: Custom domains
 description: Serve a site on your own domain, with HTTPS issued and renewed for you.
 ---
 
-Sites in a Workspace Pro workspace can use their own domains, up to five per site. The site keeps its `coline.space` address too.
+Sites in a workspace on a paid plan (Pro or Team) can use their own domains, up to five per site. The site keeps its `coline.space` address too.
 
 ```bash
 npx coline-app domains add www.example.com
@@ -34,7 +34,7 @@ Remove a domain with `npx coline-app domains remove www.example.com` or in the c
 
 | Error | Means |
 | --- | --- |
-| `SITE_DOMAINS_REQUIRE_PRO` | The workspace isn't on Workspace Pro |
+| `SITE_DOMAINS_REQUIRE_PRO` | The workspace isn't on a paid plan |
 | `SITE_DOMAINS_REQUIRE_CLAIM` | Claim the site first |
 | `SITE_DOMAIN_TAKEN` | Another site already uses the domain |
 | `SITE_DOMAIN_LIMIT` | The site already has five domains |

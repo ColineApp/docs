@@ -1,56 +1,71 @@
 ---
-title: Plans and credits
-description: What each plan includes, how team trials work, and what credits pay for.
+title: Plans and usage
+description: What each plan includes, how usage limits work, what happens at the limit, and how team trials work.
 ---
 
-Prices are on the [pricing page](https://coline.app/pricing). This page explains what the plans include.
-
-## Personal plans
-
-For your own account and personal workspace.
-
-| | Free | Pro | Pro + AI | Max |
-| --- | --- | --- | --- | --- |
-| Kairo credits per month | 100 | 750 | 1,500 | 10,000 |
-| Code credits per month | None | 2,000 | 4,000 | 10,000 |
-| Storage | 20 GB | Unlimited | Unlimited | Unlimited |
-| Publish to the web | No | Yes | Yes | Yes |
-
-Free never asks for a card. Pro starts with a 14-day trial. You can change or cancel a plan any time; changes are prorated.
+Prices and a bill calculator are on the [pricing page](https://coline.app/pricing). This page explains what the plans include.
 
 ## Team plans
 
-For team workspaces, billed per member.
+For team workspaces, billed per person.
 
-| | Workspace | Workspace Pro + AI | Enterprise |
+| | Team | Max seat on Team | Enterprise |
 | --- | --- | --- | --- |
-| Kairo credits per member per month | 750 | 1,500 | Custom |
-| Code credits per member per month | 2,000 | 4,000 | 10,000 |
+| Kairo | Included, shared by the team | 5× a Team seat's usage, added to the team's pool | Included, shared by the team |
+| Computer time for Code | Included | 5× a Team seat's | Included |
 | Storage | Unlimited | Unlimited | Unlimited |
-| Upstream repository hosting | Yes | Yes | Yes |
-| Single sign-on, directory sync, custom limits | | | Yes |
+| Upstream | Team | Team | Team, plus Enterprise controls |
+| SSO, directory sync, audit streaming | | | Yes |
 
-Kairo credits in a team workspace go into one shared bank for the whole team. Admins can cap how much each [crew member](/kairo/crew) uses.
+Everyone in a team workspace, [crew members](/kairo/crew) included, draws from one shared pool of Kairo usage. Owners and admins give Max seats to the people who use Kairo most, under **Settings → Billing**, and see the exact prorated cost before they confirm. Admins can also limit a crew member to a share of the team's usage.
 
-Team workspaces with an active Coline subscription include Upstream Team.
+A team that starts on [Upstream](https://upstream.codes) is a Coline Team workspace, and a Coline Team workspace includes Upstream Team.
 
 ### Team trial
 
 A new team workspace gets a 14-day trial without a card:
 
 - up to 5 people, counting the owner and pending invites
-- 1,500 Kairo credits shared across the trial
-- everything else in the Workspace plan
+- one shared amount of Kairo usage for the whole trial
+- everything else in Team
 
 When the trial ends without billing, the workspace pauses. Everything stays readable, but nothing new can be created, and invites are off, until the owner adds a payment method.
 
-## Credits
+## Personal plans
 
-**Kairo credits** pay for AI work across Coline: chat, drafting, summaries, research, routines and crew. A standard request costs one credit; some models and higher reasoning levels cost more, and lighter ones cost less. Credits reset at the start of each billing period. When you run out, Kairo tells you and offers an upgrade.
+For your own account and personal workspace.
 
-**Code credits** pay for cloud computers: [Code](/code) sessions, and [Kairo's computer](/kairo/computer) when it works in a browser, terminal or desktop.
+| | Free | Pro | Max |
+| --- | --- | --- | --- |
+| Kairo | To try | Included | 5× Pro's usage |
+| Computer time for Code | None | Included | 5× Pro's |
+| Storage | 50 GB | 1 TB | Unlimited |
+| Upstream | Free | Pro | Pro |
+| Publish to the web | No | Yes | Yes |
+
+Free never asks for a card. You can change or cancel a plan any time; changes are prorated.
+
+Plans bought before November 2026 (Pro, Pro + AI, Max, Workspace and Workspace Pro + AI) keep their price and what they include until you change plans. Billing settings name them as 2025 plans.
+
+## Usage limits
+
+Every plan includes a monthly amount of Kairo usage, and paid plans include computer time for Code. Bigger models and higher reasoning levels use it faster; the model picker says how much faster than the default. Usage shows as a bar with the percentage used and the reset date, under **Settings → Billing**.
+
+Owners and admins get a notice at 80% and at 100% of the team's Kairo usage, in the app and by email.
+
+### At the limit
+
+When the month's Kairo usage is used, Kairo stops until it resets, unless **Keep going after the limit** is on. Owners and admins turn it on in **Settings → Billing** with a monthly cap in dollars. Past the limit, Kairo and Upstream's AI keep working and the extra is paid from the workspace balance, up to the cap. Members who hit the limit can press **Ask an admin**, which notifies owners and admins.
+
+### Balance
+
+The balance is in dollars. It pays for extra usage and for computer time past what your plan includes. Top-ups of $10, $50 (adds $55) and $100 (adds $120) never expire. A personal workspace uses your own wallet.
 
 **API credits** are a separate prepaid balance for metered API calls such as [Tab](/api/tab). Add them in the [developer console](https://coline.app/developers/console).
+
+## Storage
+
+Free includes 50 GB and Pro 1 TB. You get a notice at 80%, and at 100% new uploads are paused until you free up space or upgrade. Max and every team plan have no storage limit.
 
 ## Programs
 
