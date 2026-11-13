@@ -1,0 +1,92 @@
+---
+title: Onset
+description: Version control built for agents. Any number of agents land on one main at once.
+---
+
+Onset is version control built for many people and agents working on one codebase at once. Its command is `on`. Any number of agents can land on one main at the same time, work saves itself, and anything can be undone.
+
+Onset is in public preview for macOS, Linux and Windows. It's included on every plan, including Free, and it's open source at [upstream.codes/coline/onset](https://upstream.codes/coline/onset). Projects live on [Upstream](/upstream), with the same account and permissions.
+
+Onset has its own full documentation at [upstream.codes/docs/onset](https://upstream.codes/docs/onset). This page is an overview.
+
+## The five words
+
+| Word | Meaning |
+| --- | --- |
+| Change | One piece of work. It has an ID made of letters, like `rtnbkcvx`, and keeps it from start to finish. |
+| Main | The project's shared history. It moves only when a change lands, one numbered version at a time. |
+| Land | Puts a change on main. The server merges it with whatever landed since the change started. |
+| Workspace | A folder working on one change. Make as many as you like. |
+| Save | A snapshot of a change. Onset saves on its own. |
+
+There's no staging, no commit command, no branch names and no pull or rebase before you land.
+
+## Install and sign in
+
+```bash
+curl -fsSL https://downloads.coline.dev/onset/install.sh | sh
+on login
+```
+
+On Windows, run `irm https://downloads.coline.dev/onset/install.ps1 | iex` in PowerShell. `on login` opens a page where you approve the sign-in with your Coline account.
+
+## Start a project
+
+```bash
+# from a Git repository, with its history
+on import https://github.com/you/shop --to upstream.codes/you/shop
+
+# or a new one
+on init shop
+on publish upstream.codes/you/shop
+
+# or one that exists
+on get upstream.codes/acme/shop
+```
+
+New projects are private. Add `--public` for one anyone can read.
+
+## The loop
+
+```bash
+on status                             # where you are
+# edit files
+on land -m "Fix the login redirect"   # put the change on main
+```
+
+`on land` saves your change, and the server merges it with whatever landed since you started. A land is never refused because someone else landed first. If two changes edit the same lines, main doesn't move, and `on sync` marks the lines to fix.
+
+## Working with agents
+
+- Give each agent its own folder with `on get` or `on workspaces add`. A new workspace takes seconds.
+- `on guide` prints the instructions for coding agents, ready for an `AGENTS.md`.
+- Agents sign in with a token in `ONSET_TOKEN`. A token can be limited to some projects, or to reading.
+- Every command ends with a `next:` line, and `--json` returns the same facts.
+- Agents with no folder on disk land with one HTTP call, or through the MCP server at `https://onset.coline.dev/mcp`.
+
+## Nothing is lost
+
+- Every `on` command saves first, and a background saver picks up edits within seconds.
+- `on undo` takes back the last command, including a land. `on restore` brings a file back from any earlier save.
+- Deleting a workspace folder keeps its change.
+- Owners can roll a project back to any point in the last 30 days.
+
+## Private folders and secrets
+
+- `on access billing/ @sam` hides a folder from everyone else's workspaces, diffs and logs.
+- Add `--sealed` and the folder's files are encrypted on its readers' machines. The host stores them and can't read them.
+- `.env` files are saved and follow you to every new workspace. They never land, and nobody else sees them.
+- Before a land, added lines are checked for keys and tokens. A match stops the land and names the file and line.
+
+## Git and GitHub
+
+Every Onset project on Upstream is also a Git repository, so `git clone` and `git push` keep working. `on git mirror <GitHub URL>` keeps a GitHub repository's main and the project's main in step both ways.
+
+## Limits
+
+- A project can hold up to 100 GiB, and one file up to 5 GB.
+- A very busy project's Git view can fall behind main. It catches up when landing slows.
+
+## Host it yourself
+
+`onset-server` is one binary with SQLite and a folder of objects. It's in the Linux downloads at [upstream.codes/downloads](https://upstream.codes/downloads#onset), and it's licensed AGPL-3.0.
